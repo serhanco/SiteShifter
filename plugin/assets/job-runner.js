@@ -68,6 +68,13 @@
 		return go();
 	}
 
+	/* A paused job: the known cause and fix when there is a stable code, else the raw message. */
+	function explain(job) {
+		var p = job.code && cfg.i18n.problems ? cfg.i18n.problems[job.code] : null;
+		if (!p) { return cfg.i18n.paused + ' ' + (job.error || ''); }
+		return p.title + ' [' + job.code + ']. ' + p.fix + (job.error ? ' ' + cfg.i18n.technical + ' ' + job.error : '');
+	}
+
 	function bar(root) {
 		root.innerHTML = '<div class="ss-bar" style="background:#dcdcde;border-radius:3px;height:22px;max-width:520px"><div class="ss-fill" style="background:#2271b1;height:100%;width:0;border-radius:3px;transition:width .3s"></div></div><p class="ss-line" aria-live="polite"></p>';
 		var fill = root.querySelector('.ss-fill'), line = root.querySelector('.ss-line');
@@ -90,7 +97,7 @@
 			function loop(job) {
 				ui.set(job);
 				if (job.status === 'done') { ui.text(cfg.i18n.done); return job; }
-				if (job.status === 'paused') { ui.text(cfg.i18n.paused + ' ' + (job.error || '')); return job; }
+				if (job.status === 'paused') { ui.text(explain(job)); return job; }
 				if (job.status !== 'running') { return job; }
 				return resilient('step', { id: id }, ui).then(function (s) {
 					if (!s.ok) { throw new Error(s.message); }

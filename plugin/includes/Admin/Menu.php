@@ -104,6 +104,8 @@ class Menu
                 'packageReady' => __('The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires.', 'siteshifter'),
                 'packageNote' => __('The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it.', 'siteshifter'),
                 'deleted' => __('Deleted.', 'siteshifter'),
+                'problems' => ProblemText::all(),
+                'technical' => __('Technical detail:', 'siteshifter'),
                 'noPackages' => __('There are no packages on this server.', 'siteshifter'),
                 'colDate' => __('Created', 'siteshifter'),
                 'colSize' => __('Size', 'siteshifter'),
