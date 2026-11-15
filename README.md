@@ -4,7 +4,7 @@
 
 SiteShifter moves a WordPress site from any host (localhost, GoDaddy, Hostinger, cPanel/hPanel, VPS) to a new one, including domain changes, and checks everything that could make the move fail *before* it starts.
 
-> Status: early development. Step 1 (core engine, pre-flight checks, CLI and standalone installer) is in progress.
+> Status: 0.2.0. Core engine, CLI, standalone installer and the WordPress plugin work; direct site-to-site transfer is next.
 
 ## What it does
 
@@ -20,8 +20,12 @@ SiteShifter moves a WordPress site from any host (localhost, GoDaddy, Hostinger,
 | Core library (PHP ≥ 7.4, no runtime dependencies) | in progress |
 | WP-CLI commands | in progress |
 | `installer.php` | in progress |
-| WordPress plugin (dashboard UI) | planned |
+| WordPress plugin (dashboard UI) | available (0.2.0) |
 | Direct transfer (site-to-site, SFTP/SSH) | planned |
+
+## WordPress plugin
+
+Download `siteshifter.zip` from the [releases](https://github.com/serhanco/SiteShifter/releases), upload it under Plugins > Add New > Upload Plugin and open **SiteShifter** in the admin menu. It can export a package (everything, structure only, settings only, content only or a custom selection), check size and disk space first, import with a dry run, and apply it in *Replace* mode (staging tables, one quick switch, undo) or *Merge* mode (keeps what is there, adds what is new, you decide conflicts). The interface is English and Turkish. Multisite is detected and not supported yet.
 
 ## Usage
 
@@ -68,6 +72,8 @@ If the new address is `https://`, every old `http://` / `https://` / `www` / pro
 composer install
 composer test                       # unit + integration (needs MySQL/MariaDB: SS_DB_HOST, SS_DB_USER, SS_DB_PASS)
 php bin/build-installer.php         # writes dist/installer.php
+php bin/build-plugin.php            # writes dist/siteshifter.zip
+php bin/make-pot.php && php bin/make-mo.php   # translations
 WP_CORE=/path/to/wordpress tests/e2e/run.sh   # real WordPress, both modes
 ```
 
@@ -76,3 +82,7 @@ WP_CORE=/path/to/wordpress tests/e2e/run.sh   # real WordPress, both modes
 GPL-2.0-or-later, the same as WordPress.
 
 SiteShifter is made by [Serhan Demirel](https://serhandemirel.com).
+
+## Releasing
+
+Update the version in `plugin/siteshifter.php`, `plugin/readme.txt`, `src/Cli/Application.php` and `installer/ui.php` (a test checks they match), merge, then push a tag such as `v0.2.0`. The `release` workflow builds `siteshifter.zip` and `installer.php` and attaches them with SHA-256 checksums to a GitHub release.
