@@ -20,6 +20,8 @@ class MergePolicy
         'other_files' => ['skip', 'overwrite'],
         'settings' => ['keep', 'overwrite'],
         'users' => ['map', 'skip'],
+        'content' => ['merge', 'skip'],
+        'posts' => ['skip', 'overwrite', 'rename'],
     ];
 
     /** @var array */
