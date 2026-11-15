@@ -1,6 +1,6 @@
 # SiteShifter
 
-**Shift WordPress sites safely.**
+**Shift WordPress sites safely.** — by [Serhan Demirel](https://serhandemirel.com)
 
 SiteShifter moves a WordPress site from any host (localhost, GoDaddy, Hostinger, cPanel/hPanel, VPS) to a new one, including domain changes, and checks everything that could make the move fail *before* it starts.
 
@@ -23,13 +23,48 @@ SiteShifter moves a WordPress site from any host (localhost, GoDaddy, Hostinger,
 | WordPress plugin (dashboard UI) | planned |
 | Direct transfer (site-to-site, SFTP/SSH) | planned |
 
+## Usage
+
+### Move a site with a package
+
+```bash
+# on the old server (or locally)
+bin/siteshifter export --path=/var/www/old-site --out=site.zip
+
+# on the new server: upload site.zip and dist/installer.php into the new folder,
+# open https://new-domain.com/installer.php and follow the three steps.
+# or from the command line:
+bin/siteshifter install --dir=/var/www/new-site --zip=site.zip --url=https://new-domain.com \
+    --db-name=new_db --db-user=new_user --db-pass=secret
+```
+
+### Move a site from a hand-made export
+
+Export the database from cPanel / phpMyAdmin (`.sql`) and zip `public_html` or just `wp-content`. Upload both with `installer.php` into the new folder and open the installer. If the zip has no WordPress core files, they are downloaded from wordpress.org (or pass `--core-zip`).
+
+### Only replace the address
+
+```bash
+bin/siteshifter replace --path=/var/www/site --from=http://old.test --to=https://new.com
+```
+
+With WP-CLI: `wp --require=/path/to/siteshifter/wp-cli.php siteshifter export|replace|preflight`.
+
+### What happens on the new server
+
+`backup` (existing tables renamed, wp-config.php saved) → `extract` → `core` → `config` → `import` → `replace` → `finalize` (caches with old URLs cleared, server-specific drop-ins disabled, `.user.ini`/`.htaccess` paths fixed) → `verify` (leftover scan, row counts, licence to-do list). Every step is resumable, so short PHP time limits are not a problem. If a step fails, the previous tables and wp-config.php can be restored.
+
 ## Development
 
 ```bash
 composer install
-composer test
+composer test                       # unit + integration (needs MySQL/MariaDB: SS_DB_HOST, SS_DB_USER, SS_DB_PASS)
+php bin/build-installer.php         # writes dist/installer.php
+WP_CORE=/path/to/wordpress tests/e2e/run.sh   # real WordPress, both modes
 ```
 
 ## License
 
 GPL-2.0-or-later, the same as WordPress.
+
+SiteShifter is made by [Serhan Demirel](https://serhandemirel.com).

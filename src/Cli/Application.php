@@ -44,7 +44,7 @@ class Application
                     return $this->replace($options);
                 case 'version':
                 case '--version':
-                    $this->line('SiteShifter ' . self::VERSION);
+                    $this->line('SiteShifter ' . self::VERSION . ' by Serhan Demirel (https://serhandemirel.com)');
                     return 0;
                 default:
                     $this->help();
@@ -160,7 +160,7 @@ class Application
     private function printResult(array $result): void
     {
         $this->line('');
-        $this->line('Done.');
+        $this->line('Done. — SiteShifter by Serhan Demirel · https://serhandemirel.com');
         if ($result['row_mismatches'] === []) {
             $this->line('  Row counts: every table matches the source.');
         } else {
@@ -224,6 +224,7 @@ class Application
     {
         $this->line(<<<TXT
 SiteShifter {$this->version()} — shift WordPress sites safely
+by Serhan Demirel · https://serhandemirel.com
 
   export     --path=/var/www/site [--out=site.zip] [--scope=root|wp-content] [--all-tables]
   preflight  --dir=/new/site --url=https://new.com --db-name= --db-user= [--db-pass=] [--db-host=]

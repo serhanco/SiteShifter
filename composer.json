@@ -3,6 +3,8 @@
     "description": "Shift WordPress sites safely: pre-flight checks, packaging, installer and serialization-safe domain replacement.",
     "type": "library",
     "license": "GPL-2.0-or-later",
+    "authors": [{ "name": "Serhan Demirel", "homepage": "https://serhandemirel.com" }],
+    "homepage": "https://github.com/serhanco/SiteShifter",
     "require": {
         "php": ">=7.4"
     },
