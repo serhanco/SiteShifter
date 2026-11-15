@@ -6,6 +6,7 @@ use SiteShifter\Database\Connection;
 use SiteShifter\Database\DatabaseReplacer;
 use SiteShifter\Installer\Installer;
 use SiteShifter\Package\PackageBuilder;
+use SiteShifter\Package\Scope;
 use SiteShifter\Replace\ReplacementMap;
 use SiteShifter\Replace\Replacer;
 use SiteShifter\Support\WpConfigReader;
@@ -73,6 +74,7 @@ class Application
         $builder = new PackageBuilder($db, $path, $o['prefix'] ?? $config['prefix'], $work, $out, [
             'scope' => $o['scope'] ?? 'root',
             'include_foreign_tables' => isset($o['all-tables']),
+            'content' => $this->scopeFrom($o),
         ]);
         $this->line("Packaging {$path} …");
         $state = PackageBuilder::initialState();
@@ -269,6 +271,8 @@ SiteShifter {$this->version()} — shift WordPress sites safely
 by Serhan Demirel · https://serhandemirel.com
 
   export     --path=/var/www/site [--out=site.zip] [--scope=root|wp-content] [--all-tables]
+             [--profile=full|structure|settings|content|custom] (custom: [--types=post,page|all] [--no-media] [--no-users] [--no-comments]
+             [--no-settings] [--no-themes] [--no-plugins] [--no-plugin-tables] [--no-other-files] [--no-revisions])
   preflight  --dir=/new/site --url=https://new.com --db-name= --db-user= [--db-pass=] [--db-host=]
              (--zip=package.zip | --zip=files.zip --sql=dump.sql | --sql=dump.sql)
   check      --url=https://new.com   (diagnoses Cloudflare/proxy, SSL, redirect and mixed-content problems on the live site)
@@ -311,6 +315,39 @@ TXT
     private function isTty(): bool
     {
         return $this->ttyOut && defined('STDOUT') && function_exists('stream_isatty') && @stream_isatty(STDOUT);
+    }
+
+    /** Builds the content scope from --profile and the --no-* switches (custom profile). */
+    private function scopeFrom(array $o): Scope
+    {
+        $in = ['profile' => $o['profile'] ?? (isset($o['types']) || $this->hasNoFlags($o) ? 'custom' : 'full')];
+        if (isset($o['types'])) {
+            $in['types'] = $o['types'] === 'all' ? 'all' : array_filter(array_map('trim', explode(',', (string) $o['types'])));
+        }
+        foreach (['media', 'users', 'comments', 'settings', 'themes', 'plugins', 'revisions'] as $part) {
+            if (isset($o['no-' . $part])) {
+                $in[$part] = false;
+            }
+        }
+        if (isset($o['no-plugin-tables'])) {
+            $in['other_tables'] = false;
+        }
+        if (isset($o['no-other-files'])) {
+            $in['other_files'] = false;
+        }
+
+        return Scope::fromArray($in);
+    }
+
+    private function hasNoFlags(array $o): bool
+    {
+        foreach (array_keys($o) as $k) {
+            if (strpos((string) $k, 'no-') === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function line(string $text): void

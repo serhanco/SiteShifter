@@ -23,8 +23,12 @@ class Dumper
     /** @var int */
     private $batch;
 
-    public function __construct(Connection $db, array $tables, string $file, int $batch = 1000)
+    /** @var array<string,string> SQL condition per table: only matching rows are dumped */
+    private $where;
+
+    public function __construct(Connection $db, array $tables, string $file, int $batch = 1000, array $where = [])
     {
+        $this->where = $where;
         $this->db = $db;
         $this->tables = array_values($tables);
         $this->file = $file;
@@ -116,11 +120,19 @@ class Dumper
         $colList = implode(', ', array_map([Connection::class, 'ident'], $columns));
 
         if ($pk !== []) {
-            $where = $state['cursor'] === null ? '' : ' WHERE ' . self::afterCursor($this->db, $pk, $state['cursor']);
+            $conds = [];
+            if (isset($this->where[$table])) {
+                $conds[] = '(' . $this->where[$table] . ')';
+            }
+            if ($state['cursor'] !== null) {
+                $conds[] = self::afterCursor($this->db, $pk, $state['cursor']);
+            }
+            $where = $conds === [] ? '' : ' WHERE ' . implode(' AND ', $conds);
             $order = implode(', ', array_map([Connection::class, 'ident'], $pk));
             $sql = "SELECT {$colList} FROM {$t}{$where} ORDER BY {$order} LIMIT {$this->batch}";
         } else {
-            $sql = "SELECT {$colList} FROM {$t} LIMIT {$this->batch} OFFSET " . (int) $state['offset'];
+            $filter = isset($this->where[$table]) ? ' WHERE (' . $this->where[$table] . ')' : '';
+            $sql = "SELECT {$colList} FROM {$t}{$filter} LIMIT {$this->batch} OFFSET " . (int) $state['offset'];
         }
         $result = $this->db->query($sql);
         $count = 0;

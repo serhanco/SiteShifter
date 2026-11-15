@@ -30,7 +30,8 @@ class PackageBuilder
     private $options;
 
     /**
-     * Options: excludes (string[]), include_foreign_tables (bool), scope ("root"|"wp-content")
+     * Options: excludes (string[]), include_foreign_tables (bool), scope ("root"|"wp-content"),
+     * content (Scope: what to include; null = everything)
      */
     public function __construct(Connection $db, string $abspath, string $prefix, string $workDir, string $zipPath, array $options = [])
     {
@@ -39,7 +40,7 @@ class PackageBuilder
         $this->prefix = $prefix;
         $this->workDir = rtrim($workDir, '/');
         $this->zipPath = $zipPath;
-        $this->options = $options + ['excludes' => Archiver::DEFAULT_EXCLUDES, 'include_foreign_tables' => false, 'scope' => 'root'];
+        $this->options = $options + ['excludes' => Archiver::DEFAULT_EXCLUDES, 'include_foreign_tables' => false, 'scope' => 'root', 'content' => null];
     }
 
     public static function initialState(): array
@@ -75,7 +76,7 @@ class PackageBuilder
         $didWork = false; // every call must make progress, even with the deadline already past
         if ($state['phase'] === 'dump') {
             $didWork = true;
-            $state['dump'] = (new Dumper($this->db, $this->tables(), $sqlFile))->run($state['dump'], $deadline);
+            $state['dump'] = (new Dumper($this->db, $this->tables(), $sqlFile, 1000, $this->rules()['where']))->run($state['dump'], $deadline);
             if ($state['dump']['done']) {
                 $state['phase'] = 'files';
             }
@@ -88,6 +89,7 @@ class PackageBuilder
         }
         if ($state['phase'] === 'finish') {
             $manifest = Manifest::build($this->db, $this->prefix, $this->abspath, $this->tables(), [
+                'scope' => $this->content()->describe($this->rules()),
                 'db' => ['largest_row' => $state['dump']['largest_row']],
                 'files' => ['count' => $state['archive']['total'], 'bytes' => $state['archive']['bytes'], 'scope' => $this->options['scope']],
             ]);
@@ -109,17 +111,36 @@ class PackageBuilder
         return $this->run(self::initialState(), INF);
     }
 
+    private function content(): Scope
+    {
+        return $this->options['content'] ?? Scope::full();
+    }
+
+    /** @var array|null */
+    private $rulesCache;
+
+    private function rules(): array
+    {
+        return $this->rulesCache ?? $this->rulesCache = $this->content()->tableRules($this->prefix, $this->allTables());
+    }
+
+    /** @return string[] */
+    private function allTables(): array
+    {
+        return $this->options['include_foreign_tables'] ? $this->db->tables() : $this->db->tables($this->prefix);
+    }
+
     /** @return string[] */
     private function tables(): array
     {
-        return $this->options['include_foreign_tables'] ? $this->db->tables() : $this->db->tables($this->prefix);
+        return $this->rules()['tables'];
     }
 
     private function archiver(): Archiver
     {
         $root = $this->options['scope'] === 'wp-content' ? $this->abspath . '/wp-content' : $this->abspath;
         $prefix = $this->options['scope'] === 'wp-content' ? 'files/wp-content/' : 'files/';
-        $excludes = $this->options['excludes'];
+        $excludes = $this->content()->excludes($this->options['excludes']);
         if ($this->options['scope'] === 'wp-content') {
             $excludes = array_map(static function ($e) {
                 return strpos($e, 'wp-content/') === 0 ? substr($e, 11) : $e;
@@ -131,6 +152,13 @@ class PackageBuilder
             $excludes[] = substr($work, strlen($root) + 1);
         }
 
-        return new Archiver($root, $this->zipPath, $excludes, $prefix);
+        $only = $this->content()->only();
+        if ($this->options['scope'] === 'wp-content') {
+            $only = array_map(static function ($e) {
+                return strpos($e, 'wp-content/') === 0 ? substr($e, 11) : $e;
+            }, $only);
+        }
+
+        return new Archiver($root, $this->zipPath, $excludes, $prefix, 64 * 1048576, $only);
     }
 }

@@ -44,6 +44,9 @@ class Archiver
     /** @var string[] */
     private $excludes;
 
+    /** @var string[] when not empty, only these folders (and the folders leading to them) are packed */
+    private $only = [];
+
     /** @var string */
     private $entryPrefix;
 
@@ -54,7 +57,7 @@ class Archiver
      * @param string   $entryPrefix folder inside the zip, e.g. "files/"
      * @param string[] $excludes    paths relative to $root (folders or files)
      */
-    public function __construct(string $root, string $zipPath, array $excludes = self::DEFAULT_EXCLUDES, string $entryPrefix = 'files/', int $maxBatchBytes = 64 * 1048576)
+    public function __construct(string $root, string $zipPath, array $excludes = self::DEFAULT_EXCLUDES, string $entryPrefix = 'files/', int $maxBatchBytes = 64 * 1048576, array $only = [])
     {
         if (!class_exists('ZipArchive')) {
             throw new \RuntimeException('The PHP zip extension is not installed.');
@@ -65,6 +68,9 @@ class Archiver
         $this->excludes = array_map(static function ($e) {
             return trim(str_replace('\\', '/', $e), '/');
         }, $excludes);
+        $this->only = array_values(array_filter(array_map(static function ($e) {
+            return trim(str_replace('\\', '/', $e), '/');
+        }, $only), 'strlen'));
         $this->entryPrefix = $entryPrefix;
         $this->maxBatchBytes = $maxBatchBytes;
     }
@@ -225,6 +231,15 @@ class Archiver
             if ($path === $exclude || strpos($path, $exclude . '/') === 0) {
                 return true;
             }
+        }
+        if ($this->only !== []) {
+            foreach ($this->only as $inc) {
+                if ($path === $inc || strpos($path, $inc . '/') === 0 || strpos($inc, $path . '/') === 0) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         return false;
