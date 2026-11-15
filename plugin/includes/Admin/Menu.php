@@ -161,6 +161,7 @@ class Menu
                         'map' => __('use the existing user', 'siteshifter'),
                     ],
                 ],
+                'mergeResult' => __('Merge result (files by action, then database counts):', 'siteshifter'),
                 'importNow' => __('Import and replace this site', 'siteshifter'),
                 'importDone' => __('The import is finished and the site now runs the imported data.', 'siteshifter'),
                 /* translators: %d: number of places */

@@ -433,6 +433,9 @@
 				var r = job.result || {}, html = '<div class="notice notice-success inline"><p><strong>' + esc(cfg.i18n.importDone) + '</strong></p></div>';
 				if (r.leftovers && r.leftovers.length) { html += '<p>' + esc(cfg.i18n.importLeftovers.replace('%d', r.leftovers.length)) + '</p>'; }
 				if (r.row_mismatches && r.row_mismatches.length) { html += '<p>' + esc(cfg.i18n.importMismatch.replace('%d', r.row_mismatches.length)) + '</p>'; }
+				if (r.merge) {
+					html += '<p>' + esc(cfg.i18n.mergeResult) + ' <code>' + esc(JSON.stringify(r.merge.files)) + '</code> <code>' + esc(JSON.stringify(r.merge.database)) + '</code></p>';
+				}
 				html += '<p>' + esc(cfg.i18n.importLogin) + ' <a href="' + esc(cfg.loginUrl) + '">' + esc(cfg.loginUrl) + '</a></p>';
 				res.innerHTML = html;
 				imports();
