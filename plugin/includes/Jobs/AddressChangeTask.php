@@ -88,13 +88,16 @@ class AddressChangeTask implements Task
         $db = call_user_func($this->connect);
         $tables = $db->tables($this->prefix);
 
+        $didWork = false; // every slice must make progress, even with the deadline already past
         if ($state['phase'] === 'backup') {
+            $didWork = true;
             $state['backup'] = (new Dumper($db, $tables, $this->backupFile()))->run($state['backup'], $deadline);
             if ($state['backup']['done']) {
                 $state['phase'] = 'replace';
             }
         }
-        if ($state['phase'] === 'replace' && microtime(true) < $deadline) {
+        if ($state['phase'] === 'replace' && (!$didWork || microtime(true) < $deadline)) {
+            $didWork = true;
             $map = (new ReplacementMap())->addUrl($state['old'], $state['new']);
             $replacer = new DatabaseReplacer($db, new Replacer($map), $tables, [$this->prefix . 'posts' => ['guid']]);
             $state['replace'] = $replacer->run($state['replace'], $deadline);
