@@ -90,6 +90,8 @@ class Menu
             'restNonce' => wp_create_nonce('wp_rest'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'ajaxAction' => \SiteShifter\Plugin\Rest\Routes::AJAX_ACTION,
+            'uploadAction' => \SiteShifter\Plugin\Rest\Routes::UPLOAD_ACTION,
+            'chunkBytes' => max(262144, (int) floor(min((int) wp_max_upload_size(), 8 * 1048576) * 0.9)),
             'downloadAction' => \SiteShifter\Plugin\Rest\Routes::DOWNLOAD_ACTION,
             'ajaxNonce' => wp_create_nonce(\SiteShifter\Plugin\Rest\Routes::NONCE),
             'i18n' => [
@@ -110,6 +112,12 @@ class Menu
                 'useNoMedia' => __('Use "without media" and copy uploads myself', 'siteshifter'),
                 'continueAnyway' => __('Continue anyway', 'siteshifter'),
                 'mediaOffNote' => __('Media is now switched off in the custom options. Copy wp-content/uploads to the new site by hand, then click "Check and create package" again.', 'siteshifter'),
+                'noIncoming' => __('No packages have been uploaded yet.', 'siteshifter'),
+                'check' => __('Check this package', 'siteshifter'),
+                'chooseFile' => __('Choose a .zip file first.', 'siteshifter'),
+                'uploading' => __('Uploading…', 'siteshifter'),
+                'uploaded' => __('Uploaded and verified.', 'siteshifter'),
+                'summary' => __('Package from %1$s, %2$s, WordPress %3$s, %4$s tables, scope: %5$s', 'siteshifter'),
                 'noPackages' => __('There are no packages on this server.', 'siteshifter'),
                 'colDate' => __('Created', 'siteshifter'),
                 'colSize' => __('Size', 'siteshifter'),
@@ -215,6 +223,17 @@ class Menu
                 . '</tbody></table><p><button class="button" id="ss-address-check">' . esc_html__('Run checks', 'siteshifter') . '</button> '
                 . '<button class="button button-primary" id="ss-address-start">' . esc_html__('Check and change address', 'siteshifter') . '</button></p></form>'
                 . '<div id="ss-address-report"></div><div id="ss-address-progress"></div><div id="ss-address-result"></div>';
+        } elseif ($current === 'import') {
+            echo '<p>' . esc_html__('Upload a package made by SiteShifter (or put it in the incoming folder by FTP for very large sites), then check it. The check changes nothing: it shows what would be replaced, what is incompatible and what you must do by hand.', 'siteshifter') . '</p>'
+                . '<p><input type="file" id="ss-file" accept=".zip"> <button class="button button-primary" id="ss-upload">' . esc_html__('Upload package', 'siteshifter') . '</button></p>'
+                . '<div id="ss-upload-progress"></div>'
+                . '<h2>' . esc_html__('Packages ready to import', 'siteshifter') . '</h2><div id="ss-incoming"></div>'
+                . '<div id="ss-import-report"></div>'
+                . '<p class="description">' . esc_html(sprintf(
+                    /* translators: %s: folder path */
+                    __('FTP folder: %s', 'siteshifter'),
+                    'wp-content/siteshifter-work/incoming/'
+                )) . '</p>';
         } else {
             echo '<p>' . esc_html__('This screen is coming in a later step.', 'siteshifter') . '</p>';
         }

@@ -34,6 +34,27 @@ class Site
     }
 
     /** Context for Preflight::run() for an in-place check. */
+    /** Facts about this site that the import dry run compares a package against. */
+    public static function importTarget()
+    {
+        global $wp_db_version;
+        $target = [
+            'prefix' => self::prefix(),
+            'home' => self::homeUrl(),
+            'abspath' => untrailingslashit(ABSPATH),
+            'wp_version' => get_bloginfo('version'),
+            'wp_db_version' => isset($wp_db_version) ? (int) $wp_db_version : null,
+            'db' => null,
+        ];
+        try {
+            $target['db'] = self::connection();
+        } catch (\Throwable $e) {
+            $target['db_error'] = $e->getMessage();
+        }
+
+        return $target;
+    }
+
     public static function preflightContext($newUrl = '')
     {
         $ctx = [
