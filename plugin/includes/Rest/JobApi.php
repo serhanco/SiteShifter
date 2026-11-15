@@ -44,6 +44,36 @@ class JobApi
     /** @var callable|null function (array $measured, array $params): array */
     private $estimate;
 
+    /** @var \SiteShifter\Plugin\Jobs\Incoming|null */
+    private $incoming;
+
+    /** @var callable|null function (string $zipPath): array  the import dry run */
+    private $inspect;
+
+    public function withImport($incoming, $inspect)
+    {
+        $this->incoming = $incoming;
+        $this->inspect = $inspect;
+
+        return $this;
+    }
+
+    /** One uploaded piece (called by the upload transports, which have checked permission and nonce). */
+    public function upload($id, $offset, $pieceFile)
+    {
+        try {
+            if (!$this->incoming) {
+                return $this->fail('unavailable', 'Not available.');
+            }
+
+            return ['ok' => true] + $this->incoming->append((string) $id, (int) $offset, (string) $pieceFile);
+        } catch (\InvalidArgumentException $e) {
+            return $this->fail('not_found', $e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->fail('server_error', $e->getMessage());
+        }
+    }
+
     public function withEstimate($estimate)
     {
         $this->estimate = $estimate;
@@ -95,6 +125,25 @@ class JobApi
                     }
 
                     return ['ok' => true] + call_user_func($this->estimate, $job['result'], (array) ($input['params'] ?? []));
+                case 'upload_begin':
+                    return $this->incoming ? ['ok' => true, 'id' => $this->incoming->begin((string) ($input['params']['name'] ?? ''), (int) ($input['params']['total'] ?? 0))] : $this->fail('unavailable', 'Not available.');
+                case 'upload_end':
+                    return $this->incoming ? ['ok' => true, 'package' => $this->incoming->finish($this->id($input))] : $this->fail('unavailable', 'Not available.');
+                case 'incoming':
+                    return $this->incoming ? ['ok' => true, 'packages' => array_map(static function ($p) {
+                        unset($p['file']);
+
+                        return $p;
+                    }, $this->incoming->all())] : $this->fail('unavailable', 'Not available.');
+                case 'incoming_delete':
+                    return $this->incoming ? ['ok' => true, 'deleted' => $this->incoming->delete($this->id($input))] : $this->fail('unavailable', 'Not available.');
+                case 'import_check':
+                    $path = $this->incoming ? $this->incoming->path($this->id($input)) : null;
+                    if ($path === null || !$this->inspect) {
+                        return $this->fail('not_found', 'That package was not found.');
+                    }
+
+                    return ['ok' => true] + call_user_func($this->inspect, $path);
                 case 'packages':
                     return $this->library ? ['ok' => true, 'packages' => $this->library->all(), 'retention' => $this->retention ? $this->retention->get() : null] : $this->fail('unavailable', 'The package list is not available.');
                 case 'delete_many':

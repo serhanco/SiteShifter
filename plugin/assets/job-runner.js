@@ -10,7 +10,8 @@
 	function post(op, payload) {
 		if (transport === 'rest') {
 			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention' }[op];
-			var url = cfg.restUrl + (path ? path : 'jobs' + (payload.id ? '/' + payload.id + '/' + op : ''));
+			var inc = { upload_begin: 'incoming/begin', incoming: 'incoming', upload_end: 'end', incoming_delete: 'delete', import_check: 'check' }[op];
+			var url = cfg.restUrl + (inc ? (payload.id && inc.indexOf('/') < 0 && inc !== 'incoming' ? 'incoming/' + payload.id + '/' + inc : inc) : (path ? path : 'jobs' + (payload.id ? '/' + payload.id + '/' + op : '')));
 			if (op === 'status') {
 				return fetch(url.replace(/\/status$/, ''), { headers: { 'X-WP-Nonce': cfg.restNonce }, credentials: 'same-origin', cache: 'no-store' });
 			}
@@ -120,7 +121,7 @@
 		}).join('') + '</ul>';
 	}
 
-	window.SiteShifterJobs = { run: run, call: resilient, renderReport: renderReport, ui: function (root) { return { note: function (t) { root.textContent = t; } }; } };
+	window.SiteShifterJobs = { run: run, bar: bar, sleep: sleep, call: resilient, renderReport: renderReport, ui: function (root) { return { note: function (t) { root.textContent = t; } }; } };
 
 	document.addEventListener('click', function (e) {
 		var b = e.target.closest && e.target.closest('[data-ss-host-test]');
@@ -339,4 +340,106 @@
 		});
 	});
 	load();
+})();
+
+/* Import screen: chunked upload, list, dry-run check */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	if (!$('ss-upload')) { return; }
+	var J = window.SiteShifterJobs;
+	function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
+	function human(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(i ? 1 : 0) + ' ' + u[i]; }
+
+	/* One piece: REST first, admin-ajax if REST is blocked; retried with back-off. */
+	function sendPiece(id, offset, blob, useAjax, attempt) {
+		var fd = new FormData();
+		fd.append('piece', blob, 'piece.bin');
+		fd.append('offset', offset);
+		var req;
+		if (useAjax) {
+			fd.append('action', cfg.uploadAction); fd.append('_ajax_nonce', cfg.ajaxNonce); fd.append('id', id);
+			req = fetch(cfg.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' });
+		} else {
+			req = fetch(cfg.restUrl + 'incoming/' + id + '/piece', { method: 'POST', headers: { 'X-WP-Nonce': cfg.restNonce }, body: fd, credentials: 'same-origin' });
+		}
+		return req.then(function (res) { return res.text(); }).then(function (text) {
+			var d; try { d = JSON.parse(text); } catch (e) { d = null; }
+			if (!d || typeof d.ok === 'undefined') { throw new Error('transport'); }
+			return d;
+		}).catch(function (err) {
+			if (attempt >= 5) { throw err; }
+			return J.sleep(1000 * Math.pow(2, attempt)).then(function () { return sendPiece(id, offset, blob, useAjax || attempt === 0, attempt + 1); });
+		});
+	}
+
+	function upload(file, ui) {
+		return J.call('upload_begin', { params: { name: file.name, total: file.size } }, ui).then(function (b) {
+			if (!b.ok) { throw new Error(b.message); }
+			var id = b.id, offset = 0;
+			function next() {
+				if (offset >= file.size) { return J.call('upload_end', { id: id }, ui); }
+				var end = Math.min(file.size, offset + cfg.chunkBytes);
+				return sendPiece(id, offset, file.slice(offset, end), false, 0).then(function (d) {
+					if (!d.ok) { throw new Error(d.message); }
+					offset = d.size; // a repeated or lost piece makes the server report where it really is
+					ui.set({ percent: Math.floor(100 * offset / file.size), detail: human(offset) + ' / ' + human(file.size) });
+					return next();
+				});
+			}
+			return next();
+		});
+	}
+
+	function list() {
+		J.call('incoming', { params: {} }, J.ui($('ss-incoming'))).then(function (r) {
+			var box = $('ss-incoming');
+			if (!r.ok) { box.textContent = r.message; return; }
+			if (!r.packages.length) { box.textContent = cfg.i18n.noIncoming; return; }
+			box.innerHTML = '<table class="widefat striped"><tbody>' + r.packages.map(function (p) {
+				return '<tr><td>' + esc(p.name) + '</td><td>' + esc(human(p.bytes)) + '</td><td>' + esc(new Date(p.created * 1000).toLocaleString()) + '</td><td>' +
+					'<button class="button ss-chk" data-id="' + p.id + '">' + esc(cfg.i18n.check) + '</button> <button class="button ss-rm" data-id="' + p.id + '">' + esc(cfg.i18n.deletePackage) + '</button></td></tr>';
+			}).join('') + '</tbody></table>';
+		});
+	}
+
+	$('ss-upload').addEventListener('click', function (e) {
+		e.preventDefault();
+		var f = $('ss-file').files[0], btn = e.target;
+		if (!f) { $('ss-upload-progress').textContent = cfg.i18n.chooseFile; return; }
+		btn.disabled = true;
+		var ui = J.bar($('ss-upload-progress'));
+		upload(f, ui).then(function (r) {
+			btn.disabled = false;
+			if (!r.ok) { throw new Error(r.message); }
+			ui.set({ percent: 100, detail: cfg.i18n.uploaded });
+			list();
+		}).catch(function (err) { btn.disabled = false; ui.text(cfg.i18n.failed + ' ' + err.message); });
+	});
+
+	$('ss-incoming').addEventListener('click', function (e) {
+		var t = e.target, id = t.getAttribute && t.getAttribute('data-id');
+		if (!id) { return; }
+		e.preventDefault();
+		if (t.classList.contains('ss-rm')) {
+			if (window.confirm(cfg.i18n.confirmDelete)) { J.call('incoming_delete', { id: id }, J.ui($('ss-incoming'))).then(list); }
+		}
+		if (t.classList.contains('ss-chk')) {
+			var box = $('ss-import-report');
+			box.textContent = cfg.i18n.checking;
+			J.call('import_check', { id: id }, J.ui(box)).then(function (r) {
+				if (!r.ok) { box.textContent = r.message; return; }
+				var s = r.package, head = '';
+				if (s) {
+					head = '<p><strong>' + esc(cfg.i18n.summary.replace('%1$s', s.source).replace('%2$s', human(s.bytes)).replace('%3$s', s.wp_version || '?').replace('%4$s', s.tables).replace('%5$s', (cfg.i18n.profiles[s.profile] || s.profile))) + '</strong></p>';
+				}
+				var holder = document.createElement('div');
+				J.renderReport(holder, r.rows);
+				box.innerHTML = head;
+				box.appendChild(holder);
+			});
+		}
+	});
+	list();
 })();

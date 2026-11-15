@@ -19,6 +19,7 @@ class Routes
     const AJAX_ACTION = 'siteshifter_job';
     const NONCE = 'siteshifter_job';
     const DOWNLOAD_ACTION = 'siteshifter_download';
+    const UPLOAD_ACTION = 'siteshifter_upload';
 
     /** @var JobApi */
     private $api;
@@ -33,6 +34,7 @@ class Routes
         add_action('rest_api_init', [$this, 'registerRest']);
         add_action('wp_ajax_' . self::AJAX_ACTION, [$this, 'ajax']); // logged-in only: no wp_ajax_nopriv_
         add_action('wp_ajax_' . self::DOWNLOAD_ACTION, [$this, 'download']);
+        add_action('wp_ajax_' . self::UPLOAD_ACTION, [$this, 'uploadPiece']);
     }
 
     public static function can()
@@ -48,6 +50,11 @@ class Routes
             '/checks' => ['POST', 'checks', []],
             '/site-check' => ['POST', 'site_check', []],
             '/packages' => ['POST', 'packages', []],
+            '/incoming' => ['POST', 'incoming', []],
+            '/incoming/begin' => ['POST', 'upload_begin', []],
+            '/incoming/(?P<id>[a-f0-9]{32})/end' => ['POST', 'upload_end', $idArg],
+            '/incoming/(?P<id>[a-f0-9]{32})/delete' => ['POST', 'incoming_delete', $idArg],
+            '/incoming/(?P<id>[a-f0-9]{32})/check' => ['POST', 'import_check', $idArg],
             '/packages/delete' => ['POST', 'delete_many', []],
             '/retention' => ['POST', 'retention', []],
             '/jobs/(?P<id>[a-f0-9]{32})' => ['GET', 'status', $idArg],
@@ -58,6 +65,22 @@ class Routes
             '/jobs/(?P<id>[a-f0-9]{32})/download_link' => ['POST', 'download_link', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/delete' => ['POST', 'delete', $idArg],
         ];
+        register_rest_route(self::NAMESPACE_, '/incoming/(?P<id>[a-f0-9]{32})/piece', [
+            'methods' => 'POST',
+            'callback' => function (\WP_REST_Request $request) {
+                $files = $request->get_file_params();
+                $tmp = isset($files['piece']['tmp_name']) ? (string) $files['piece']['tmp_name'] : '';
+                $body = $tmp !== '' && is_uploaded_file($tmp)
+                    ? $this->api->upload((string) $request->get_param('id'), (int) $request->get_param('offset'), $tmp)
+                    : ['ok' => false, 'code' => 'invalid', 'message' => 'No piece was uploaded (the server may limit upload size).'];
+                $response = new \WP_REST_Response($body, $body['ok'] ? 200 : 400);
+                $response->header('Cache-Control', 'no-store');
+
+                return $response;
+            },
+            'permission_callback' => [self::class, 'can'],
+            'args' => $idArg,
+        ]);
         foreach ($routes as $path => $def) {
             list($method, $op, $args) = $def;
             register_rest_route(self::NAMESPACE_, $path, [
@@ -79,6 +102,23 @@ class Routes
                 'args' => $args,
             ]);
         }
+    }
+
+    /** POST admin-ajax.php?action=siteshifter_upload (multipart: id, offset, piece) */
+    public function uploadPiece()
+    {
+        check_ajax_referer(self::NONCE, '_ajax_nonce');
+        if (!self::can()) {
+            wp_send_json(['ok' => false, 'code' => 'forbidden', 'message' => 'Not allowed.'], 403);
+        }
+        $id = isset($_POST['id']) ? sanitize_key(wp_unslash($_POST['id'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked above
+        $offset = isset($_POST['offset']) ? (int) $_POST['offset'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $tmp = isset($_FILES['piece']['tmp_name']) ? (string) $_FILES['piece']['tmp_name'] : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        nocache_headers();
+        $body = $tmp !== '' && is_uploaded_file($tmp)
+            ? $this->api->upload($id, $offset, $tmp)
+            : ['ok' => false, 'code' => 'invalid', 'message' => 'No piece was uploaded (the server may limit upload size).'];
+        wp_send_json($body, $body['ok'] ? 200 : 400);
     }
 
     /** GET admin-ajax.php?action=siteshifter_download&job=<id>&token=<token> */

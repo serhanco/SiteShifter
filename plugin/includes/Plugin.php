@@ -82,6 +82,10 @@ class Plugin
 
             return $report;
         });
+        $incoming = new Jobs\Incoming($store);
+        $api->withImport($incoming, static function ($zip) {
+            return (new Import\Inspector())->inspect($zip, Runtime\Site::importTarget());
+        });
         (new Rest\Routes($api))->register();
 
         if (is_admin()) {
