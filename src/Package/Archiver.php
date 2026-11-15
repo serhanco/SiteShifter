@@ -110,6 +110,7 @@ class Archiver
     {
         $zip = $this->open();
         foreach ($files as $entry => $path) {
+            $this->dropEntry($zip, $entry); // a repeated slice must not leave two entries with one name
             if (!$zip->addFile($path, $entry)) {
                 throw new \RuntimeException("Could not add {$entry} to the package.");
             }
@@ -184,6 +185,7 @@ class Archiver
             $full = $this->root . '/' . $path;
             $entry = $this->entryPrefix . $path;
             if (is_file($full)) {
+                $this->dropEntry($zip, $entry);
                 if (!$zip->addFile($full, $entry)) {
                     throw new \RuntimeException("Could not add {$path} to the package.");
                 }
@@ -207,6 +209,14 @@ class Archiver
         }
 
         return $state;
+    }
+
+    /** Removes an entry that an interrupted earlier run already stored, so replays are harmless. */
+    private function dropEntry(\ZipArchive $zip, string $entry): void
+    {
+        if ($zip->locateName($entry) !== false) {
+            $zip->deleteName($entry);
+        }
     }
 
     private function excluded(string $path): bool

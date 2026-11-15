@@ -174,3 +174,46 @@
 
 	function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
 })();
+
+/* Export screen */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	if (!$('ss-export')) { return; }
+	function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
+	function human(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(i ? 1 : 0) + ' ' + u[i]; }
+	var J = window.SiteShifterJobs;
+
+	$('ss-export-start').addEventListener('click', function (e) {
+		e.preventDefault();
+		var btn = e.target, box = $('ss-export-report');
+		btn.disabled = true;
+		box.textContent = cfg.i18n.checking;
+		J.call('checks', { params: {} }, J.ui(box)).then(function (r) {
+			if (!r.ok) { box.textContent = r.message; return null; }
+			J.renderReport(box, r.results);
+			if (r.blockers) { return null; }
+			var scope = document.querySelector('input[name=ss-scope]:checked').value;
+			return J.run('export', { scope: scope, all_tables: $('ss-all-tables').checked ? 1 : 0 }, $('ss-export-progress'));
+		}).then(function (job) {
+			btn.disabled = false;
+			if (!job || job.status !== 'done' || !job.result) { return; }
+			var out = $('ss-export-result'), r = job.result;
+			out.innerHTML = '<p><strong>' + esc(cfg.i18n.packageReady.replace('%1$s', human(r.bytes)).replace('%2$s', r.files).replace('%3$s', r.tables)) + '</strong></p>' +
+				'<p>' + esc(cfg.i18n.packageNote) + '</p>' +
+				'<p><button class="button button-primary" id="ss-download">' + esc(cfg.i18n.download) + '</button> <button class="button" id="ss-delete-package">' + esc(cfg.i18n.deletePackage) + '</button></p>';
+			$('ss-download').addEventListener('click', function (ev) {
+				ev.preventDefault();
+				J.call('download_link', { id: job.id }, J.ui(out)).then(function (d) {
+					if (!d.ok) { out.textContent = d.message; return; }
+					window.location.href = cfg.ajaxUrl + '?action=' + encodeURIComponent(cfg.downloadAction) + '&job=' + job.id + '&token=' + d.token;
+				});
+			});
+			$('ss-delete-package').addEventListener('click', function (ev) {
+				ev.preventDefault();
+				J.call('delete', { id: job.id }, J.ui(out)).then(function () { out.textContent = cfg.i18n.deleted; });
+			});
+		}).catch(function (err) { btn.disabled = false; box.textContent = cfg.i18n.failed + ' ' + err.message; });
+	});
+})();

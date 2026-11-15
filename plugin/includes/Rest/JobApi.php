@@ -67,6 +67,13 @@ class JobApi
                     }
 
                     return $this->siteCheck ? ['ok' => true, 'notes' => call_user_func($this->siteCheck, $url)] : $this->fail('unavailable', 'Site check is not available.');
+                case 'download_link':
+                    $user = isset($input['user']) ? (int) $input['user'] : 0;
+                    $d = $this->runner->issueDownload($this->id($input), $user);
+
+                    return ['ok' => true, 'token' => $d['token'], 'expires' => $d['expires']];
+                case 'delete':
+                    return ['ok' => true] + $this->runner->delete($this->id($input));
                 case 'status':
                     return ['ok' => true, 'job' => $this->runner->get($this->id($input))];
                 case 'resume':
@@ -81,6 +88,16 @@ class JobApi
         } catch (\Throwable $e) {
             return $this->fail('server_error', $e->getMessage());
         }
+    }
+
+    /**
+     * @return array{file:string,created:int}|string the package to stream, or the reason it is refused
+     */
+    public function downloadTarget($id, $token, $userId)
+    {
+        $found = $this->runner->downloadFile($id, $token, $userId);
+
+        return $found;
     }
 
     private function id(array $input)

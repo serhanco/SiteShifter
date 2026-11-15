@@ -115,6 +115,60 @@ class Runner
         return $this->setStatus($id, ['running', 'paused'], 'cancelled', false);
     }
 
+    /**
+     * Issues a short-lived download token for a finished export.
+     *
+     * @return array{token:string,expires:int}
+     */
+    public function issueDownload($id, $userId, $now = null)
+    {
+        $job = $this->mustLoad($id);
+        if ($job['type'] !== 'export' || $job['status'] !== 'done') {
+            throw new \InvalidArgumentException('There is no finished package for this job.');
+        }
+        $now = $now === null ? time() : $now;
+        $job['download'] = ['token' => \SiteShifter\Plugin\Rest\Download::newToken(), 'user' => (int) $userId, 'expires' => $now + \SiteShifter\Plugin\Rest\Download::TTL];
+        $this->store->save($job);
+
+        return ['token' => $job['download']['token'], 'expires' => $job['download']['expires']];
+    }
+
+    /**
+     * @return array{file:string,created:int}|string package path, or why it is refused
+     */
+    public function downloadFile($id, $token, $userId, $now = null)
+    {
+        if (!JobStore::validId($id)) {
+            return 'The download link is not valid.';
+        }
+        $job = $this->store->load($id);
+        if (!$job) {
+            return 'The download link is not valid.';
+        }
+        $why = \SiteShifter\Plugin\Rest\Download::check($job, $token, $userId, $now === null ? time() : $now);
+        if ($why !== '') {
+            return $why;
+        }
+        $file = $this->store->dir($id) . '/package.zip';
+        if (!is_file($file)) {
+            return 'The package file is gone. Create a new export.';
+        }
+
+        return ['file' => $file, 'created' => (int) $job['created']];
+    }
+
+    /** Deletes a job and every file it made (package, backup, work files). */
+    public function delete($id)
+    {
+        $job = $this->mustLoad($id);
+        if ($job['status'] === 'running') {
+            throw new \RuntimeException('Cancel the job before deleting it.');
+        }
+        $this->store->delete($id);
+
+        return ['deleted' => true];
+    }
+
     public function get($id)
     {
         return self::view($this->mustLoad($id));
