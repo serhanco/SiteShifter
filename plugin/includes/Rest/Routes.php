@@ -43,6 +43,8 @@ class Routes
         $idArg = ['id' => ['type' => 'string', 'required' => true, 'validate_callback' => ['SiteShifter\\Plugin\\Jobs\\JobStore', 'validId']]];
         $routes = [
             '/jobs' => ['POST', 'start', []],
+            '/checks' => ['POST', 'checks', []],
+            '/site-check' => ['POST', 'site_check', []],
             '/jobs/(?P<id>[a-f0-9]{32})' => ['GET', 'status', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/step' => ['POST', 'step', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/resume' => ['POST', 'resume', $idArg],

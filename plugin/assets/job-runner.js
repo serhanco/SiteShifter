@@ -9,7 +9,8 @@
 
 	function post(op, payload) {
 		if (transport === 'rest') {
-			var url = cfg.restUrl + 'jobs' + (payload.id ? '/' + payload.id + '/' + op : '');
+			var path = { checks: 'checks', site_check: 'site-check' }[op];
+			var url = cfg.restUrl + (path ? path : 'jobs' + (payload.id ? '/' + payload.id + '/' + op : ''));
 			if (op === 'status') {
 				return fetch(url.replace(/\/status$/, ''), { headers: { 'X-WP-Nonce': cfg.restNonce }, credentials: 'same-origin', cache: 'no-store' });
 			}
@@ -80,11 +81,12 @@
 		};
 	}
 
-	function run(type, params, root) {
+	function run(type, params, root, onJob) {
 		var ui = bar(root);
 		return resilient('start', { type: type, params: params || {} }, ui).then(function (r) {
 			if (!r.ok) { throw new Error(r.message); }
 			var id = r.job.id;
+			if (onJob) { onJob(r.job); }
 			function loop(job) {
 				ui.set(job);
 				if (job.status === 'done') { ui.text(cfg.i18n.done); return job; }
@@ -99,7 +101,19 @@
 		}).catch(function (e) { ui.text(cfg.i18n.failed + ' ' + e.message); });
 	}
 
-	window.SiteShifterJobs = { run: run };
+	function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
+
+	/* Renders a pre-flight / site-check list: block, warn, ok, info with the suggested fix. */
+	function renderReport(root, rows) {
+		var order = { block: 0, warn: 1, info: 2, ok: 3 }, color = { block: '#d63638', warn: '#dba617', info: '#2271b1', ok: '#00a32a' };
+		rows = rows.slice().sort(function (a, b) { return order[a.level] - order[b.level]; });
+		root.innerHTML = '<ul style="margin:0;padding:0;list-style:none">' + rows.map(function (r) {
+			return '<li style="border-left:4px solid ' + color[r.level] + ';padding:4px 10px;margin:0 0 6px;background:#fff"><strong>' + esc(r.title) + '</strong> <span style="color:' + color[r.level] + '">' + esc(r.level.toUpperCase()) + '</span>' +
+				(r.message ? '<br>' + esc(r.message) : '') + (r.fix && r.level !== 'ok' ? '<br><em>' + esc(r.fix) + '</em>' : '') + '</li>';
+		}).join('') + '</ul>';
+	}
+
+	window.SiteShifterJobs = { run: run, call: resilient, renderReport: renderReport, ui: function (root) { return { note: function (t) { root.textContent = t; } }; } };
 
 	document.addEventListener('click', function (e) {
 		var b = e.target.closest && e.target.closest('[data-ss-host-test]');
@@ -108,4 +122,55 @@
 		b.disabled = true;
 		run('host_test', { mb: 32 }, document.getElementById('ss-host-test-progress')).then(function () { b.disabled = false; });
 	});
+})();
+
+/* Change address screen */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	var form = $('ss-address');
+	if (!form) { return; }
+	var lastJob = null;
+
+	function report(newUrl) {
+		var box = $('ss-address-report');
+		box.textContent = cfg.i18n.checking;
+		return window.SiteShifterJobs.call('checks', { params: { new_url: newUrl } }, window.SiteShifterJobs.ui(box)).then(function (r) {
+			if (!r.ok) { box.textContent = r.message; return null; }
+			window.SiteShifterJobs.renderReport(box, r.results);
+			return r;
+		}).catch(function (e) { box.textContent = cfg.i18n.failed + ' ' + e.message; return null; });
+	}
+
+	$('ss-address-check').addEventListener('click', function (e) {
+		e.preventDefault();
+		report($('ss-new-url').value.trim());
+	});
+
+	$('ss-address-start').addEventListener('click', function (e) {
+		e.preventDefault();
+		var btn = e.target, newUrl = $('ss-new-url').value.trim(), oldUrl = $('ss-old-url').value.trim();
+		btn.disabled = true;
+		report(newUrl).then(function (r) {
+			if (!r || r.blockers) { btn.disabled = false; return; }
+			var prog = $('ss-address-progress');
+			return window.SiteShifterJobs.run('address_change', { old_url: oldUrl, new_url: newUrl }, prog, function (job) { lastJob = job; }).then(function (job) {
+				btn.disabled = false;
+				if (!job || job.status !== 'done' || !job.result) { return; }
+				var res = job.result, out = $('ss-address-result');
+				out.innerHTML = '<p><strong>' + esc(cfg.i18n.changed.replace('%d', res.rows_changed)) + '</strong></p>' +
+					(res.leftover_total ? '<p>' + esc(cfg.i18n.leftovers.replace('%d', res.leftover_total)) + '</p>' : '<p>' + esc(cfg.i18n.noLeftovers) + '</p>') +
+					'<p>' + esc(cfg.i18n.login) + ' <a href="' + esc(res.new) + '/wp-login.php">' + esc(res.new) + '/wp-login.php</a></p>' +
+					'<p><button class="button" id="ss-rollback">' + esc(cfg.i18n.rollback) + '</button></p>';
+				$('ss-rollback').addEventListener('click', function (ev) {
+					ev.preventDefault();
+					ev.target.disabled = true;
+					window.SiteShifterJobs.run('rollback', { job: job.id }, $('ss-address-progress'));
+				});
+			});
+		});
+	});
+
+	function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
 })();

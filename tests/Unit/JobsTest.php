@@ -215,6 +215,6 @@ class JobsTest extends TestCase
     public function testBrowserViewHidesInternals(): void
     {
         $view = $this->runner()->start('host_test', ['mb' => 1]);
-        $this->assertSame(['id', 'type', 'status', 'percent', 'phase', 'detail', 'error', 'errors', 'created', 'updated'], array_keys($view));
+        $this->assertSame(['id', 'type', 'status', 'percent', 'phase', 'detail', 'result', 'error', 'errors', 'created', 'updated'], array_keys($view));
     }
 }

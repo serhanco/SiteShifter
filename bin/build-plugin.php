@@ -21,10 +21,13 @@ function ss_rrmdir($dir)
     rmdir($dir);
 }
 
-/** Prefixes SiteShifter\Foo to SiteShifter\Core\Foo (leaves "SiteShifter\'s" prose alone). */
+/**
+ * Prefixes SiteShifter\Foo to SiteShifter\Core\Foo. Leaves SiteShifter\Plugin\
+ * (the plugin's own code), SiteShifter\Core\ and "SiteShifter\'s" prose alone.
+ */
 function ss_prefix($code)
 {
-    return preg_replace('/(?<![A-Za-z0-9_])SiteShifter\\\\(?=[A-Z])/', 'SiteShifter\\\\Core\\\\', $code);
+    return preg_replace('/(?<![A-Za-z0-9_])SiteShifter\\\\(?!Plugin\\b|Core\\b)(?=[A-Z])/', 'SiteShifter\\\\Core\\\\', $code);
 }
 
 function ss_copy($from, $to, $transform = null)
@@ -43,7 +46,7 @@ function ss_copy($from, $to, $transform = null)
 
 ss_rrmdir($out);
 @mkdir($out, 0755, true);
-ss_copy($root . '/plugin', $out);
+ss_copy($root . '/plugin', $out, 'ss_prefix'); // plugin code refers to the core as SiteShifter\\X in source
 // The core's CLI front-end is not needed inside WordPress.
 ss_copy($root . '/src', $out . '/core', 'ss_prefix');
 ss_rrmdir($out . '/core/Cli');

@@ -40,8 +40,13 @@ class Runner
             throw new \InvalidArgumentException('Unknown job type.');
         }
         $job = $this->store->create($type, $params, []);
-        $task = $this->task($job);
-        $job['state'] = $task->initialState($params);
+        try {
+            $task = $this->task($job);
+            $job['state'] = $task->initialState($params);
+        } catch (\Throwable $e) {
+            $this->store->delete($job['id']); // invalid request: leave nothing behind
+            throw $e;
+        }
         $job['progress'] = $task->progress($job['state']) + ['percent' => 0, 'phase' => 'start'];
         $job['checkpoints'] = $this->sizes($task->checkpointFiles($job['state']));
         $this->store->save($job);
@@ -125,6 +130,7 @@ class Runner
             'percent' => (int) ($job['progress']['percent'] ?? 0),
             'phase' => (string) ($job['progress']['phase'] ?? ''),
             'detail' => (string) ($job['progress']['detail'] ?? ''),
+            'result' => $job['status'] === 'done' ? ($job['progress']['result'] ?? null) : null,
             'error' => $job['last_error'],
             'errors' => (int) $job['errors'],
             'created' => (int) $job['created'],

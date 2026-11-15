@@ -47,6 +47,14 @@ class Menu
                 'done' => __('Finished.', 'siteshifter'),
                 'paused' => __('Paused after repeated errors. You can resume from where it stopped.', 'siteshifter'),
                 'failed' => __('Could not finish:', 'siteshifter'),
+                'checking' => __('Checking…', 'siteshifter'),
+                /* translators: %d: number of database rows */
+                'changed' => __('Done. %d database rows were updated.', 'siteshifter'),
+                /* translators: %d: number of places */
+                'leftovers' => __('The old address still appears in %d places (see the list in Checks and history after a reload).', 'siteshifter'),
+                'noLeftovers' => __('The old address no longer appears anywhere in the database.', 'siteshifter'),
+                'login' => __('Your login session ends with the address change. Log in again at:', 'siteshifter'),
+                'rollback' => __('Undo: restore the database from the backup taken before the change', 'siteshifter'),
             ],
         ]);
     }
@@ -90,6 +98,15 @@ class Menu
                 . esc_html__('Writes and checks a 32 MB test file in small steps, the way a real export would. It shows whether long jobs can run on this host.', 'siteshifter')
                 . '</p><p><button class="button button-primary" data-ss-host-test>' . esc_html__('Run server test', 'siteshifter') . '</button></p>'
                 . '<div id="ss-host-test-progress"></div>';
+        } elseif ($current === 'address') {
+            $home = untrailingslashit((string) get_option('home'));
+            echo '<p>' . esc_html__('Changes the site address in the database (including serialized data, Elementor, ACF and WPML values). A full database backup is taken first so you can undo it.', 'siteshifter') . '</p>'
+                . '<form id="ss-address" onsubmit="return false"><table class="form-table" role="presentation"><tbody>'
+                . '<tr><th><label for="ss-old-url">' . esc_html__('Current address', 'siteshifter') . '</label></th><td><input type="url" id="ss-old-url" class="regular-text" value="' . esc_attr($home) . '"></td></tr>'
+                . '<tr><th><label for="ss-new-url">' . esc_html__('New address', 'siteshifter') . '</label></th><td><input type="url" id="ss-new-url" class="regular-text" placeholder="https://"></td></tr>'
+                . '</tbody></table><p><button class="button" id="ss-address-check">' . esc_html__('Run checks', 'siteshifter') . '</button> '
+                . '<button class="button button-primary" id="ss-address-start">' . esc_html__('Check and change address', 'siteshifter') . '</button></p></form>'
+                . '<div id="ss-address-report"></div><div id="ss-address-progress"></div><div id="ss-address-result"></div>';
         } else {
             echo '<p>' . esc_html__('This screen is coming in a later step.', 'siteshifter') . '</p>';
         }
