@@ -20,6 +20,14 @@ class Plugin
             return;
         }
 
+        $store = new Jobs\JobStore(WP_CONTENT_DIR . '/siteshifter-work');
+        $runner = new Jobs\Runner($store, [
+            'host_test' => static function ($job, $dir) {
+                return new Jobs\HostTestTask($dir);
+            },
+        ]);
+        (new Rest\Routes(new Rest\JobApi($runner)))->register();
+
         if (is_admin()) {
             (new Admin\Menu())->register();
         }
