@@ -414,7 +414,7 @@
 		};
 		wrap.innerHTML = '<p><label><input type="radio" name="ss-mode-' + id + '" class="ss-mode" value="replace" checked> ' + esc(t.replace) + '</label><br>' +
 			'<label><input type="radio" name="ss-mode-' + id + '" class="ss-mode" value="merge"> ' + esc(t.merge) + '</label></p>' +
-			'<div class="ss-merge" hidden><p>' + ['themes', 'plugins', 'media', 'other_files', 'settings', 'users'].map(sel).join('<br>') + '</p><p class="description">' + esc(t.note) + '</p></div>' +
+			'<div class="ss-merge" hidden><p>' + ['themes', 'plugins', 'media', 'other_files', 'settings', 'users', 'content', 'posts'].map(sel).join('<br>') + '</p><p class="description">' + esc(t.note) + '</p></div>' +
 			'<p><label><input type="checkbox" class="ss-ok"> ' + esc(cfg.i18n.confirmReplace) + '</label></p>' +
 			'<p><button class="button button-primary ss-go" disabled>' + esc(cfg.i18n.importNow) + '</button></p><div class="ss-imp-progress"></div><div class="ss-imp-result"></div>';
 		var modes = wrap.querySelectorAll('.ss-mode');
@@ -435,6 +435,9 @@
 				if (r.row_mismatches && r.row_mismatches.length) { html += '<p>' + esc(cfg.i18n.importMismatch.replace('%d', r.row_mismatches.length)) + '</p>'; }
 				if (r.merge) {
 					html += '<p>' + esc(cfg.i18n.mergeResult) + ' <code>' + esc(JSON.stringify(r.merge.files)) + '</code> <code>' + esc(JSON.stringify(r.merge.database)) + '</code></p>';
+				}
+				if (r.merge && r.merge.flags && r.merge.flags.length) {
+					html += '<p><strong>' + esc(cfg.i18n.mergeFlags) + '</strong></p><ul>' + r.merge.flags.slice(0, 50).map(function (f) { return '<li>' + esc(f.kind + ' ' + f.id + ': ' + f.what) + '</li>'; }).join('') + '</ul>';
 				}
 				html += '<p>' + esc(cfg.i18n.importLogin) + ' <a href="' + esc(cfg.loginUrl) + '">' + esc(cfg.loginUrl) + '</a></p>';
 				res.innerHTML = html;

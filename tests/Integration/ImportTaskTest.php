@@ -234,7 +234,7 @@ class ImportTaskTest extends DatabaseTestCase
         $view = $this->finish($runner, $runner->start('import', ['package' => 'x', 'mode' => 'merge', 'policy' => ['themes' => 'overwrite']]));
         $this->assertSame('done', $view['status'], (string) $view['error']);
         $this->assertSame('merge', $view['result']['mode']);
-        $this->assertFalse($view['result']['merge']['content_merged']);
+        $this->assertTrue($view['result']['merge']['content_merged']);
         $c = $this->dst . '/wp-content';
 
         // files: nothing deleted, new things added
@@ -246,7 +246,8 @@ class ImportTaskTest extends DatabaseTestCase
         $this->assertFileExists($c . '/plugins/other/o.php');
         $this->assertFileDoesNotExist($c . '/plugins/siteshifter/evil.php');
         // database: own posts and users stay, package users are added, address stays
-        $this->assertSame('Old post', $this->db->value('SELECT post_title FROM wp_posts'));
+        $this->assertSame('2', $this->db->value('SELECT COUNT(*) FROM wp_posts'), 'own post stays, package post is added');
+        $this->assertSame('see https://new.test/a', $this->db->value("SELECT post_content FROM wp_posts WHERE post_title = 'New post'"));
         $this->assertSame('2', $this->db->value('SELECT COUNT(*) FROM wp_users'));
         $this->assertSame('https://new.test', $this->db->value("SELECT option_value FROM wp_options WHERE option_name = 'siteurl'"));
         $this->assertSame('wp_capabilities', $this->db->value("SELECT meta_key FROM wp_usermeta WHERE meta_key LIKE '%capabilities'"));
@@ -256,6 +257,7 @@ class ImportTaskTest extends DatabaseTestCase
         });
         $this->assertTrue($actions->undo($view['id'])['undone']);
         $this->assertSame('1', $this->db->value('SELECT COUNT(*) FROM wp_users'));
+        $this->assertSame('Old post', $this->db->value('SELECT post_title FROM wp_posts'));
         $this->assertFileDoesNotExist($c . '/uploads/2026/new.txt');
         $this->assertFileDoesNotExist($c . '/themes/new/style.css');
         $this->assertFileExists($c . '/uploads/2020/old.txt');

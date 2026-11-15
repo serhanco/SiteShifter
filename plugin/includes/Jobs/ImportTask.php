@@ -383,6 +383,8 @@ class ImportTask implements Task
             $record['backups'] = array_column($r['copies'], 1);
             $record['stats'] = $r['stats'];
             $record['user_map'] = $r['user_map'];
+            $record['flags'] = $r['flags'];
+            $record['content'] = $r['content'];
             $record['state'] = 'live';
             $this->writeSwap($record);
             $prior = $record;
@@ -397,7 +399,7 @@ class ImportTask implements Task
         $state['result']['swapped'] = true;
         $state['result']['can_undo'] = true;
         $state['result']['mode'] = 'merge';
-        $state['result']['merge'] = ['files' => $counts, 'database' => $prior['stats'] ?? [], 'content_merged' => false];
+        $state['result']['merge'] = ['files' => $counts, 'database' => $prior['stats'] ?? [], 'content_merged' => !empty($prior['content']), 'flags' => $prior['flags'] ?? []];
 
         return true;
     }

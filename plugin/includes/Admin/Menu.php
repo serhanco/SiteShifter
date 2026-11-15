@@ -142,7 +142,7 @@ class Menu
                 'merge' => [
                     'replace' => __('Replace: the site becomes exactly the package (the current data is kept for undo).', 'siteshifter'),
                     'merge' => __('Merge: keep what is on this site, add what is new, and decide conflicts below.', 'siteshifter'),
-                    'note' => __('Merge never deletes anything and never changes the site address, the active plugins or the roles. Posts, pages and other content are not merged yet; use Replace for those.', 'siteshifter'),
+                    'note' => __('Merge never deletes anything and never changes the site address, the active plugins or the roles. Posts, comments and categories are added next to yours and their links (parent, author, featured image, categories) are translated; a link that cannot be translated is cleared and listed after the import. IDs stored inside page-builder data are not translated.', 'siteshifter'),
                     'labels' => [
                         'themes' => __('Same theme in both', 'siteshifter'),
                         'plugins' => __('Same plugin in both', 'siteshifter'),
@@ -150,6 +150,8 @@ class Menu
                         'other_files' => __('Same other file in both', 'siteshifter'),
                         'settings' => __('Same setting in both', 'siteshifter'),
                         'users' => __('Same user (e-mail or login) in both', 'siteshifter'),
+                        'content' => __('Posts, comments and categories of the package', 'siteshifter'),
+                        'posts' => __('Same post or page (type and slug) in both', 'siteshifter'),
                     ],
                     'choices' => \SiteShifter\Plugin\Import\MergePolicy::CHOICES,
                     'names' => [
@@ -159,8 +161,10 @@ class Menu
                         'rename' => __('keep both (new name)', 'siteshifter'),
                         'keep' => __('keep this site\'s', 'siteshifter'),
                         'map' => __('use the existing user', 'siteshifter'),
+                        'merge' => __('add them', 'siteshifter'),
                     ],
                 ],
+                'mergeFlags' => __('Links that could not be translated (cleared, please check):', 'siteshifter'),
                 'mergeResult' => __('Merge result (files by action, then database counts):', 'siteshifter'),
                 'importNow' => __('Import and replace this site', 'siteshifter'),
                 'importDone' => __('The import is finished and the site now runs the imported data.', 'siteshifter'),

@@ -20,9 +20,9 @@ class DbMerge
     const KEEP_LIVE = ['siteurl', 'home', 'active_plugins', 'db_version', 'initial_db_version', 'admin_email', 'blogname'];
 
     /** @return string[] live table names (without prefix) the merge changes */
-    public static function tables()
+    public static function tables($withContent = false)
     {
-        return ['options', 'users', 'usermeta'];
+        return $withContent ? array_merge(['options', 'users', 'usermeta'], ContentMerge::TABLES) : ['options', 'users', 'usermeta'];
     }
 
     /**
@@ -53,9 +53,10 @@ class DbMerge
     public static function apply(Connection $db, $stage, $live, $backupPrefix, MergePolicy $policy)
     {
         $copies = [];
+        $withContent = $policy->get('content') === 'merge' && ContentMerge::available($db, $stage);
         $existing = array_flip($db->tables($backupPrefix));
         $leftover = [];
-        foreach (self::tables() as $t) {
+        foreach (self::tables($withContent) as $t) {
             $bak = DbSwap::backupName($backupPrefix, $live . $t);
             if (isset($existing[$bak])) {
                 $leftover[] = [$live . $t, $bak];
@@ -65,16 +66,16 @@ class DbMerge
             self::undo($db, $leftover); // an earlier attempt died half way: go back to the start first
         }
         try {
-            return self::run($db, $stage, $live, $backupPrefix, $policy, $copies);
+            return self::run($db, $stage, $live, $backupPrefix, $policy, $copies, $withContent);
         } catch (\Throwable $e) {
             self::undo($db, $copies);
             throw $e;
         }
     }
 
-    private static function run(Connection $db, $stage, $live, $backupPrefix, MergePolicy $policy, array &$copies)
+    private static function run(Connection $db, $stage, $live, $backupPrefix, MergePolicy $policy, array &$copies, $withContent)
     {
-        foreach (self::tables() as $t) {
+        foreach (self::tables($withContent) as $t) {
             if (!in_array($live . $t, $db->tables($live), true)) {
                 continue;
             }
@@ -85,8 +86,14 @@ class DbMerge
         }
         $stats = self::options($db, $stage, $live, $policy);
         $map = self::users($db, $stage, $live, $policy, $stats);
+        $flags = [];
+        if ($withContent) {
+            $c = (new ContentMerge($db, $stage, $live, $map, $policy))->apply();
+            $stats = array_merge($stats, $c['stats']);
+            $flags = $c['flags'];
+        }
 
-        return ['copies' => $copies, 'user_map' => $map, 'stats' => $stats];
+        return ['copies' => $copies, 'user_map' => $map, 'stats' => $stats, 'flags' => $flags, 'content' => $withContent];
     }
 
     /** Puts the copied tables back. */

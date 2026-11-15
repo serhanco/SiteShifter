@@ -45,7 +45,7 @@ abstract class DatabaseTestCase extends TestCase
     protected function createWordPressTables(string $prefix = 'wp_'): void
     {
         $this->db->exec("CREATE TABLE {$prefix}options (option_id bigint unsigned NOT NULL AUTO_INCREMENT, option_name varchar(191) NOT NULL, option_value longtext NOT NULL, autoload varchar(20) NOT NULL DEFAULT 'yes', PRIMARY KEY (option_id), UNIQUE KEY option_name (option_name))");
-        $this->db->exec("CREATE TABLE {$prefix}posts (ID bigint unsigned NOT NULL AUTO_INCREMENT, post_content longtext NOT NULL, post_title text NOT NULL, guid varchar(255) NOT NULL DEFAULT '', post_type varchar(20) NOT NULL DEFAULT 'post', PRIMARY KEY (ID))");
+        $this->db->exec("CREATE TABLE {$prefix}posts (ID bigint unsigned NOT NULL AUTO_INCREMENT, post_content longtext NOT NULL, post_title text NOT NULL, guid varchar(255) NOT NULL DEFAULT '', post_type varchar(20) NOT NULL DEFAULT 'post', post_name varchar(200) NOT NULL DEFAULT '', post_parent bigint unsigned NOT NULL DEFAULT 0, post_author bigint unsigned NOT NULL DEFAULT 0, comment_count bigint NOT NULL DEFAULT 0, PRIMARY KEY (ID))");
         $this->db->exec("CREATE TABLE {$prefix}postmeta (meta_id bigint unsigned NOT NULL AUTO_INCREMENT, post_id bigint unsigned NOT NULL DEFAULT 0, meta_key varchar(255) DEFAULT NULL, meta_value longtext, PRIMARY KEY (meta_id))");
         $this->db->exec("CREATE TABLE {$prefix}icl_strings (lang varchar(7), value text)");
     }
