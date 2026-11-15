@@ -29,6 +29,16 @@ class Plugin
             'address_change' => static function ($job, $dir) use ($connect) {
                 return new Jobs\AddressChangeTask($dir, Runtime\Site::prefix(), $connect);
             },
+            'measure' => static function () use ($connect) {
+                return new Jobs\MeasureTask(untrailingslashit(ABSPATH), array_merge(\SiteShifter\Package\Archiver::DEFAULT_EXCLUDES, [Jobs\ExportTask::WORK_FOLDER]), static function () use ($connect) {
+                    $db = call_user_func($connect);
+
+                    return [
+                        'db' => \SiteShifter\Support\SizeScan::databaseBytes($db, $db->tables(Runtime\Site::prefix())),
+                        'free' => function_exists('disk_free_space') ? @disk_free_space(WP_CONTENT_DIR) : false,
+                    ];
+                });
+            },
             'export' => static function ($job, $dir) use ($connect) {
                 return new Jobs\ExportTask($dir, static function (array $options) use ($connect, $dir) {
                     return new \SiteShifter\Package\PackageBuilder(call_user_func($connect), untrailingslashit(ABSPATH), Runtime\Site::prefix(), $dir, $dir . '/package.zip', $options);
@@ -65,7 +75,14 @@ class Plugin
         $siteCheck = static function ($url) {
             return \SiteShifter\Support\SiteCheck::check($url);
         };
-        (new Rest\Routes(new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention)))->register();
+        $api = new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention);
+        $api->withEstimate(static function (array $measured, array $params) {
+            $threshold = isset($params['threshold_mb']) ? max(0, (int) $params['threshold_mb']) * 1048576 : \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD;
+            $report = \SiteShifter\Package\Estimate::report((array) $measured['bytes'], (int) $measured['db'], Jobs\ExportTask::scope($params), $measured['free'], $threshold ?: \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD);
+
+            return $report;
+        });
+        (new Rest\Routes($api))->register();
 
         if (is_admin()) {
             (new Admin\Menu())->register();

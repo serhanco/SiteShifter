@@ -205,20 +205,62 @@
 		r.addEventListener('change', function () { $('ss-custom').style.display = document.querySelector('input[name=ss-profile]:checked').value === 'custom' ? 'block' : 'none'; });
 	});
 
+	/* Measure first; warn about a huge uploads folder or too little disk and offer the "without media" way. */
+	function advise(box, rows) {
+		var progress = $('ss-export-progress'), choice = $('ss-export-choice');
+		choice.innerHTML = '';
+		box.insertAdjacentHTML('beforeend', '<p>' + esc(cfg.i18n.measuring) + '</p>');
+		return J.run('measure', {}, progress).then(function (m) {
+			if (!m || m.status !== 'done') { return false; }
+			var p = scopeParams();
+			p.threshold_mb = Math.round((parseFloat($('ss-threshold').value) || 2) * 1024);
+			try { window.localStorage.setItem('ssThreshold', $('ss-threshold').value); } catch (e) { /* optional */ }
+			return J.call('estimate', { id: m.id, params: p }, J.ui(progress)).then(function (e) {
+				J.call('delete', { id: m.id }, J.ui(progress));
+				if (!e.ok) { box.textContent = e.message; return false; }
+				J.renderReport(box, rows.concat(e.rows));
+				if (e.rows.some(function (r) { return r.level === 'block'; }) && !e.recommend_no_media) { return false; }
+				if (!e.recommend_no_media) { return true; }
+				return new Promise(function (resolve) {
+					choice.innerHTML = '<p><button class="button button-primary" id="ss-no-media">' + esc(cfg.i18n.useNoMedia) + '</button> <button class="button" id="ss-go-anyway">' + esc(cfg.i18n.continueAnyway) + '</button></p>';
+					$('ss-no-media').addEventListener('click', function (ev) {
+						ev.preventDefault();
+						document.querySelector('input[name=ss-profile][value=custom]').checked = true;
+						$('ss-custom').style.display = 'block';
+						var m2 = document.querySelector('.ss-part[data-part=media]'); if (m2) { m2.checked = false; }
+						choice.innerHTML = '<p>' + esc(cfg.i18n.mediaOffNote) + '</p>';
+						resolve(false);
+					});
+					$('ss-go-anyway').addEventListener('click', function (ev) {
+						ev.preventDefault();
+						choice.innerHTML = '';
+						if (e.rows.some(function (r) { return r.level === 'block'; })) { resolve(false); } else { resolve(true); }
+					});
+				});
+			});
+		});
+	}
+	try { var saved = window.localStorage.getItem('ssThreshold'); if (saved) { $('ss-threshold').value = saved; } } catch (err) { /* optional */ }
+
 	$('ss-export-start').addEventListener('click', function (e) {
 		e.preventDefault();
 		var btn = e.target, box = $('ss-export-report');
 		btn.disabled = true;
 		box.textContent = cfg.i18n.checking;
+		var rows = [];
 		J.call('checks', { params: scopeParams() }, J.ui(box)).then(function (r) {
 			if (!r.ok) { box.textContent = r.message; return null; }
-			J.renderReport(box, r.results);
+			rows = r.results;
+			J.renderReport(box, rows);
 			if (r.blockers) { return null; }
-			var scope = document.querySelector('input[name=ss-scope]:checked').value;
-			var params = scopeParams();
-			params.scope = scope;
-			params.all_tables = $('ss-all-tables').checked ? 1 : 0;
-			return J.run('export', params, $('ss-export-progress'));
+			return advise(box, rows).then(function (go) {
+				if (!go) { return null; }
+				var scope = document.querySelector('input[name=ss-scope]:checked').value;
+				var params = scopeParams();
+				params.scope = scope;
+				params.all_tables = $('ss-all-tables').checked ? 1 : 0;
+				return J.run('export', params, $('ss-export-progress'));
+			});
 		}).then(function (job) {
 			btn.disabled = false;
 			if (!job || job.status !== 'done' || !job.result) { return; }

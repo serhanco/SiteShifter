@@ -53,6 +53,7 @@ class Routes
             '/jobs/(?P<id>[a-f0-9]{32})' => ['GET', 'status', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/step' => ['POST', 'step', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/resume' => ['POST', 'resume', $idArg],
+            '/jobs/(?P<id>[a-f0-9]{32})/estimate' => ['POST', 'estimate', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/cancel' => ['POST', 'cancel', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/download_link' => ['POST', 'download_link', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/delete' => ['POST', 'delete', $idArg],
