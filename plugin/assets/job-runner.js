@@ -11,6 +11,8 @@
 		if (transport === 'rest') {
 			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention' }[op];
 			var inc = { upload_begin: 'incoming/begin', incoming: 'incoming', upload_end: 'end', incoming_delete: 'delete', import_check: 'check' }[op];
+			var imp = { imports: 'imports', import_undo: 'imports/' + payload.id + '/undo', import_discard: 'imports/' + payload.id + '/discard' }[op];
+			if (imp) { return fetch(cfg.restUrl + imp, { method: 'POST', headers: { 'X-WP-Nonce': cfg.restNonce, 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', body: JSON.stringify(payload) }); }
 			var url = cfg.restUrl + (inc ? (payload.id && inc.indexOf('/') < 0 && inc !== 'incoming' ? 'incoming/' + payload.id + '/' + inc : inc) : (path ? path : 'jobs' + (payload.id ? '/' + payload.id + '/' + op : '')));
 			if (op === 'status') {
 				return fetch(url.replace(/\/status$/, ''), { headers: { 'X-WP-Nonce': cfg.restNonce }, credentials: 'same-origin', cache: 'no-store' });
@@ -404,6 +406,58 @@
 		});
 	}
 
+	/* Replace-mode import: confirmation, live progress, result, undo. */
+	function importControls(id) {
+		var wrap = document.createElement('div');
+		wrap.innerHTML = '<p><label><input type="checkbox" class="ss-ok"> ' + esc(cfg.i18n.confirmReplace) + '</label></p>' +
+			'<p><button class="button button-primary ss-go" disabled>' + esc(cfg.i18n.importNow) + '</button></p><div class="ss-imp-progress"></div><div class="ss-imp-result"></div>';
+		var ok = wrap.querySelector('.ss-ok'), go = wrap.querySelector('.ss-go');
+		ok.addEventListener('change', function () { go.disabled = !ok.checked; });
+		go.addEventListener('click', function (e) {
+			e.preventDefault();
+			go.disabled = true; ok.disabled = true;
+			var res = wrap.querySelector('.ss-imp-result');
+			J.run('import', { package: id }, wrap.querySelector('.ss-imp-progress')).then(function (job) {
+				if (!job || job.status !== 'done') { return; }
+				var r = job.result || {}, html = '<div class="notice notice-success inline"><p><strong>' + esc(cfg.i18n.importDone) + '</strong></p></div>';
+				if (r.leftovers && r.leftovers.length) { html += '<p>' + esc(cfg.i18n.importLeftovers.replace('%d', r.leftovers.length)) + '</p>'; }
+				if (r.row_mismatches && r.row_mismatches.length) { html += '<p>' + esc(cfg.i18n.importMismatch.replace('%d', r.row_mismatches.length)) + '</p>'; }
+				html += '<p>' + esc(cfg.i18n.importLogin) + ' <a href="' + esc(cfg.loginUrl) + '">' + esc(cfg.loginUrl) + '</a></p>';
+				res.innerHTML = html;
+				imports();
+			});
+		});
+		return wrap;
+	}
+
+	function imports() {
+		var box = $('ss-imports');
+		if (!box) { return; }
+		J.call('imports', { params: {} }, J.ui(box)).then(function (r) {
+			if (!r.ok || !r.imports.length) { box.textContent = ''; return; }
+			box.innerHTML = '<h2>' + esc(cfg.i18n.appliedImports) + '</h2><table class="widefat striped"><tbody>' + r.imports.map(function (i) {
+				return '<tr><td>' + esc(new Date(i.created * 1000).toLocaleString()) + '</td><td>' + esc(cfg.i18n.importStates[i.state] || i.state) + '</td><td>' +
+					(i.can_undo ? '<button class="button ss-undo" data-imp="' + i.id + '">' + esc(cfg.i18n.undoImport) + '</button> ' : '') +
+					(i.can_discard ? '<button class="button ss-discard" data-imp="' + i.id + '">' + esc(cfg.i18n.discardBackup) + '</button>' : '') + '</td></tr>';
+			}).join('') + '</tbody></table>';
+		});
+	}
+
+	if ($('ss-imports')) {
+		$('ss-imports').addEventListener('click', function (e) {
+			var t = e.target, id = t.getAttribute && t.getAttribute('data-imp');
+			if (!id) { return; }
+			e.preventDefault();
+			var undo = t.classList.contains('ss-undo');
+			if (!window.confirm(undo ? cfg.i18n.confirmUndo : cfg.i18n.confirmDiscard)) { return; }
+			t.disabled = true;
+			J.call(undo ? 'import_undo' : 'import_discard', { id: id }, J.ui($('ss-imports'))).then(function (r) {
+				if (!r.ok) { window.alert(r.message); }
+				imports();
+			});
+		});
+	}
+
 	$('ss-upload').addEventListener('click', function (e) {
 		e.preventDefault();
 		var f = $('ss-file').files[0], btn = e.target;
@@ -438,8 +492,10 @@
 				J.renderReport(holder, r.rows);
 				box.innerHTML = head;
 				box.appendChild(holder);
+				if (!r.blockers && s) { box.appendChild(importControls(id)); }
 			});
 		}
 	});
 	list();
+	imports();
 })();

@@ -85,13 +85,7 @@ class Inspector
             $rows[] = $this->row('plan_address', Result::INFO, 'Address change', 'Addresses inside the content will change from ' . $old . ' to ' . $new . ' (serialized data, Elementor, ACF and WPML values included).');
         }
         if (!empty($m['site']['table_prefix']) && !empty($target['prefix']) && $m['site']['table_prefix'] !== $target['prefix']) {
-            $rows[] = $this->row(
-                'plan_prefix',
-                Result::BLOCK,
-                'Different table prefix',
-                'The package uses the prefix "' . $m['site']['table_prefix'] . '" but this site uses "' . $target['prefix'] . '".',
-                'Not supported yet in the plugin. Use installer.php or the command line, which rewrite the prefix, or give this site the same prefix.'
-            );
+            $rows[] = $this->row('plan_prefix', Result::INFO, 'Table prefix', 'The package uses the prefix "' . $m['site']['table_prefix'] . '"; this site uses "' . $target['prefix'] . '". The tables are renamed to this site\'s prefix during the import, so wp-config.php stays as it is.');
         }
         if (!empty($m['site']['multisite'])) {
             $rows[] = $this->row('plan_multisite', Result::BLOCK, 'Multisite package', 'The package comes from a multisite network.', 'Network packages are not supported in this version.');
