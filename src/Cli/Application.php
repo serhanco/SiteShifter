@@ -46,6 +46,8 @@ class Application
                     return $this->install($options, false);
                 case 'replace':
                     return $this->replace($options);
+                case 'check':
+                    return $this->check($options);
                 case 'version':
                 case '--version':
                     $this->line('SiteShifter ' . self::VERSION . ' by Serhan Demirel (https://serhandemirel.com)');
@@ -108,6 +110,7 @@ class Application
             'old_url' => $o['old-url'] ?? null,
             'old_path' => $o['old-path'] ?? null,
             'core_zip' => $o['core-zip'] ?? null,
+            'proxy_https' => !isset($o['no-proxy-https']),
         ]);
         $inspection = $installer->inspect();
         $report = $installer->preflight($inspection);
@@ -148,6 +151,29 @@ class Application
         $installer->cleanup(isset($o['delete-uploads']));
 
         return 0;
+    }
+
+    /** Looks at the live address and prints what to fix (Cloudflare SSL mode, loops, mixed content ...). */
+    private function check(array $o): int
+    {
+        $url = (string) ($o['url'] ?? '');
+        if (!preg_match('#^https?://#i', $url)) {
+            throw new \InvalidArgumentException('--url=https://your-site.com is required.');
+        }
+        $notes = \SiteShifter\Support\SiteCheck::check($url);
+        $blocked = false;
+        foreach ($notes as $n) {
+            $blocked = $blocked || $n['level'] === 'block';
+            $this->line(strtoupper($n['level']) . '  ' . $n['title'] . ': ' . $n['message']);
+            if ($n['fix'] !== '') {
+                $this->line('      Fix: ' . $n['fix']);
+            }
+        }
+        if ($notes === []) {
+            $this->line('OK  No problems found at ' . $url);
+        }
+
+        return $blocked ? 1 : 0;
     }
 
     private function replace(array $o): int
@@ -245,7 +271,8 @@ by Serhan Demirel · https://serhandemirel.com
   export     --path=/var/www/site [--out=site.zip] [--scope=root|wp-content] [--all-tables]
   preflight  --dir=/new/site --url=https://new.com --db-name= --db-user= [--db-pass=] [--db-host=]
              (--zip=package.zip | --zip=files.zip --sql=dump.sql | --sql=dump.sql)
-  install    same as preflight, plus [--yes] [--old-url=] [--old-path=] [--core-zip=] [--delete-uploads]
+  check      --url=https://new.com   (diagnoses Cloudflare/proxy, SSL, redirect and mixed-content problems on the live site)
+  install    same as preflight, plus [--yes] [--old-url=] [--old-path=] [--core-zip=] [--delete-uploads] [--no-proxy-https]
   replace    --path=/var/www/site --from=http://old.test --to=https://new.com [--from-path= --to-path=]
 TXT
         );

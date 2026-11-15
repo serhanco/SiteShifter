@@ -50,6 +50,14 @@ bin/siteshifter replace --path=/var/www/site --from=http://old.test --to=https:/
 
 With WP-CLI: `wp --require=/path/to/siteshifter/wp-cli.php siteshifter export|replace|preflight`.
 
+### https, proxies and www
+
+If the new address is `https://`, every old `http://` / `https://` / `www` / protocol-relative / JSON-escaped variant of the old address becomes that https address, also when the domain stays the same. For sites behind Cloudflare or any other proxy or CDN, a small block is added to `wp-config.php` so WordPress trusts the proxy's scheme header (`X-Forwarded-Proto`, `CF-Visitor`, ...). Switch it off with `--no-proxy-https` (CLI) or the Advanced checkbox (installer). The pre-flight report warns about https→http, www / non-www differences, a missing DNS record or certificate for the other spelling, and Cloudflare SSL mode (use Full or Full (strict)).
+
+### Check the live site (Cloudflare and other proxies)
+
+`bin/siteshifter check --url=https://new.com` (or the "Check the live site" button on the installer's last screen) opens the address like a visitor and names the exact setting to change: redirect loops (Cloudflare SSL mode Flexible), Cloudflare errors 520-526, certificate problems, https falling back to http, plain http not redirecting, mixed content, stale Cloudflare cache and other proxies' headers. Run it after the DNS record points to the new server.
+
 ### What happens on the new server
 
 `backup` (existing tables renamed, wp-config.php saved) → `extract` → `core` → `config` → `import` → `replace` → `finalize` (caches with old URLs cleared, server-specific drop-ins disabled, `.user.ini`/`.htaccess` paths fixed) → `verify` (leftover scan, row counts, licence to-do list). Every step is resumable, so short PHP time limits are not a problem. If a step fails, the previous tables and wp-config.php can be restored.

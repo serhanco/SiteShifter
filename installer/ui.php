@@ -145,6 +145,7 @@ function ss_settings(string $dir, array $in): array
         'new_url' => rtrim(trim($in['new_url'] ?? ''), '/'),
         'old_url' => trim($in['old_url'] ?? '') ?: null,
         'old_path' => trim($in['old_path'] ?? '') ?: null,
+        'proxy_https' => ($in['proxy_https'] ?? '1') !== '0',
     ];
 }
 
@@ -159,7 +160,7 @@ function ss_deadline(): float
 
 function ss_current_url(): string
 {
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    $https = \SiteShifter\Support\Https::isSecureRequest($_SERVER);
     $path = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
 
     return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $path;
@@ -222,6 +223,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 ss_json(['ok' => true]);
                 // no break
+            case 'sitecheck':
+                $session = ss_store($ssWork . '/session.php');
+                $target = (string) ($session['settings']['new_url'] ?? ($_POST['new_url'] ?? ''));
+                if (!preg_match('#^https?://#i', $target)) {
+                    ss_json(['error' => 'No address to check.'], 400);
+                }
+                ss_json(['url' => $target, 'notes' => \SiteShifter\Support\SiteCheck::check($target)]);
+                // no break
             case 'cleanup':
                 $session = ss_store($ssWork . '/session.php');
                 if ($session) {
@@ -252,6 +261,7 @@ $ssDefaultUrl = ss_current_url();
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 main{max-width:760px;margin:0 auto;padding:24px 16px 64px}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}
 .sub{color:var(--muted);margin:0 0 24px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:16px}
+label.check{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:14px}label.check input{width:auto;margin-top:3px}
 label{display:block;font-weight:600;margin:12px 0 4px;font-size:14px}input,select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:560px){.row{grid-template-columns:1fr}}
 .hint{color:var(--muted);font-size:13px;font-weight:400}button{font:inherit;font-weight:600;padding:10px 18px;border-radius:7px;border:0;background:var(--accent);color:#fff;cursor:pointer}
@@ -293,6 +303,7 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
     <details><summary>Advanced</summary>
       <label>Old site URL <span class="hint">— read from the database when empty</span></label><input id="old_url" placeholder="https://old-domain.com">
       <label>Old server path <span class="hint">— guessed when empty, e.g. /home/user/public_html</span></label><input id="old_path">
+      <label class="check"><input type="checkbox" id="proxy_https" checked> Trust a proxy's https header in wp-config.php <span class="hint">— needed behind Cloudflare or a load balancer; only added for https addresses</span></label>
     </details>
     <div class="actions"><button id="btn-check">Check everything</button></div>
     <p id="setup-error" class="err"></p>
@@ -320,7 +331,8 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
   <section class="card hidden" id="s-done">
     <h2>Done</h2>
     <div id="result"></div>
-    <div class="actions"><a id="lnk-site" target="_blank"><button>Open the site</button></a><a id="lnk-admin" target="_blank"><button class="secondary">Open wp-admin</button></a></div>
+    <div class="actions"><a id="lnk-site" target="_blank"><button>Open the site</button></a><a id="lnk-admin" target="_blank"><button class="secondary">Open wp-admin</button></a><button class="secondary" id="btn-sitecheck">Check the live site</button></div>
+    <div id="sitecheck" class="hint"></div>
     <h2 style="margin-top:24px">Clean up</h2>
     <p class="hint">Removes installer.php and its work folder. Do this now: the installer must not stay on a live site.</p>
     <label style="font-weight:400"><input type="checkbox" id="rm-uploads" style="width:auto" checked> Also delete the uploaded zip and SQL files</label>
@@ -342,12 +354,21 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
     if (!res.ok || json.error) { const err = new Error(json.error || ('HTTP ' + res.status)); err.data = json; throw err; }
     return json;
   }
-  function values(){ const o = {}; fields.forEach(f => o[f] = $(f).value); return o; }
+  function values(){ const o = {}; fields.forEach(f => o[f] = $(f).value); o.proxy_https = $('proxy_https').checked ? '1' : '0'; return o; }
+  $('new_url').addEventListener('input', () => { $('new_url').dataset.touched = '1'; });
 
   async function check(){
     $('setup-error').textContent = ''; $('btn-check').disabled = true; $('btn-check').textContent = 'Checking…';
     try {
       const r = await post('check', values());
+      // The page may have been opened over http; keep the site's https unless the user typed an address.
+      const cur = $('new_url').value;
+      if (!$('new_url').dataset.touched && r.old_url && /^https:\/\//i.test(r.old_url) && /^http:\/\//i.test(cur)
+          && cur.replace(/^http:\/\//i, '').split('/')[0].toLowerCase() === r.old_url.replace(/^https:\/\//i, '').split('/')[0].toLowerCase()) {
+        $('new_url').value = cur.replace(/^http:/i, 'https:');
+        $('btn-check').disabled = false; $('btn-check').textContent = 'Check everything';
+        return check();
+      }
       lastReport = r;
       if (!$('old_url').value && r.old_url) $('old_url').placeholder = r.old_url;
       if (!$('old_path').value && r.old_path) $('old_path').placeholder = r.old_path;
@@ -410,7 +431,8 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
     if (res.needs_db_upgrade) h += '<li><strong>WordPress is newer than the database:</strong> open <a target="_blank" href="'+esc(url)+'/wp-admin/upgrade.php">wp-admin/upgrade.php</a> once.</li>';
     h += '</ul>';
     const lic = res.licences.filter(l => l.id !== 'domain_services');
-    h += '<h2 style="margin-top:20px">To do on the new domain</h2><ul class="check">' + lic.concat(res.licences.filter(l => l.id === 'domain_services')).map(l => '<li><label style="font-weight:400;display:inline"><input type="checkbox" style="width:auto"> <strong>'+esc(l.title)+':</strong> '+esc(l.fix)+'</label></li>').join('') + '</ul>';
+    const addr = (res.address_notes || []).map(n => ({title: n.title, fix: n.fix || n.message}));
+    h += '<h2 style="margin-top:20px">To do on the new domain</h2><ul class="check">' + addr.concat(lic, res.licences.filter(l => l.id === 'domain_services')).map(l => '<li><label style="font-weight:400;display:inline"><input type="checkbox" style="width:auto"> <strong>'+esc(l.title)+':</strong> '+esc(l.fix)+'</label></li>').join('') + '</ul>';
     $('result').innerHTML = h;
     $('s-run').classList.add('hidden'); $('s-done').classList.remove('hidden'); $('s-done').scrollIntoView({behavior:'smooth'});
   }
@@ -424,6 +446,13 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
   $('btn-check').onclick = check; $('btn-recheck').onclick = check; $('btn-start').onclick = start;
   $('ack').onchange = () => { $('btn-start').disabled = !$('ack').checked || (lastReport && lastReport.blocked); };
   $('btn-retry').onclick = loop;
+  $('btn-sitecheck').onclick = async () => {
+    const box = $('sitecheck'); box.textContent = 'Checking the live address…';
+    try {
+      const r = await post('sitecheck');
+      box.innerHTML = r.notes.length ? '<ul class="check">' + r.notes.map(n => '<li><strong>'+esc(n.title)+':</strong> '+esc(n.message)+(n.fix?'<br><em>'+esc(n.fix)+'</em>':'')+'</li>').join('') + '</ul>' : 'No problems found at ' + esc(r.url) + '.';
+    } catch (e) { box.textContent = e.message; }
+  };
   $('btn-rollback').onclick = async () => { if (!confirm('Restore the tables and wp-config.php that were here before?')) return; try { await post('rollback'); $('run-error').textContent = 'The previous state was restored.'; } catch (e) { $('run-error').textContent = e.message; } };
   $('btn-cleanup').onclick = cleanup;
 })();

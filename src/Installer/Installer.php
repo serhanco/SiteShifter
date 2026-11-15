@@ -29,6 +29,7 @@ use SiteShifter\Replace\Replacer;
  *  - db           [host, user, pass, name]
  *  - new_url      the new site address
  *  - old_url      override for the old address (defaults to the one in the dump)
+ *  - proxy_https  add the wp-config block that trusts a proxy's https header (default true; only used for https addresses)
  *  - old_path     override for the old server path (guessed from the dump when missing)
  *  - core_zip     a local WordPress zip to use instead of downloading one
  */
@@ -122,6 +123,7 @@ class Installer
             'target_wp_db_version' => $core['wp_db_version'],
             'target_dir' => $this->dir,
             'new_url' => $this->settings['new_url'] ?? '',
+            'old_url' => $this->settings['old_url'] ?? null,
             'package_bytes' => $inspection['sizes']['package'],
             'unpacked_bytes' => $inspection['sizes']['unpacked'] + ($layout && !$layout['has_core'] ? 80 * 1048576 : 0),
             'needs_zip' => $zip !== null,
@@ -349,7 +351,7 @@ class Installer
         if ($zip && $state['inspection']['layout']['has_config']) {
             $source = Extractor::readEntry($zip, $state['inspection']['layout'], 'wp-config.php');
         }
-        $config = (new ConfigWriter())->write($source, $this->settings['db'], $manifest['site']['table_prefix'], $this->settings['new_url'], $this->dir);
+        $config = (new ConfigWriter())->write($source, $this->settings['db'], $manifest['site']['table_prefix'], $this->settings['new_url'], $this->dir, $this->settings['proxy_https'] ?? true);
         if (file_put_contents($this->dir . '/wp-config.php', $config) === false) {
             $this->fail('Could not write wp-config.php.');
         }
@@ -452,6 +454,7 @@ class Installer
             })),
             'backup_tables' => $state['backup_tables'],
             'needs_db_upgrade' => $this->needsDbUpgrade($manifest),
+            'address_notes' => $this->addressNotes($state),
         ];
 
         return true;
@@ -495,6 +498,28 @@ class Installer
         if (is_file($this->work . '/wp-config.backup.php')) {
             copy($this->work . '/wp-config.backup.php', $this->dir . '/wp-config.php');
         }
+    }
+
+    /**
+     * Things to do (or know) after an address change: www / non-www redirect,
+     * https upgrade, and the proxy block that was added to wp-config.php.
+     *
+     * @return array<int,array{id:string,title:string,message:string,fix:string}>
+     */
+    private function addressNotes(array $state): array
+    {
+        $manifest = $state['inspection']['manifest'];
+        $old = (string) ($this->settings['old_url'] ?? ($manifest['site']['home'] ?: $manifest['site']['url']));
+        $notes = [];
+        foreach ((new Preflight())->address($old, (string) $this->settings['new_url'])->all() as $result) {
+            $notes[] = ['id' => $result->id, 'title' => $result->title, 'message' => (string) $result->message, 'fix' => (string) $result->fix];
+        }
+        $config = (string) @file_get_contents($this->dir . '/wp-config.php');
+        if (strpos($config, \SiteShifter\Support\Https::MARKER_BEGIN) !== false) {
+            $notes[] = ['id' => 'proxy_https', 'title' => 'wp-config.php', 'message' => '', 'fix' => 'A small block was added that makes WordPress trust the https header of a proxy or CDN (Cloudflare, load balancer). Behind Cloudflare use SSL mode Full (strict) once the server has a valid certificate.'];
+        }
+
+        return $notes;
     }
 
     public function replacementMap(array $state): ReplacementMap
