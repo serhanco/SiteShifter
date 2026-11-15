@@ -1,0 +1,23 @@
+{
+    "name": "serhanco/siteshifter",
+    "description": "Shift WordPress sites safely: pre-flight checks, packaging, installer and serialization-safe domain replacement.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [{ "name": "Serhan Demirel", "homepage": "https://serhandemirel.com" }],
+    "homepage": "https://github.com/serhanco/SiteShifter",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": { "SiteShifter\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "SiteShifter\\Tests\\": "tests/" }
+    },
+    "bin": ["bin/siteshifter"],
+    "config": { "platform": { "php": "7.4.33" }, "sort-packages": true },
+    "scripts": { "test": "phpunit" }
+}
