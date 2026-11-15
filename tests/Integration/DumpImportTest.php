@@ -122,12 +122,14 @@ SQL;
 
         $available = array_flip(array_column($this->db->rows('SHOW COLLATION'), 'Collation'));
         $plan = Preflight::collationPlan($info['db']['collations'], $available);
-        $this->assertSame(['utf8mb4_0900_ai_ci' => 'utf8mb4_unicode_520_ci'], $plan['convert']);
+        // MySQL 8 knows the 0900 collations; MariaDB and MySQL 5.7 need them converted.
+        $expected = isset($available['utf8mb4_0900_ai_ci']) ? [] : ['utf8mb4_0900_ai_ci' => 'utf8mb4_unicode_520_ci'];
+        $this->assertSame($expected, $plan['convert']);
 
         (new Importer($this->db, $file, $plan['convert']))->runAll();
         $this->assertSame('https://test.example.com', $this->db->value("SELECT option_value FROM xyz_options WHERE option_name='home'"));
         $this->assertSame('1', $this->db->value('SELECT a FROM xyz_v'));
-        $this->assertStringContainsString('utf8mb4_unicode_520_ci', $this->db->rows('SHOW CREATE TABLE xyz_options')[0]['Create Table']);
+        $this->assertStringContainsString($expected === [] ? 'utf8mb4_0900_ai_ci' : 'utf8mb4_unicode_520_ci', $this->db->rows('SHOW CREATE TABLE xyz_options')[0]['Create Table']);
     }
 
     public function testBackupAndRestoreExistingTables(): void

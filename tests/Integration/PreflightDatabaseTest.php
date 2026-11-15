@@ -16,8 +16,13 @@ class PreflightDatabaseTest extends DatabaseTestCase
         ]]);
         $this->assertSame(Result::OK, $report->get('db_connect')->level);
         $this->assertSame(Result::OK, $report->get('db_privileges')->level);
-        $this->assertSame(Result::WARN, $report->get('db_collation')->level, 'MariaDB has no 0900 collations');
-        $this->assertStringContainsString('utf8mb4_0900_ai_ci → utf8mb4_unicode_520_ci', $report->get('db_collation')->message);
+        $has0900 = $this->db->value("SHOW COLLATION LIKE 'utf8mb4_0900_ai_ci'") !== null;
+        if ($has0900) {
+            $this->assertSame(Result::OK, $report->get('db_collation')->level, 'MySQL 8 supports the source collations');
+        } else {
+            $this->assertSame(Result::WARN, $report->get('db_collation')->level, 'MariaDB has no 0900 collations');
+            $this->assertStringContainsString('utf8mb4_0900_ai_ci → utf8mb4_unicode_520_ci', $report->get('db_collation')->message);
+        }
         $this->assertSame(Result::WARN, $report->get('db_existing_tables')->level);
         $this->assertSame(Result::WARN, $report->get('db_foreign_tables')->level);
         $this->assertNull($report->get('db_packet'));
