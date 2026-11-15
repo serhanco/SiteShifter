@@ -21,12 +21,30 @@ class Plugin
         }
 
         $store = new Jobs\JobStore(WP_CONTENT_DIR . '/siteshifter-work');
+        $connect = ['SiteShifter\\Plugin\\Runtime\\Site', 'connection'];
         $runner = new Jobs\Runner($store, [
             'host_test' => static function ($job, $dir) {
                 return new Jobs\HostTestTask($dir);
             },
+            'address_change' => static function ($job, $dir) use ($connect) {
+                return new Jobs\AddressChangeTask($dir, Runtime\Site::prefix(), $connect);
+            },
+            'rollback' => static function ($job, $dir) use ($store, $connect) {
+                $source = (string) ($job['params']['job'] ?? '');
+                $file = Jobs\JobStore::validId($source) ? $store->dir($source) . '/backup.sql' : '';
+
+                return new Jobs\RollbackTask($file, $connect);
+            },
         ]);
-        (new Rest\Routes(new Rest\JobApi($runner)))->register();
+        $checks = static function ($newUrl) {
+            $report = (new \SiteShifter\Preflight\Preflight())->run(Runtime\Site::preflightContext($newUrl));
+
+            return ['blockers' => $report->hasBlockers(), 'results' => $report->toArray()];
+        };
+        $siteCheck = static function ($url) {
+            return \SiteShifter\Support\SiteCheck::check($url);
+        };
+        (new Rest\Routes(new Rest\JobApi($runner, $checks, $siteCheck)))->register();
 
         if (is_admin()) {
             (new Admin\Menu())->register();

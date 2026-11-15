@@ -31,6 +31,22 @@ class PluginBuildTest extends TestCase
         $this->assertGreaterThan(20, $count);
     }
 
+    public function testPluginCodeKeepsItsOwnNamespaceAndPointsAtThePrefixedCore(): void
+    {
+        $root = dirname(__DIR__, 2);
+        exec('php ' . escapeshellarg($root . '/bin/build-plugin.php') . ' 2>&1', $out, $rc);
+        $this->assertSame(0, $rc, implode("\n", $out));
+        $dir = $root . '/dist/siteshifter/includes';
+        $this->assertStringContainsString('namespace SiteShifter\\Plugin;', file_get_contents($dir . '/Plugin.php'));
+        $this->assertStringContainsString('use SiteShifter\\Core\\Database\\Dumper;', file_get_contents($dir . '/Jobs/AddressChangeTask.php'));
+        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $f) {
+            if ($f->getExtension() === 'php') {
+                $this->assertSame(0, preg_match('/(?<![A-Za-z0-9_])SiteShifter\\\\(?!Plugin\\b|Core\\b)(?=[A-Z])/', file_get_contents($f->getPathname())), $f->getPathname());
+            }
+        }
+    }
+
     public function testPluginHeaderMatchesReadmeVersion(): void
     {
         $root = dirname(__DIR__, 2) . '/plugin';

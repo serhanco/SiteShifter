@@ -20,9 +20,17 @@ class JobApi
     /** @var Runner */
     private $runner;
 
-    public function __construct(Runner $runner)
+    /** @var callable|null function (string $newUrl): array  runs the pre-flight report */
+    private $checks;
+
+    /** @var callable|null function (string $url): array  live site check */
+    private $siteCheck;
+
+    public function __construct(Runner $runner, $checks = null, $siteCheck = null)
     {
         $this->runner = $runner;
+        $this->checks = $checks;
+        $this->siteCheck = $siteCheck;
     }
 
     /**
@@ -50,6 +58,15 @@ class JobApi
                     );
 
                     return ['ok' => true, 'job' => $this->runner->step($this->id($input), $deadline)];
+                case 'checks':
+                    return $this->checks ? ['ok' => true] + call_user_func($this->checks, (string) ($input['params']['new_url'] ?? '')) : $this->fail('unavailable', 'Checks are not available.');
+                case 'site_check':
+                    $url = (string) ($input['params']['url'] ?? '');
+                    if (!preg_match('#^https?://[^\s/]+#i', $url)) {
+                        return $this->fail('invalid', 'Enter an address starting with http:// or https://.');
+                    }
+
+                    return $this->siteCheck ? ['ok' => true, 'notes' => call_user_func($this->siteCheck, $url)] : $this->fail('unavailable', 'Site check is not available.');
                 case 'status':
                     return ['ok' => true, 'job' => $this->runner->get($this->id($input))];
                 case 'resume':
@@ -60,7 +77,7 @@ class JobApi
 
             return $this->fail('unknown_op', 'Unknown operation.');
         } catch (\InvalidArgumentException $e) {
-            return $this->fail('not_found', $e->getMessage());
+            return $this->fail($op === 'start' ? 'invalid' : 'not_found', $e->getMessage());
         } catch (\Throwable $e) {
             return $this->fail('server_error', $e->getMessage());
         }
