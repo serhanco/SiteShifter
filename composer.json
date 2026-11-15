@@ -15,7 +15,7 @@
         "psr-4": { "SiteShifter\\": "src/" }
     },
     "autoload-dev": {
-        "psr-4": { "SiteShifter\\Tests\\": "tests/" }
+        "psr-4": { "SiteShifter\\Tests\\": "tests/", "SiteShifter\\Plugin\\": "plugin/includes/" }
     },
     "bin": ["bin/siteshifter"],
     "config": { "platform": { "php": "7.4.33" }, "sort-packages": true },
