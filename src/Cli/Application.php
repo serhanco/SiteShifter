@@ -9,6 +9,7 @@ use SiteShifter\Package\PackageBuilder;
 use SiteShifter\Package\Scope;
 use SiteShifter\Replace\ReplacementMap;
 use SiteShifter\Replace\Replacer;
+use SiteShifter\Support\Problem;
 use SiteShifter\Support\WpConfigReader;
 
 /**
@@ -58,7 +59,7 @@ class Application
                     return $command === 'help' ? 0 : 1;
             }
         } catch (\Throwable $e) {
-            $this->line('Error: ' . $e->getMessage());
+            $this->describeFailure('Error', $e);
 
             return 1;
         }
@@ -141,7 +142,7 @@ class Application
             }
             $this->progressEnd();
         } catch (\Throwable $e) {
-            $this->line('Install failed: ' . $e->getMessage());
+            $this->describeFailure('Install failed', $e);
             if (!isset($o['keep-on-error'])) {
                 $installer->rollback($state);
                 $this->line('Previous tables and wp-config.php were restored.');
@@ -348,6 +349,17 @@ TXT
         }
 
         return false;
+    }
+
+    /** Prints the message with its stable code, a plain explanation and what to do about it. */
+    private function describeFailure(string $label, \Throwable $e): void
+    {
+        $p = Problem::classify($e);
+        $this->line($label . ' [' . $p['code'] . ']: ' . $e->getMessage());
+        if ($p['code'] !== Problem::UNKNOWN) {
+            $this->line('  ' . $p['title'] . '.');
+            $this->line('  → ' . $p['fix']);
+        }
     }
 
     private function line(string $text): void

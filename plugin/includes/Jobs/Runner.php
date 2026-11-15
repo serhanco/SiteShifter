@@ -5,6 +5,8 @@
 
 namespace SiteShifter\Plugin\Jobs;
 
+use SiteShifter\Support\Problem;
+
 defined('ABSPATH') || exit;
 
 /**
@@ -75,11 +77,21 @@ class Runner
             }
             $task = $this->task($job);
             $this->restore($job['checkpoints']);
+            $before = $job;
+            $finished = false;
+            // PHP kills the request on running out of memory or time; record why before it goes.
+            register_shutdown_function(function () use (&$finished, $before) {
+                $code = $finished ? null : Problem::fromFatal(error_get_last());
+                if ($code !== null) {
+                    $this->recordProblem($before, $code, (string) (error_get_last()['message'] ?? ''));
+                }
+            });
             try {
                 $state = $task->run($job['state'], $deadline);
                 $job['state'] = $state;
                 $job['errors'] = 0;
                 $job['last_error'] = null;
+                $job['problem'] = null;
                 $job['progress'] = $task->progress($state);
                 $job['checkpoints'] = $this->sizes($task->checkpointFiles($state));
                 if (!empty($state['done'])) {
@@ -88,12 +100,16 @@ class Runner
                 }
             } catch (\Throwable $e) {
                 // Keep the last good state; the next step retries from it.
+                $problem = Problem::classify($e);
                 $job['errors']++;
                 $job['last_error'] = $e->getMessage();
-                if ($job['errors'] >= self::MAX_ERRORS) {
+                $job['problem'] = $problem['code'];
+                // Trying again cannot fix a missing permission or a full disk: stop at once and say what to do.
+                if ($job['errors'] >= self::MAX_ERRORS || !$problem['retryable']) {
                     $job['status'] = 'paused';
                 }
             }
+            $finished = true;
             $job['slices']++;
             $job['updated'] = time();
             $this->store->save($job);
@@ -101,6 +117,23 @@ class Runner
             return self::view($job);
         } finally {
             $lock->release();
+        }
+    }
+
+    /** Saves the reason a request died (memory, time) into the last good job state. */
+    private function recordProblem(array $job, $code, $message)
+    {
+        try {
+            $job['errors'] = (int) $job['errors'] + 1;
+            $job['last_error'] = $message;
+            $job['problem'] = $code;
+            if ($job['errors'] >= self::MAX_ERRORS || !Problem::isRetryable($code)) {
+                $job['status'] = 'paused';
+            }
+            $job['updated'] = time();
+            $this->store->save($job);
+        } catch (\Throwable $e) {
+            // Nothing more can be done while PHP is shutting down.
         }
     }
 
@@ -186,6 +219,8 @@ class Runner
             'detail' => (string) ($job['progress']['detail'] ?? ''),
             'result' => $job['status'] === 'done' ? ($job['progress']['result'] ?? null) : null,
             'error' => $job['last_error'],
+            'code' => isset($job['problem']) ? $job['problem'] : null,
+            'retryable' => isset($job['problem']) ? Problem::isRetryable($job['problem']) : null,
             'errors' => (int) $job['errors'],
             'created' => (int) $job['created'],
             'updated' => (int) $job['updated'],

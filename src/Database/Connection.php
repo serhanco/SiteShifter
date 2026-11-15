@@ -23,7 +23,7 @@ class Connection
         [$hostname, $port, $socket] = self::parseHost($host);
         $db = mysqli_init();
         if (!@$db->real_connect($hostname, $user, $pass, $name, $port, $socket)) {
-            throw new \RuntimeException('Could not connect to the database: ' . mysqli_connect_error());
+            throw new \RuntimeException('Could not connect to the database: ' . mysqli_connect_error(), (int) mysqli_connect_errno());
         }
         if (!$db->set_charset($charset)) {
             $db->set_charset('utf8');
@@ -48,7 +48,7 @@ class Connection
     {
         $result = $this->db->query($sql);
         if ($result === false) {
-            throw new \RuntimeException('Database error: ' . $this->db->error . ' — query: ' . self::shorten($sql));
+            throw new \RuntimeException('Database error: ' . $this->db->error . ' — query: ' . self::shorten($sql), (int) $this->db->errno);
         }
 
         return $result;

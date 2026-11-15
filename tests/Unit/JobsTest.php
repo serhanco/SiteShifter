@@ -215,6 +215,68 @@ class JobsTest extends TestCase
     public function testBrowserViewHidesInternals(): void
     {
         $view = $this->runner()->start('host_test', ['mb' => 1]);
-        $this->assertSame(['id', 'type', 'status', 'percent', 'phase', 'detail', 'result', 'error', 'errors', 'created', 'updated'], array_keys($view));
+        $this->assertSame(['id', 'type', 'status', 'percent', 'phase', 'detail', 'result', 'error', 'code', 'retryable', 'errors', 'created', 'updated'], array_keys($view));
+    }
+
+    private function failingTask(string $message, int $code = 0): Task
+    {
+        return new class($message, $code) implements Task {
+            private $m;
+            private $c;
+
+            public function __construct($m, $c)
+            {
+                $this->m = $m;
+                $this->c = $c;
+            }
+
+            public function initialState(array $params)
+            {
+                return ['done' => false];
+            }
+
+            public function run(array $state, $deadline)
+            {
+                throw new \RuntimeException($this->m, $this->c);
+            }
+
+            public function progress(array $state)
+            {
+                return ['percent' => 0, 'phase' => 'x'];
+            }
+
+            public function checkpointFiles(array $state)
+            {
+                return [];
+            }
+        };
+    }
+
+    public function testAPermanentProblemPausesAtOnceWithItsCode(): void
+    {
+        $runner = $this->runner(['fail' => function () {
+            return $this->failingTask('Cannot write /x/database.sql — check folder permissions.');
+        }]);
+        $job = $runner->start('fail');
+        $view = $runner->step($job['id'], microtime(true) + 5);
+
+        $this->assertSame('paused', $view['status']);
+        $this->assertSame(1, $view['errors']);
+        $this->assertSame('SS_E_PERM_WRITE', $view['code']);
+        $this->assertFalse($view['retryable']);
+    }
+
+    public function testATemporaryProblemIsRetriedBeforePausing(): void
+    {
+        $runner = $this->runner(['fail' => function () {
+            return $this->failingTask('Database error: Deadlock found', 1213);
+        }]);
+        $job = $runner->start('fail');
+        $first = $runner->step($job['id'], microtime(true) + 5);
+        $this->assertSame('running', $first['status']);
+        $this->assertSame('SS_E_DB_LOCK', $first['code']);
+        $this->assertTrue($first['retryable']);
+        $runner->step($job['id'], microtime(true) + 5);
+        $this->assertSame('paused', $runner->step($job['id'], microtime(true) + 5)['status']);
     }
 }
