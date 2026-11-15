@@ -41,6 +41,18 @@ class Plugin
                 return new Jobs\RollbackTask($file, $connect);
             },
         ]);
+        $library = new Jobs\PackageLibrary($store);
+        $retention = new Jobs\Retention($library, static function () {
+            return get_option('siteshifter_retention', []);
+        }, static function (array $value) {
+            update_option('siteshifter_retention', $value, false);
+            if (!empty($value['enabled']) && !wp_next_scheduled('siteshifter_prune')) {
+                wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', 'siteshifter_prune');
+            } elseif (empty($value['enabled'])) {
+                wp_clear_scheduled_hook('siteshifter_prune');
+            }
+        });
+        add_action('siteshifter_prune', [$retention, 'apply']);
         $checks = static function ($newUrl, $params = []) {
             $report = (new \SiteShifter\Preflight\Preflight())->run(Runtime\Site::preflightContext($newUrl));
             $results = $report->toArray();
@@ -53,7 +65,7 @@ class Plugin
         $siteCheck = static function ($url) {
             return \SiteShifter\Support\SiteCheck::check($url);
         };
-        (new Rest\Routes(new Rest\JobApi($runner, $checks, $siteCheck)))->register();
+        (new Rest\Routes(new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention)))->register();
 
         if (is_admin()) {
             (new Admin\Menu())->register();
