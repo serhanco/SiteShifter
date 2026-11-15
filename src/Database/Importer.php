@@ -56,7 +56,9 @@ class Importer
         $this->db->exec("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
         $this->db->exec('SET NAMES utf8mb4');
 
-        while (microtime(true) < $deadline) {
+        $first = true; // always make progress, even when the deadline has already passed
+        while ($first || microtime(true) < $deadline) {
+            $first = false;
             $statement = $reader->next();
             if ($statement === null) {
                 $state['done'] = true;

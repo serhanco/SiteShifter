@@ -87,7 +87,9 @@ class Archiver
             $state['index'] = 0;
             @unlink($this->zipPath);
         }
-        while ($state['phase'] === 'add' && microtime(true) < $deadline) {
+        $first = true; // always make progress, even when the deadline has already passed
+        while ($state['phase'] === 'add' && ($first || microtime(true) < $deadline)) {
+            $first = false;
             $state = $this->addBatch($state, $deadline);
         }
         if ($state['phase'] === 'finished') {

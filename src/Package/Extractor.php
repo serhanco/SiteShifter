@@ -122,7 +122,9 @@ class Extractor
         $state['total'] = $zip->numFiles;
         $strip = $this->layout['strip'];
         $target = $this->layout['target'];
-        while ($state['index'] < $zip->numFiles && microtime(true) < $deadline) {
+        $first = true; // always make progress, even when the deadline has already passed
+        while ($state['index'] < $zip->numFiles && ($first || microtime(true) < $deadline)) {
+            $first = false;
             $i = $state['index']++;
             $name = str_replace('\\', '/', (string) $zip->getNameIndex($i));
             if ($strip !== '' && strpos($name, $strip) !== 0) {

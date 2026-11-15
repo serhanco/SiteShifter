@@ -41,8 +41,8 @@ class DatabaseReplacerTest extends DatabaseTestCase
         $state = DatabaseReplacer::initialState();
         $calls = 0;
         while (!$state['done']) {
-            // A deadline in the past still processes nothing; give each call exactly one batch.
-            $state = $job->run($state, microtime(true) + 0.0001);
+            // A deadline that has already passed must still make progress: one batch per call.
+            $state = $job->run($state, microtime(true) - 1);
             $state = json_decode(json_encode($state), true); // state must survive a round-trip (stored between requests)
             $this->assertLessThan(100, ++$calls);
         }

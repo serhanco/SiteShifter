@@ -54,7 +54,7 @@ class DumpImportTest extends DatabaseTestCase
         $state = Dumper::initialState();
         $steps = 0;
         while (!$state['done']) {
-            $state = json_decode(json_encode($dumper->run($state, microtime(true) + 0.0001)), true);
+            $state = json_decode(json_encode($dumper->run($state, microtime(true) - 1)), true);
             $steps++;
         }
         $this->assertGreaterThan(5, $steps);
@@ -65,7 +65,7 @@ class DumpImportTest extends DatabaseTestCase
         $state = Importer::initialState();
         $steps = 0;
         while (!$state['done']) {
-            $state = json_decode(json_encode($importer->run($state, microtime(true) + 0.0001)), true);
+            $state = json_decode(json_encode($importer->run($state, microtime(true) - 1)), true);
             $steps++;
         }
         $this->assertGreaterThan(5, $steps);

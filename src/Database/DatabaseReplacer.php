@@ -63,7 +63,9 @@ class DatabaseReplacer
             $state['total_rows'] = \SiteShifter\Support\Progress::estimateRows($this->db, $this->tables);
             $state['rows_done'] = 0;
         }
-        while (!$state['done'] && microtime(true) < $deadline) {
+        $first = true; // always make progress, even when the deadline has already passed
+        while (!$state['done'] && ($first || microtime(true) < $deadline)) {
+            $first = false;
             if (!isset($this->tables[$state['table']])) {
                 $state['done'] = true;
                 break;

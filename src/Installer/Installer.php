@@ -190,7 +190,9 @@ class Installer
 
     public function run(array $state, float $deadline): array
     {
-        while (!$state['done'] && microtime(true) < $deadline) {
+        $first = true; // always make progress, even when the deadline has already passed
+        while (!$state['done'] && ($first || microtime(true) < $deadline)) {
+            $first = false;
             $method = 'step' . ucfirst($state['step']);
             $finished = $this->$method($state, $deadline);
             if ($finished) {

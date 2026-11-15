@@ -55,7 +55,9 @@ class Dumper
                 $this->write($fh, $this->header());
                 $state['started'] = true;
             }
-            while (!$state['done'] && microtime(true) < $deadline) {
+            $first = true; // always make progress, even when the deadline has already passed
+            while (!$state['done'] && ($first || microtime(true) < $deadline)) {
+                $first = false;
                 if (!isset($this->tables[$state['table']])) {
                     $this->write($fh, "\nSET FOREIGN_KEY_CHECKS = 1;\n-- SiteShifter dump complete\n");
                     $state['done'] = true;
