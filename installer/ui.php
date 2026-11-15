@@ -223,6 +223,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
                 ss_json(['ok' => true]);
                 // no break
+            case 'sitecheck':
+                $session = ss_store($ssWork . '/session.php');
+                $target = (string) ($session['settings']['new_url'] ?? ($_POST['new_url'] ?? ''));
+                if (!preg_match('#^https?://#i', $target)) {
+                    ss_json(['error' => 'No address to check.'], 400);
+                }
+                ss_json(['url' => $target, 'notes' => \SiteShifter\Support\SiteCheck::check($target)]);
+                // no break
             case 'cleanup':
                 $session = ss_store($ssWork . '/session.php');
                 if ($session) {
@@ -323,7 +331,8 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
   <section class="card hidden" id="s-done">
     <h2>Done</h2>
     <div id="result"></div>
-    <div class="actions"><a id="lnk-site" target="_blank"><button>Open the site</button></a><a id="lnk-admin" target="_blank"><button class="secondary">Open wp-admin</button></a></div>
+    <div class="actions"><a id="lnk-site" target="_blank"><button>Open the site</button></a><a id="lnk-admin" target="_blank"><button class="secondary">Open wp-admin</button></a><button class="secondary" id="btn-sitecheck">Check the live site</button></div>
+    <div id="sitecheck" class="hint"></div>
     <h2 style="margin-top:24px">Clean up</h2>
     <p class="hint">Removes installer.php and its work folder. Do this now: the installer must not stay on a live site.</p>
     <label style="font-weight:400"><input type="checkbox" id="rm-uploads" style="width:auto" checked> Also delete the uploaded zip and SQL files</label>
@@ -437,6 +446,13 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
   $('btn-check').onclick = check; $('btn-recheck').onclick = check; $('btn-start').onclick = start;
   $('ack').onchange = () => { $('btn-start').disabled = !$('ack').checked || (lastReport && lastReport.blocked); };
   $('btn-retry').onclick = loop;
+  $('btn-sitecheck').onclick = async () => {
+    const box = $('sitecheck'); box.textContent = 'Checking the live address…';
+    try {
+      const r = await post('sitecheck');
+      box.innerHTML = r.notes.length ? '<ul class="check">' + r.notes.map(n => '<li><strong>'+esc(n.title)+':</strong> '+esc(n.message)+(n.fix?'<br><em>'+esc(n.fix)+'</em>':'')+'</li>').join('') + '</ul>' : 'No problems found at ' + esc(r.url) + '.';
+    } catch (e) { box.textContent = e.message; }
+  };
   $('btn-rollback').onclick = async () => { if (!confirm('Restore the tables and wp-config.php that were here before?')) return; try { await post('rollback'); $('run-error').textContent = 'The previous state was restored.'; } catch (e) { $('run-error').textContent = e.message; } };
   $('btn-cleanup').onclick = cleanup;
 })();
