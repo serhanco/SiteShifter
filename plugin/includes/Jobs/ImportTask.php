@@ -13,7 +13,10 @@ use SiteShifter\Database\Verifier;
 use SiteShifter\Package\Extractor;
 use SiteShifter\Package\Manifest;
 use SiteShifter\Plugin\Import\DbSwap;
+use SiteShifter\Plugin\Import\DbMerge;
+use SiteShifter\Plugin\Import\FileMerge;
 use SiteShifter\Plugin\Import\FileSwap;
+use SiteShifter\Plugin\Import\MergePolicy;
 use SiteShifter\Preflight\Preflight;
 use SiteShifter\Replace\ReplacementMap;
 use SiteShifter\Replace\Replacer;
@@ -63,12 +66,16 @@ class ImportTask implements Task
             }
             throw new \InvalidArgumentException('The package cannot be imported: ' . implode(' ', $why));
         }
+        $mode = isset($params['mode']) && $params['mode'] === 'merge' ? 'merge' : 'replace';
+        $policy = new MergePolicy(isset($params['policy']) && is_array($params['policy']) ? $params['policy'] : []);
         $manifest = json_decode((string) Extractor::readEntry($this->env['zip'], ['strip' => '', 'target' => ''], Manifest::FILE), true);
         $id = basename($this->dir);
         $tag = substr($id, 0, 6);
 
         return [
             'phase' => 'unpack',
+            'mode' => $mode,
+            'policy' => $policy->toArray(),
             'manifest' => [
                 'site' => $manifest['site'],
                 'db' => ['tables' => $manifest['db']['tables'] ?? [], 'collations' => $manifest['db']['collations'] ?? [], 'db_version' => $manifest['db']['db_version'] ?? null],
@@ -304,6 +311,9 @@ class ImportTask implements Task
     /** The only step that touches the live site, and it is a few renames. */
     private function phaseSwap(array &$state)
     {
+        if ($state['mode'] === 'merge') {
+            return $this->mergeSwap($state);
+        }
         $db = call_user_func($this->env['connect']);
         $stage = $state['stage_prefix'];
         $files = new FileSwap($this->env['content_dir'], $this->dir . '/stage/wp-content', $this->dir . '/aside', [$this->protectedPlugin()]);
@@ -339,6 +349,55 @@ class ImportTask implements Task
         $state['result']['swapped'] = true;
         $state['result']['can_undo'] = true;
         $state['result']['backup_tables'] = count($plan['backups']);
+
+        return true;
+    }
+
+    /** Merge mode: nothing is removed; files and the few database rows are added or replaced by policy. */
+    private function mergeSwap(array &$state)
+    {
+        $db = call_user_func($this->env['connect']);
+        $stage = $state['stage_prefix'];
+        $prior = $this->readSwap();
+        if (!$prior || $prior['state'] !== 'live') {
+            $swap = new FileSwap('', '', '');
+            if ($prior && $prior['state'] === 'swapping') {
+                $swap->undo((array) $prior['files']); // an earlier attempt died: start from the original state
+            }
+            $merge = new FileMerge($this->env['content_dir'], $this->dir . '/stage/wp-content', $this->dir . '/aside', new MergePolicy($state['policy']), [$this->protectedPlugin()]);
+            $plan = $merge->plan();
+            $record = ['mode' => 'merge', 'pairs' => [], 'backups' => [], 'copies' => [], 'stage_prefix' => $stage, 'files' => [], 'state' => 'swapping', 'files_report' => $plan['report']];
+            $this->writeSwap($record);
+            $record['files'] = $swap->apply($plan['ops']);
+            $this->writeSwap($record);
+            try {
+                $r = DbMerge::apply($db, $stage, $this->env['prefix'], $state['backup_prefix'], new MergePolicy($state['policy']));
+            } catch (\Throwable $e) {
+                $swap->undo($record['files']);
+                $record['state'] = 'failed';
+                $record['files'] = [];
+                $this->writeSwap($record);
+                throw $e;
+            }
+            $record['copies'] = $r['copies'];
+            $record['backups'] = array_column($r['copies'], 1);
+            $record['stats'] = $r['stats'];
+            $record['user_map'] = $r['user_map'];
+            $record['state'] = 'live';
+            $this->writeSwap($record);
+            $prior = $record;
+        }
+        if (!empty($this->env['after_swap'])) {
+            call_user_func($this->env['after_swap']);
+        }
+        $counts = [];
+        foreach ((array) $prior['files_report'] as $row) {
+            $counts[$row['action']] = ($counts[$row['action']] ?? 0) + 1;
+        }
+        $state['result']['swapped'] = true;
+        $state['result']['can_undo'] = true;
+        $state['result']['mode'] = 'merge';
+        $state['result']['merge'] = ['files' => $counts, 'database' => $prior['stats'] ?? [], 'content_merged' => false];
 
         return true;
     }
