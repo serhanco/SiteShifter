@@ -6,6 +6,7 @@
 namespace SiteShifter\Plugin\Jobs;
 
 use SiteShifter\Package\PackageBuilder;
+use SiteShifter\Package\Scope;
 
 defined('ABSPATH') || exit;
 
@@ -41,6 +42,26 @@ class ExportTask implements Task
         return $this->dir . '/database.sql';
     }
 
+    /**
+     * What to include, from the form values (scalars only: types is a comma list or "all", switches are 0/1).
+     *
+     * @return Scope
+     */
+    public static function scope(array $params)
+    {
+        $in = ['profile' => isset($params['profile']) ? (string) $params['profile'] : 'full'];
+        if (isset($params['types'])) {
+            $in['types'] = $params['types'] === 'all' ? 'all' : array_filter(array_map('trim', explode(',', (string) $params['types'])));
+        }
+        foreach (['media', 'users', 'comments', 'settings', 'themes', 'plugins', 'other_tables', 'other_files', 'revisions'] as $key) {
+            if (isset($params[$key])) {
+                $in[$key] = !empty($params[$key]);
+            }
+        }
+
+        return Scope::fromArray($in);
+    }
+
     /** Options the builder receives; never lets the work folder end up inside a package. */
     public static function options(array $params)
     {
@@ -48,7 +69,7 @@ class ExportTask implements Task
         $excludes = \SiteShifter\Package\Archiver::DEFAULT_EXCLUDES;
         $excludes[] = self::WORK_FOLDER;
 
-        return ['scope' => $scope, 'include_foreign_tables' => !empty($params['all_tables']), 'excludes' => $excludes];
+        return ['scope' => $scope, 'include_foreign_tables' => !empty($params['all_tables']), 'excludes' => $excludes, 'content' => self::scope($params)->toArray()];
     }
 
     public function initialState(array $params)

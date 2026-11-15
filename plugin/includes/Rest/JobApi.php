@@ -59,7 +59,7 @@ class JobApi
 
                     return ['ok' => true, 'job' => $this->runner->step($this->id($input), $deadline)];
                 case 'checks':
-                    return $this->checks ? ['ok' => true] + call_user_func($this->checks, (string) ($input['params']['new_url'] ?? '')) : $this->fail('unavailable', 'Checks are not available.');
+                    return $this->checks ? ['ok' => true] + call_user_func($this->checks, (string) ($input['params']['new_url'] ?? ''), (array) ($input['params'] ?? [])) : $this->fail('unavailable', 'Checks are not available.');
                 case 'site_check':
                     $url = (string) ($input['params']['url'] ?? '');
                     if (!preg_match('#^https?://[^\s/]+#i', $url)) {

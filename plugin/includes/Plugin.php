@@ -41,10 +41,14 @@ class Plugin
                 return new Jobs\RollbackTask($file, $connect);
             },
         ]);
-        $checks = static function ($newUrl) {
+        $checks = static function ($newUrl, $params = []) {
             $report = (new \SiteShifter\Preflight\Preflight())->run(Runtime\Site::preflightContext($newUrl));
+            $results = $report->toArray();
+            if (isset($params['profile'])) {
+                $results = array_merge($results, Admin\ScopeText::rows(Jobs\ExportTask::scope($params)));
+            }
 
-            return ['blockers' => $report->hasBlockers(), 'results' => $report->toArray()];
+            return ['blockers' => $report->hasBlockers(), 'results' => $results];
         };
         $siteCheck = static function ($url) {
             return \SiteShifter\Support\SiteCheck::check($url);

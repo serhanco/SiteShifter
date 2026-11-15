@@ -185,17 +185,33 @@
 	function human(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(i ? 1 : 0) + ' ' + u[i]; }
 	var J = window.SiteShifterJobs;
 
+	function scopeParams() {
+		var p = { profile: document.querySelector('input[name=ss-profile]:checked').value };
+		if (p.profile === 'custom') {
+			var types = [].map.call(document.querySelectorAll('.ss-type:checked'), function (c) { return c.value; });
+			p.types = types.length === document.querySelectorAll('.ss-type').length ? 'all' : types.join(',');
+			[].forEach.call(document.querySelectorAll('.ss-part'), function (c) { p[c.getAttribute('data-part')] = c.checked ? 1 : 0; });
+		}
+		return p;
+	}
+	[].forEach.call(document.querySelectorAll('input[name=ss-profile]'), function (r) {
+		r.addEventListener('change', function () { $('ss-custom').style.display = document.querySelector('input[name=ss-profile]:checked').value === 'custom' ? 'block' : 'none'; });
+	});
+
 	$('ss-export-start').addEventListener('click', function (e) {
 		e.preventDefault();
 		var btn = e.target, box = $('ss-export-report');
 		btn.disabled = true;
 		box.textContent = cfg.i18n.checking;
-		J.call('checks', { params: {} }, J.ui(box)).then(function (r) {
+		J.call('checks', { params: scopeParams() }, J.ui(box)).then(function (r) {
 			if (!r.ok) { box.textContent = r.message; return null; }
 			J.renderReport(box, r.results);
 			if (r.blockers) { return null; }
 			var scope = document.querySelector('input[name=ss-scope]:checked').value;
-			return J.run('export', { scope: scope, all_tables: $('ss-all-tables').checked ? 1 : 0 }, $('ss-export-progress'));
+			var params = scopeParams();
+			params.scope = scope;
+			params.all_tables = $('ss-all-tables').checked ? 1 : 0;
+			return J.run('export', params, $('ss-export-progress'));
 		}).then(function (job) {
 			btn.disabled = false;
 			if (!job || job.status !== 'done' || !job.result) { return; }
