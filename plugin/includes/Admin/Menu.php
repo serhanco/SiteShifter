@@ -12,6 +12,56 @@ class Menu
     const SLUG = 'siteshifter';
     const CAPABILITY = 'manage_options';
 
+    private static function profileRadios()
+    {
+        $profiles = [
+            'full' => __('Everything (the whole site)', 'siteshifter'),
+            'structure' => __('Structure only: themes, plugins, settings, menus and templates, no content', 'siteshifter'),
+            'settings' => __('Settings only (the options table, no files)', 'siteshifter'),
+            'content' => __('Content only: posts, pages, media, comments, users, no themes, plugins or settings', 'siteshifter'),
+            'custom' => __('Custom: choose content types and parts', 'siteshifter'),
+        ];
+        $out = '';
+        foreach ($profiles as $value => $label) {
+            $out .= '<label><input type="radio" name="ss-profile" value="' . esc_attr($value) . '"' . ($value === 'full' ? ' checked' : '') . '> ' . esc_html($label) . '</label><br>';
+        }
+
+        return $out;
+    }
+
+    private static function customChoices()
+    {
+        $out = '<p><strong>' . esc_html__('Content types', 'siteshifter') . '</strong></p>';
+        $skip = ['attachment', 'revision', 'nav_menu_item', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_font_family', 'wp_font_face'];
+        foreach (get_post_types([], 'objects') as $type) {
+            if (in_array($type->name, $skip, true) || (empty($type->public) && empty($type->show_ui))) {
+                continue;
+            }
+            $counts = wp_count_posts($type->name);
+            $n = 0;
+            foreach ((array) $counts as $count) {
+                $n += (int) $count;
+            }
+            $out .= '<label><input type="checkbox" class="ss-type" value="' . esc_attr($type->name) . '" checked> ' . esc_html($type->labels->name) . ' <span class="description">(' . (int) $n . ')</span></label><br>';
+        }
+        $parts = [
+            'media' => __('Media library (uploads folder and attachments)', 'siteshifter'),
+            'comments' => __('Comments', 'siteshifter'),
+            'users' => __('Users', 'siteshifter'),
+            'settings' => __('Settings (options table)', 'siteshifter'),
+            'themes' => __('Themes', 'siteshifter'),
+            'plugins' => __('Plugins', 'siteshifter'),
+            'other_tables' => __('Plugin data tables', 'siteshifter'),
+            'revisions' => __('Post revisions', 'siteshifter'),
+        ];
+        $out .= '<p><strong>' . esc_html__('Parts', 'siteshifter') . '</strong></p>';
+        foreach ($parts as $key => $label) {
+            $out .= '<label><input type="checkbox" class="ss-part" data-part="' . esc_attr($key) . '" checked> ' . esc_html($label) . '</label><br>';
+        }
+
+        return $out;
+    }
+
     public function register()
     {
         add_action('admin_menu', [$this, 'addMenu']);
@@ -109,6 +159,11 @@ class Menu
             echo '<p>' . esc_html__('Packs this site (files and database) into one zip you can move to another WordPress. The package is checked before you can download it.', 'siteshifter') . '</p>'
                 . '<form id="ss-export" onsubmit="return false"><table class="form-table" role="presentation"><tbody>'
                 . '<tr><th>' . esc_html__('What to include', 'siteshifter') . '</th><td>'
+                . self::profileRadios()
+                . '<div id="ss-custom" style="display:none;margin:8px 0 0 24px">'
+                . self::customChoices()
+                . '</div></td></tr>'
+                . '<tr><th>' . esc_html__('Files', 'siteshifter') . '</th><td>'
                 . '<label><input type="radio" name="ss-scope" value="root" checked> ' . esc_html__('The whole site (WordPress files, themes, plugins, uploads)', 'siteshifter') . '</label><br>'
                 . '<label><input type="radio" name="ss-scope" value="wp-content"> ' . esc_html__('Only wp-content (themes, plugins, uploads)', 'siteshifter') . '</label><br>'
                 . '<label><input type="checkbox" id="ss-all-tables"> ' . esc_html__('Also include database tables that do not use this site\'s table prefix', 'siteshifter') . '</label>'

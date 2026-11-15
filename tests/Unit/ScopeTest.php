@@ -58,7 +58,7 @@ class ScopeTest extends TestCase
 
     public function testCustomTypesFollowTheMediaSwitchAndKeepRelatedRowsConsistent(): void
     {
-        $s = Scope::fromArray(['profile' => 'custom', 'types' => ['post', 'page'], 'media' => false, 'users' => false, 'comments' => true]);
+        $s = Scope::fromArray(['profile' => 'custom', 'types' => ['post', 'page'], 'media' => false, 'users' => false, 'comments' => true, 'settings' => false]);
         $r = $s->tableRules('wp_', self::TABLES);
         $this->assertSame("`post_type` IN ('post', 'page')", $r['where']['wp_posts']);
         $this->assertContains('wp_comments', $r['tables']);
@@ -67,8 +67,15 @@ class ScopeTest extends TestCase
         $this->assertNotContains('wp_users', $r['tables']);
         $this->assertContains('wp-content/uploads', $s->excludes([]));
 
-        $withMedia = Scope::fromArray(['profile' => 'custom', 'types' => ['post'], 'media' => true]);
+        $withMedia = Scope::fromArray(['profile' => 'custom', 'types' => ['post'], 'media' => true, 'settings' => false]);
         $this->assertSame("`post_type` IN ('post', 'attachment')", $withMedia->tableRules('wp_', self::TABLES)['where']['wp_posts']);
+    }
+
+    public function testChosenTypesStillKeepMenusAndTemplatesWhenSettingsAreIncluded(): void
+    {
+        $where = Scope::fromArray(['profile' => 'custom', 'types' => ['post']])->tableRules('wp_', self::TABLES)['where']['wp_posts'];
+        $this->assertStringContainsString("'post'", $where);
+        $this->assertStringContainsString("'nav_menu_item'", $where);
     }
 
     public function testNoCommentsMeansNoCommentTablesAndNoPostsMeansNoPostRelatedTables(): void
@@ -77,7 +84,7 @@ class ScopeTest extends TestCase
         $this->assertNotContains('wp_comments', $r['tables']);
         $this->assertNotContains('wp_commentmeta', $r['tables']);
 
-        $r = Scope::fromArray(['profile' => 'custom', 'types' => [], 'media' => false])->tableRules('wp_', self::TABLES);
+        $r = Scope::fromArray(['profile' => 'custom', 'types' => [], 'media' => false, 'settings' => false])->tableRules('wp_', self::TABLES);
         foreach (['wp_posts', 'wp_postmeta', 'wp_comments', 'wp_terms', 'wp_term_relationships'] as $t) {
             $this->assertNotContains($t, $r['tables']);
         }

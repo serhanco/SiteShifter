@@ -255,6 +255,9 @@ class Scope
             return implode(' AND ', $cond);
         }
         $list = $types;
+        if ($o['settings'] && $o['profile'] === 'custom') {
+            $list = array_merge($list, self::STRUCTURAL_TYPES); // menus, templates and field groups travel with the settings
+        }
         if ($o['media']) {
             $list[] = 'attachment';
         }

@@ -113,7 +113,9 @@ class PackageBuilder
 
     private function content(): Scope
     {
-        return $this->options['content'] ?? Scope::full();
+        $c = $this->options['content'];
+
+        return $c instanceof Scope ? $c : ($c === null ? Scope::full() : Scope::fromArray((array) $c));
     }
 
     /** @var array|null */

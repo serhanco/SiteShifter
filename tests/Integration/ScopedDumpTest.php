@@ -45,7 +45,7 @@ class ScopedDumpTest extends DatabaseTestCase
     public function testPostsPagesWithoutMediaKeepRelatedRowsOnly(): void
     {
         $this->seed();
-        $sql = $this->dump(Scope::fromArray(['profile' => 'custom', 'types' => ['post', 'page'], 'media' => false, 'users' => false]));
+        $sql = $this->dump(Scope::fromArray(['profile' => 'custom', 'types' => ['post', 'page'], 'media' => false, 'users' => false, 'settings' => false]));
 
         $posts = $this->inserted($sql, 'wp_posts');
         $this->assertStringContainsString("'Post'", $posts);
