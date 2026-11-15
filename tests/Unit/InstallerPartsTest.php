@@ -14,7 +14,7 @@ class InstallerPartsTest extends TestCase
 <?php
 define( 'DB_NAME', 'old_db' );
 define('DB_USER', getenv('DB_USER'));
-define( 'DB_PASSWORD', 'p@ss\'word' );
+define( 'DB_PASSWORD', 'not-a-secret' );
 define( 'DB_HOST', 'localhost' );
 define( 'WP_HOME', 'http://old.test' );
 define( 'COOKIE_DOMAIN', '.old.test' );
