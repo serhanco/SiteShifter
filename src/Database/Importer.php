@@ -91,7 +91,8 @@ class Importer
             return $sql; // data statements are passed through untouched
         }
         // Session settings this importer manages itself.
-        if (preg_match('/^\s*(\/\*!\d*\s*)?SET\s+(@OLD_|@@SESSION\.SQL_LOG_BIN|@@GLOBAL\.GTID_PURGED|SQL_LOG_BIN)/i', $sql)) {
+        if (preg_match('/^\s*(\/\*!\d*\s*)?SET\s+(@OLD_|@@SESSION\.SQL_LOG_BIN|@@GLOBAL\.GTID_PURGED|SQL_LOG_BIN)/i', $sql)
+            || preg_match('/^\s*(\/\*!\d*\s*)?SET\s+[^;]*=\s*@OLD_/i', $sql)) {
             return '';
         }
         foreach ($this->collations as $from => $to) {

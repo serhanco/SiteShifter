@@ -164,6 +164,11 @@ class Installer
         if (is_file($this->dir . '/wp-includes/version.php')) {
             return Manifest::versionFile($this->dir) + ['source' => 'existing'];
         }
+        if (!empty($this->settings['core_zip'])) {
+            $code = Extractor::readEntry($this->settings['core_zip'], ['strip' => 'wordpress/', 'target' => ''], 'wp-includes/version.php');
+
+            return Manifest::parseVersionFile((string) $code) + ['source' => 'core_zip'];
+        }
 
         return ['wp_version' => $inspection['manifest']['site']['wp_version'] ?? null, 'wp_db_version' => null, 'source' => 'download'];
     }
@@ -243,6 +248,10 @@ class Installer
         $layout = $state['inspection']['layout'];
         $layout['rename'] = [];
         $layout['skip_regex'] = '#^[^/]*\.sql(\.gz)?$#i'; // never leave a database dump in the public folder
+        // Hand-made zips often include caches and other backup tools' archives.
+        $layout['skip_prefixes'] = array_map(static function ($e) {
+            return $e . '/';
+        }, \SiteShifter\Package\Archiver::DEFAULT_EXCLUDES);
         foreach (self::DISABLED_DROPINS as $dropin) {
             $layout['rename'][$dropin] = $dropin . '.siteshifter-disabled';
         }
@@ -312,6 +321,11 @@ class Installer
         $available = array_flip(array_column($db->rows('SHOW COLLATION'), 'Collation'));
         $plan = Preflight::collationPlan($state['inspection']['manifest']['db']['collations'] ?? [], $available);
         $state['import'] = (new Importer($db, $sql, $plan['convert']))->run($state['import'], $deadline);
+        if ($state['import']['done']) {
+            // Counted now, before finalize removes caches (transients, Elementor CSS).
+            $prefix = $state['inspection']['manifest']['site']['table_prefix'];
+            $state['imported_rows'] = (new Verifier($db))->rowCounts($db->tables($prefix));
+        }
 
         return $state['import']['done'];
     }
@@ -372,7 +386,7 @@ class Installer
         $source = $manifest['db']['tables'] ?? [];
         $state['result'] = [
             'leftovers' => $hosts === [] ? [] : $verifier->leftovers($tables, $hosts, [$prefix . 'posts' => ['guid']]),
-            'row_mismatches' => $source === [] ? [] : Verifier::compareRowCounts($source, $verifier->rowCounts($tables), $prefix, $prefix),
+            'row_mismatches' => $source === [] ? [] : Verifier::compareRowCounts($source, $state['imported_rows'] ?? $verifier->rowCounts($tables), $prefix, $prefix),
             'replace_stats' => $state['replace']['stats'],
             'licences' => (new Preflight())->licences($manifest)->toArray(),
             'disabled_dropins' => array_values(array_filter(self::DISABLED_DROPINS, function ($d) {
@@ -540,7 +554,7 @@ class Installer
         while (!feof($fh) && $read < 256 * 1048576) {
             $chunk = (string) fread($fh, 4 * 1048576);
             $read += strlen($chunk);
-            if (preg_match_all('#((?:/[A-Za-z0-9._~@+-]+)+|[A-Za-z]:(?:\\\\\\\\|\\\\|/)[^\'"\s;]*?)(?:/|\\\\\\\\|\\\\)wp-(?:content|includes|admin)\b#', $chunk, $m)) {
+            if (preg_match_all('#((?:/[A-Za-z0-9._~@+-]+)+|(?<![A-Za-z0-9])[A-Za-z]:(?:\\\\\\\\|\\\\|/(?!/))[^\'"\s;]*?)(?:/|\\\\\\\\|\\\\)wp-(?:content|includes|admin)\b#', $chunk, $m)) {
                 foreach ($m[1] as $path) {
                     $path = str_replace('\\\\', '/', $path);
                     $counts[$path] = ($counts[$path] ?? 0) + 1;

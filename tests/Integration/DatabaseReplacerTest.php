@@ -71,7 +71,7 @@ class DatabaseReplacerTest extends DatabaseTestCase
         foreach ($found as $f) {
             $byKey[$f['table'] . '.' . $f['column'] . ':' . $f['kind']] = $f['count'];
         }
-        $this->assertSame(['wp_options.option_value:plain' => 1, 'wp_options.option_value:base64' => 1], $byKey);
+        $this->assertSame(['wp_options.option_value:email' => 1, 'wp_options.option_value:base64' => 1], $byKey);
     }
 
     public function testRowCountComparisonAcrossPrefixes(): void

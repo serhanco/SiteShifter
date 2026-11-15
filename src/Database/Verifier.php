@@ -47,9 +47,17 @@ class Verifier
                 }
                 foreach ($needles as [$kind, $needle]) {
                     $hit = $this->countLike($table, $column, $needle);
-                    if ($hit['count'] > 0) {
-                        $found[] = ['table' => $table, 'column' => $column, 'kind' => $kind] + $hit;
+                    if ($hit['count'] === 0) {
+                        continue;
                     }
+                    // Rows where the host only appears in e-mail addresses are reported separately:
+                    // keeping info@old-domain is usually intended.
+                    if ($kind === 'plain' && strpos($needle, '/') === false
+                        && $this->countLike($table, $column, '@' . $needle)['count'] === $hit['count']
+                        && $this->countOutsideEmails($table, $column, $needle) === 0) {
+                        $kind = 'email';
+                    }
+                    $found[] = ['table' => $table, 'column' => $column, 'kind' => $kind] + $hit;
                 }
             }
         }
@@ -148,6 +156,17 @@ class Verifier
         }
 
         return ['count' => $count, 'sample' => $sample];
+    }
+
+    /** Rows where the host appears somewhere other than right after an "@". */
+    private function countOutsideEmails(string $table, string $column, string $needle): int
+    {
+        $c = Connection::ident($column);
+        $t = Connection::ident($table);
+        $stripped = "REPLACE({$c}, " . $this->db->quote('@' . $needle) . ", '')";
+        $like = $this->db->quote('%' . addcslashes($needle, '%_\\') . '%');
+
+        return (int) $this->db->value("SELECT COUNT(*) FROM {$t} WHERE {$stripped} LIKE BINARY {$like}");
     }
 
     private static function dedupe(array $found): array
