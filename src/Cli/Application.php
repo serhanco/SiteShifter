@@ -91,6 +91,9 @@ class Application
 
     private function install(array $o, bool $checkOnly): int
     {
+        if (!isset($o['db-pass']) && isset($o['db-password'])) {
+            $o['db-pass'] = $o['db-password'];
+        }
         foreach (['dir', 'url', 'db-name', 'db-user'] as $required) {
             if (empty($o[$required])) {
                 throw new \InvalidArgumentException("--{$required} is required");

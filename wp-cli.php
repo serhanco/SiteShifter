@@ -79,8 +79,8 @@ class SiteShifter_WP_CLI_Command
     public function preflight($args, $assoc)
     {
         // The destination database is this site's own, as configured in wp-config.php.
-        foreach (['db-name' => 'DB_NAME', 'db-user' => 'DB_USER', 'db-pass' => 'DB_PASSWORD', 'db-host' => 'DB_HOST'] as $option => $constant) {
-            $assoc += [$option => constant($constant)];
+        foreach (['NAME', 'USER', 'PASSWORD', 'HOST'] as $key) {
+            $assoc += ['db-' . strtolower($key) => constant('DB_' . $key)];
         }
         $assoc += ['dir' => untrailingslashit(ABSPATH)];
         $this->run('preflight', $assoc);
