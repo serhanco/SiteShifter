@@ -1,0 +1,753 @@
+# SiteShifter translation template.
+# by Serhan Demirel - https://serhandemirel.com
+msgid ""
+msgstr ""
+"Project-Id-Version: SiteShifter\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"MIME-Version: 1.0\n"
+
+#. translators: %d: number of tables
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "%d tables have a different number of rows than in the package."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A database row or statement is larger than the server allows"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A file is busy or locked"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A file or folder could not be written"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A required PHP extension is missing"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Also include database tables that do not use this site's table prefix"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Another SiteShifter job or a backup tool is using it. Wait a minute and resume."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Another process is using the same tables. Try again in a moment; pause busy plugins or cron jobs if it keeps happening."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Applied (can be undone)"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Ask your host to add the folder to open_basedir, or choose a folder that is inside the allowed paths."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Backup deleted"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Change address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Changes the site address in the database (including serialized data, Elementor, ACF and WPML values). A full database backup is taken first so you can undo it."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check and change address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check and create package"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Check that the database host is correct and running. On shared hosting try \"localhost\" or the host name your provider shows. Then resume."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Check the database user name and the password stored in wp-config.php, and that the user may connect from this server."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check this package"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Checking…"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Checks and history"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Choose a .zip file first."
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Choose an existing user on the new site to own the imported content."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Comments"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Comments are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Connection problem, trying again (%d)…"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content only"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content only: posts, pages, media, comments, users, no themes, plugins or settings"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Content that needs them may look wrong or break on the new site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content types"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Continue anyway"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Copy wp-content/uploads to the new site yourself (SFTP or rsync), then run the import check again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Could not finish:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Created"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Current address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Custom"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Custom: choose content types and parts"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Data that plugins keep in their own tables (forms, orders, bookings) is not packed."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete old packages automatically (once a day)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete package from this server"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete selected"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the backup"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the backup of the previous site? After this the import can no longer be undone."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the selected packages from this server? This cannot be undone."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Deleted."
+msgstr ""
+
+#. translators: %d: number of database rows
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Done. %d database rows were updated."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Download package"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Enable the mysqli and zip extensions in your PHP settings or ask your host."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Everything"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Everything (the whole site)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Export"
+msgstr ""
+
+#. translators: %s: folder path
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "FTP folder: %s"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Failed"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Failed, nothing was changed"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Files"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Finished."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Free some space (old packages, backups, caches) or ask your host to raise the disk quota, then resume."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "GB"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Give the web server user write permission to the folder named in the message (usually 755 for folders and 644 for files, owned by the account that runs PHP), then resume."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Grant the database user ALL PRIVILEGES on this database (CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, DELETE, LOCK TABLES), then resume."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "I understand: this replaces the database, the themes, the plugins and the uploads of this site with the package. The current data is kept so I can undo it."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Import"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Import and replace this site"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Imports on this site"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Include them if you need that data on the new site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Interrupted while switching"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Keep at most"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Keep packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Links that could not be translated (cleared, please check):"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Make sure the same themes and plugins are installed and active on the new site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Measuring the site (folders, database, free disk space)…"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Media is now switched off in the custom options. Copy wp-content/uploads to the new site by hand, then click \"Check and create package\" again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Media library (uploads folder and attachments)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge never deletes anything and never changes the site address, the active plugins or the roles. Posts, comments and categories are added next to yours and their links (parent, author, featured image, categories) are translated; a link that cannot be translated is cleared and listed after the import. IDs stored inside page-builder data are not translated."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge result (files by action, then database counts):"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge: keep what is on this site, add what is new, and decide conflicts below."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "New address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "No packages have been uploaded yet."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time."
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Only the chosen content types are included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Only wp-content (themes, plugins, uploads)"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Other post types, and their custom fields and category links, are left out."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP is not allowed to use that folder (open_basedir)"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP ran out of memory"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP stopped the request because it took too long"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Package from %1$s, %2$s, WordPress %3$s, %4$s tables, scope: %5$s"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages made on this server. They hold your database and wp-config.php, so delete them when you no longer need them."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages ready to import"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packs this site (files and database) into one zip you can move to another WordPress. The package is checked before you can download it."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Parts"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Passed"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paused after repeated errors. You can resume from where it stopped."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Plugin data tables"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Plugin data tables are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Plugins"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Post revisions"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Posts keep their author number, which may not exist on the new site."
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Posts that use images or files from the media library will show them as missing until the uploads folder is on the new site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Posts, comments and categories of the package"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Put the site back as it was before this import? Changes made since the import are lost."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Raise max_allowed_packet (for example to 64M) in the MySQL settings or ask your host to, then resume."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Raise memory_limit (256M or more) in php.ini or wp-config.php (WP_MEMORY_LIMIT), or ask your host, then resume."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Replace: the site becomes exactly the package (the current data is kept for undo)."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Resume to try again. If it repeats, send the message below to support."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Run checks"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Run server test"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same media file in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same other file in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same plugin in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same post or page (type and slug) in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same setting in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same theme in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same user (e-mail or login) in both"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Save"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Saved."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Scope"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings (options table)"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Settings are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings only"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings only (the options table, no files)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "SiteShifter"
+msgstr ""
+
+#: plugin/includes/Plugin.php
+msgid "SiteShifter detected a multisite network. Export, import and address change are switched off on multisite in this version; a network-aware release is planned."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Size"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Something unexpected went wrong"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Source address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Structure only"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Structure only: themes, plugins, settings, menus and templates, no content"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Suggest copying uploads by hand above"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Technical detail:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Test this server"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database connection was lost"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database refused the user name or password"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database server could not be reached"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database user lacks a permission"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database was busy (lock wait or deadlock)"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The disk is full"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The file is incomplete or damaged. Create or upload the package again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The import is finished and the site now runs the imported data."
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "The new site keeps its own settings, menus and widgets."
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "The new site will have no comments from this one."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The old address no longer appears anywhere in the database."
+msgstr ""
+
+#. translators: %d: number of places
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The old address still appears in %d places (see the list in Checks and history after a reload)."
+msgstr ""
+
+#. translators: %d: number of places
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The old address still appears in %d places."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it."
+msgstr ""
+
+#. translators: 1: size, 2: number of files, 3: number of database tables
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The server closed the connection (timeout or restart). Resume; if it repeats, ask your host to raise wait_timeout."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The users of the package are now this site's users, so your login session has ended. Log in again at:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The whole site (WordPress files, themes, plugins, uploads)"
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The zip file cannot be read"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Themes"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Themes or plugins are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "There are no packages on this server."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "This screen is coming in a later step."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undo: put the previous site back"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undo: restore the database from the backup taken before the change"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undone"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Upload a package made by SiteShifter (or put it in the incoming folder by FTP for very large sites), then check it. The check changes nothing: it shows what would be replaced, what is incompatible and what you must do by hand."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Upload package"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploaded and verified."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploading…"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Uploads are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Use \"without media\" and copy uploads myself"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Users"
+msgstr ""
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Users are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "What to include"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Writes and checks a 32 MB test file in small steps, the way a real export would. It shows whether long jobs can run on this host."
+msgstr ""
+
+#: plugin/includes/Rest/Routes.php
+msgid "You do not have permission to download this file."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "You do not have permission to open this page."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Your login session ends with the address change. Log in again at:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "add them"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "and none older than"
+msgstr ""
+
+#. translators: %s: link to the author's website
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "by %s"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "days (0 = no limit)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "keep both (new name)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "keep this site's"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "overwrite with the package"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "uploads copied by hand"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "use the existing user"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "use the newer version"
+msgstr ""
+
