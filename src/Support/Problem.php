@@ -35,7 +35,7 @@ class Problem
         self::OPEN_BASEDIR => ['PHP is not allowed to use that folder (open_basedir)', 'Ask your host to add the folder to open_basedir, or choose a folder that is inside the allowed paths.', false],
         self::FILE_LOCKED => ['A file is busy or locked', 'Another SiteShifter job or a backup tool is using it. Wait a minute and resume.', true],
         self::DB_CONNECT => ['The database server could not be reached', 'Check that the database host is correct and running. On shared hosting try "localhost" or the host name your provider shows. Then resume.', true],
-        self::DB_AUTH => ['The database refused the user name or password', 'Check DB_USER and DB_PASSWORD in wp-config.php, and that the user may connect from this server.', false],
+        self::DB_AUTH => ['The database refused the user name or password', 'Check the database user name and the password stored in wp-config.php, and that the user may connect from this server.', false],
         self::DB_PRIVILEGE => ['The database user lacks a permission', 'Grant the database user ALL PRIVILEGES on this database (CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, DELETE, LOCK TABLES), then resume.', false],
         self::DB_PACKET => ['A database row or statement is larger than the server allows', 'Raise max_allowed_packet (for example to 64M) in the MySQL settings or ask your host to, then resume.', false],
         self::DB_LOCK => ['The database was busy (lock wait or deadlock)', 'Another process is using the same tables. Try again in a moment; pause busy plugins or cron jobs if it keeps happening.', true],

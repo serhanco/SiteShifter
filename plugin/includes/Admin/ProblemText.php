@@ -38,7 +38,7 @@ class ProblemText
             ],
             'SS_E_DB_AUTH' => [
                 'title' => __('The database refused the user name or password', 'siteshifter'),
-                'fix' => __('Check DB_USER and DB_PASSWORD in wp-config.php, and that the user may connect from this server.', 'siteshifter'),
+                'fix' => __('Check the database user name and the password stored in wp-config.php, and that the user may connect from this server.', 'siteshifter'),
             ],
             'SS_E_DB_PRIVILEGE' => [
                 'title' => __('The database user lacks a permission', 'siteshifter'),
