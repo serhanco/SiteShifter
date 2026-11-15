@@ -40,6 +40,7 @@ class Menu
             'restNonce' => wp_create_nonce('wp_rest'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'ajaxAction' => \SiteShifter\Plugin\Rest\Routes::AJAX_ACTION,
+            'downloadAction' => \SiteShifter\Plugin\Rest\Routes::DOWNLOAD_ACTION,
             'ajaxNonce' => wp_create_nonce(\SiteShifter\Plugin\Rest\Routes::NONCE),
             'i18n' => [
                 'retrying' => __('Connection problem, trying again (%d)…', 'siteshifter'),
@@ -47,6 +48,12 @@ class Menu
                 'done' => __('Finished.', 'siteshifter'),
                 'paused' => __('Paused after repeated errors. You can resume from where it stopped.', 'siteshifter'),
                 'failed' => __('Could not finish:', 'siteshifter'),
+                'download' => __('Download package', 'siteshifter'),
+                'deletePackage' => __('Delete package from this server', 'siteshifter'),
+                /* translators: 1: size, 2: number of files, 3: number of database tables */
+                'packageReady' => __('The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires.', 'siteshifter'),
+                'packageNote' => __('The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it.', 'siteshifter'),
+                'deleted' => __('Deleted.', 'siteshifter'),
                 'checking' => __('Checking…', 'siteshifter'),
                 /* translators: %d: number of database rows */
                 'changed' => __('Done. %d database rows were updated.', 'siteshifter'),
@@ -98,6 +105,15 @@ class Menu
                 . esc_html__('Writes and checks a 32 MB test file in small steps, the way a real export would. It shows whether long jobs can run on this host.', 'siteshifter')
                 . '</p><p><button class="button button-primary" data-ss-host-test>' . esc_html__('Run server test', 'siteshifter') . '</button></p>'
                 . '<div id="ss-host-test-progress"></div>';
+        } elseif ($current === 'export') {
+            echo '<p>' . esc_html__('Packs this site (files and database) into one zip you can move to another WordPress. The package is checked before you can download it.', 'siteshifter') . '</p>'
+                . '<form id="ss-export" onsubmit="return false"><table class="form-table" role="presentation"><tbody>'
+                . '<tr><th>' . esc_html__('What to include', 'siteshifter') . '</th><td>'
+                . '<label><input type="radio" name="ss-scope" value="root" checked> ' . esc_html__('The whole site (WordPress files, themes, plugins, uploads)', 'siteshifter') . '</label><br>'
+                . '<label><input type="radio" name="ss-scope" value="wp-content"> ' . esc_html__('Only wp-content (themes, plugins, uploads)', 'siteshifter') . '</label><br>'
+                . '<label><input type="checkbox" id="ss-all-tables"> ' . esc_html__('Also include database tables that do not use this site\'s table prefix', 'siteshifter') . '</label>'
+                . '</td></tr></tbody></table><p><button class="button button-primary" id="ss-export-start">' . esc_html__('Check and create package', 'siteshifter') . '</button></p></form>'
+                . '<div id="ss-export-report"></div><div id="ss-export-progress"></div><div id="ss-export-result"></div>';
         } elseif ($current === 'address') {
             $home = untrailingslashit((string) get_option('home'));
             echo '<p>' . esc_html__('Changes the site address in the database (including serialized data, Elementor, ACF and WPML values). A full database backup is taken first so you can undo it.', 'siteshifter') . '</p>'

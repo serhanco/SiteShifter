@@ -72,13 +72,15 @@ class PackageBuilder
         }
         $sqlFile = $this->workDir . '/' . Manifest::SQL;
 
+        $didWork = false; // every call must make progress, even with the deadline already past
         if ($state['phase'] === 'dump') {
+            $didWork = true;
             $state['dump'] = (new Dumper($this->db, $this->tables(), $sqlFile))->run($state['dump'], $deadline);
             if ($state['dump']['done']) {
                 $state['phase'] = 'files';
             }
         }
-        if ($state['phase'] === 'files' && microtime(true) < $deadline) {
+        if ($state['phase'] === 'files' && (!$didWork || microtime(true) < $deadline)) {
             $state['archive'] = $this->archiver()->run($state['archive'], $deadline);
             if ($state['archive']['done']) {
                 $state['phase'] = 'finish';

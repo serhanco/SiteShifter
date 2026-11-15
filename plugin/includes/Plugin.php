@@ -29,6 +29,11 @@ class Plugin
             'address_change' => static function ($job, $dir) use ($connect) {
                 return new Jobs\AddressChangeTask($dir, Runtime\Site::prefix(), $connect);
             },
+            'export' => static function ($job, $dir) use ($connect) {
+                return new Jobs\ExportTask($dir, static function (array $options) use ($connect, $dir) {
+                    return new \SiteShifter\Package\PackageBuilder(call_user_func($connect), untrailingslashit(ABSPATH), Runtime\Site::prefix(), $dir, $dir . '/package.zip', $options);
+                });
+            },
             'rollback' => static function ($job, $dir) use ($store, $connect) {
                 $source = (string) ($job['params']['job'] ?? '');
                 $file = Jobs\JobStore::validId($source) ? $store->dir($source) . '/backup.sql' : '';
