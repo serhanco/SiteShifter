@@ -12,7 +12,19 @@ class ConfigWriter
     /**
      * @param array $db [host, user, pass, name, charset?]
      */
-    public function write(?string $source, array $db, string $prefix, string $newUrl, string $dir): string
+    public function write(?string $source, array $db, string $prefix, string $newUrl, string $dir, bool $proxyHttps = true): string
+    {
+        $config = $this->build($source, $db, $prefix, $newUrl);
+        // Behind a proxy or CDN (Cloudflare, a load balancer) the server sees plain http and
+        // WordPress would build http:// links. Trust the proxy's scheme header on https sites.
+        if ($proxyHttps && stripos($newUrl, 'https://') === 0) {
+            $config = \SiteShifter\Support\Https::addProxyFix($config);
+        }
+
+        return $config;
+    }
+
+    private function build(?string $source, array $db, string $prefix, string $newUrl): string
     {
         $newUrl = rtrim($newUrl, '/');
         $values = [

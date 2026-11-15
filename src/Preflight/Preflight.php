@@ -57,6 +57,10 @@ class Preflight
         $report->merge($this->site($ctx));
         if (!empty($ctx['new_url'])) {
             $report->merge($this->url($ctx['new_url']));
+            $old = $ctx['old_url'] ?? ($ctx['manifest']['site']['home'] ?? ($ctx['manifest']['site']['url'] ?? ''));
+            if ($old) {
+                $report->merge($this->address((string) $old, $ctx['new_url']));
+            }
         }
         $report->merge($this->licences($ctx['manifest'] ?? []));
 
@@ -293,12 +297,26 @@ class Preflight
         }
         $ips = $this->probe->resolve($host);
         $serverIp = $this->probe->serverAddress();
+        $cdn = \SiteShifter\Support\Https::cdnFor($ips);
         if ($ips === []) {
             $r->add(new Result('dns', Result::WARN, 'Domain DNS', "{$host} does not resolve yet.", 'Point the domain\'s A record to this server. The site can be installed now and will open once DNS has propagated.'));
+        } elseif ($cdn !== null) {
+            $r->add(new Result('dns', Result::OK, 'Domain DNS', "{$host} is served through {$cdn}."));
+            $r->add(new Result('cdn', Result::INFO, $cdn . ' proxy', "Visitors reach this site through {$cdn}, which talks to this server in its own SSL mode.", 'Set the SSL/TLS mode to Full (strict) only after this server has a valid certificate for the domain (AutoSSL / Let\'s Encrypt); until then use Full, or visitors get error 526. SiteShifter also makes WordPress trust the proxy\'s https header.'));
         } elseif ($serverIp !== '' && !in_array($serverIp, $ips, true)) {
-            $r->add(new Result('dns', Result::WARN, 'Domain DNS', "{$host} points to " . implode(', ', $ips) . ", this server is {$serverIp}.", 'If you use Cloudflare or a CDN this is expected; otherwise update the A record.'));
+            $r->add(new Result('dns', Result::WARN, 'Domain DNS', "{$host} points to " . implode(', ', $ips) . ", this server is {$serverIp}.", 'If you use a CDN or reverse proxy this is expected; otherwise update the A record.'));
         } else {
             $r->add(new Result('dns', Result::OK, 'Domain DNS', "{$host} → " . implode(', ', $ips)));
+        }
+
+        // The other spelling (www.example.com <-> example.com) should work too.
+        $alt = self::alternateHost($host);
+        if ($alt !== null && $ips !== []) {
+            if ($this->probe->resolve($alt) === []) {
+                $r->add(new Result('dns_alt', Result::WARN, 'Domain DNS (' . $alt . ')', "{$alt} does not resolve, so visitors who type it get an error.", "Add a DNS record for {$alt} (CNAME to {$host}) and a redirect to {$host}."));
+            } elseif (($parts['scheme'] ?? '') === 'https' && $this->probe->tlsError($alt) !== null) {
+                $r->add(new Result('ssl_alt', Result::WARN, 'SSL certificate (' . $alt . ')', "The certificate does not cover {$alt}.", "Issue a certificate that includes both {$host} and {$alt} so the redirect between them works over https."));
+            }
         }
 
         if (($parts['scheme'] ?? '') === 'https' && $ips !== []) {
@@ -309,6 +327,64 @@ class Preflight
         }
 
         return $r;
+    }
+
+    /**
+     * Differences between the old and the new address that need a decision:
+     * a downgrade from https to http, and a switch between www and non-www.
+     */
+    public function address(string $oldUrl, string $newUrl): Report
+    {
+        $r = new Report();
+        $old = parse_url(trim($oldUrl));
+        $new = parse_url(trim($newUrl));
+        if (empty($old['host']) || empty($new['host'])) {
+            return $r;
+        }
+        $oldScheme = strtolower($old['scheme'] ?? '');
+        $newScheme = strtolower($new['scheme'] ?? '');
+        $oldHost = strtolower($old['host']);
+        $newHost = strtolower($new['host']);
+
+        if ($oldScheme === 'https' && $newScheme === 'http' && !self::isLocalHost($newHost)) {
+            $r->add(new Result('scheme', Result::WARN, 'Address scheme', 'The site used https, but the new address is http. Every link would switch to http and browsers would show "Not secure".', 'Use https:// in the new address (all http links are upgraded for you), unless you really want an unencrypted site.'));
+        } elseif ($oldScheme === 'http' && $newScheme === 'https') {
+            $r->add(new Result('scheme', Result::INFO, 'Address scheme', 'The old site used http, the new address is https: every http link in the database is upgraded to https.'));
+        }
+
+        $oldBare = preg_replace('/^www\./', '', $oldHost);
+        $newBare = preg_replace('/^www\./', '', $newHost);
+        if ($oldBare === $newBare && $oldHost !== $newHost && !self::isLocalHost($newHost)) {
+            $from = $oldHost === $oldBare ? 'without www' : 'with www';
+            $to = $newHost === $newBare ? 'without www' : 'with www';
+            $other = $oldHost;
+            $r->add(new Result('www', Result::WARN, 'www / non-www', "The old site was {$from} ({$oldHost}) and the new address is {$to} ({$newHost}). Every link is converted to {$newHost}.", "Keep {$other} working with a permanent (301) redirect to {$newHost} and make sure the SSL certificate covers both, otherwise old links, bookmarks and search results break."));
+        }
+
+        return $r;
+    }
+
+    /** www.example.com <-> example.com; null for sub-domains and addresses without a clear counterpart. */
+    public static function alternateHost(string $host): ?string
+    {
+        $host = strtolower($host);
+        if (self::isLocalHost($host)) {
+            return null;
+        }
+        if (strpos($host, 'www.') === 0) {
+            return substr($host, 4);
+        }
+        $labels = explode('.', $host);
+        $apex = count($labels) === 2
+            || (count($labels) === 3 && strlen($labels[2]) === 2 && in_array($labels[1], ['co', 'com', 'org', 'net', 'gov', 'edu', 'ac'], true));
+
+        return $apex ? 'www.' . $host : null;
+    }
+
+    private static function isLocalHost(string $host): bool
+    {
+        return $host === 'localhost' || filter_var($host, FILTER_VALIDATE_IP) !== false
+            || substr($host, -6) === '.local' || substr($host, -5) === '.test' || substr($host, -10) === '.localhost';
     }
 
     /**

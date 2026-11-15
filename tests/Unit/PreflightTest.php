@@ -17,7 +17,7 @@ class FakeProbe extends Probe
     public $writable = true;
     public $files = [];
     public $software = 'Apache';
-    public $dns = ['new.com' => ['1.2.3.4']];
+    public $dns = ['new.com' => ['1.2.3.4'], 'www.new.com' => ['1.2.3.4']];
     public $serverIp = '1.2.3.4';
     public $tls = null;
 

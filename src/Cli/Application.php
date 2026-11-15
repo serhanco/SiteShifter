@@ -108,6 +108,7 @@ class Application
             'old_url' => $o['old-url'] ?? null,
             'old_path' => $o['old-path'] ?? null,
             'core_zip' => $o['core-zip'] ?? null,
+            'proxy_https' => !isset($o['no-proxy-https']),
         ]);
         $inspection = $installer->inspect();
         $report = $installer->preflight($inspection);
@@ -245,7 +246,7 @@ by Serhan Demirel · https://serhandemirel.com
   export     --path=/var/www/site [--out=site.zip] [--scope=root|wp-content] [--all-tables]
   preflight  --dir=/new/site --url=https://new.com --db-name= --db-user= [--db-pass=] [--db-host=]
              (--zip=package.zip | --zip=files.zip --sql=dump.sql | --sql=dump.sql)
-  install    same as preflight, plus [--yes] [--old-url=] [--old-path=] [--core-zip=] [--delete-uploads]
+  install    same as preflight, plus [--yes] [--old-url=] [--old-path=] [--core-zip=] [--delete-uploads] [--no-proxy-https]
   replace    --path=/var/www/site --from=http://old.test --to=https://new.com [--from-path= --to-path=]
 TXT
         );
