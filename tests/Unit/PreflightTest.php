@@ -190,4 +190,51 @@ class PreflightTest extends TestCase
         $this->assertSame(-1, Preflight::bytes('-1'));
         $this->assertSame('1.5 GB', Preflight::human((int) (1.5 * 1024 ** 3)));
     }
+
+    public function testPhpMajorJumpWarnsAndNamesPlugins(): void
+    {
+        $p = new FakeProbe();
+        $p->php = '8.2.10';
+        $this->assertSame(Result::WARN, $this->level($p, 'php_major_jump', ['manifest' => ['php' => ['version' => '7.4.33']]]));
+
+        $p->php = '7.4.33';
+        $report = (new Preflight($p))->server(['manifest' => ['php' => ['requires' => '8.1'], 'plugins' => ['details' => [
+            ['name' => 'WooCommerce', 'requires_php' => '8.1'], ['name' => 'Akismet', 'requires_php' => '7.2'],
+        ]]]]);
+        $this->assertSame(Result::BLOCK, $report->get('php_version')->level);
+        $this->assertStringContainsString('WooCommerce (PHP 8.1+)', $report->get('php_version')->message);
+        $this->assertStringNotContainsString('Akismet', $report->get('php_version')->message);
+    }
+
+    public function testDatabaseServerComparison(): void
+    {
+        $this->assertSame(Result::OK, Preflight::compareDbServers('8.0.36', '8.0.40')->level);
+        $this->assertSame(Result::WARN, Preflight::compareDbServers('8.0.36', '5.7.44')->level);
+        $this->assertSame(Result::WARN, Preflight::compareDbServers('10.11.6-MariaDB', '10.3.39-MariaDB')->level);
+        $mysqlToMaria = Preflight::compareDbServers('8.0.36', '10.11.6-MariaDB-log');
+        $this->assertSame(Result::WARN, $mysqlToMaria->level);
+        $this->assertStringContainsString('MySQL 8.0.36 to MariaDB 10.11.6', $mysqlToMaria->message);
+        $this->assertSame(['mariadb', '10.6.16'], Preflight::dbFlavor('5.5.5-10.6.16-MariaDB-cll-lve'));
+    }
+
+    public function testWordPressVersionChecks(): void
+    {
+        $p = new Preflight(new FakeProbe());
+        $manifest = ['site' => ['wp_version' => '6.9.1'], 'db' => ['db_version' => '60421'], 'plugins' => ['details' => [
+            ['name' => 'Future Plugin', 'requires_wp' => '7.2'], ['name' => 'Old Plugin', 'requires_wp' => '5.0'],
+        ]]];
+
+        $newer = $p->wordpress(['manifest' => $manifest, 'target_wp_version' => '7.1', 'target_wp_db_version' => 61000]);
+        $this->assertSame(Result::WARN, $newer->get('wp_version')->level);
+        $this->assertStringContainsString('6.9.1 to 7.1', $newer->get('wp_version')->message);
+        $this->assertStringContainsString('Future Plugin (WordPress 7.2+)', $newer->get('wp_plugin_requirements')->message);
+
+        $older = $p->wordpress(['manifest' => $manifest, 'target_wp_version' => '6.8.3', 'target_wp_db_version' => 60000]);
+        $this->assertSame(Result::BLOCK, $older->get('wp_version')->level);
+
+        $same = $p->wordpress(['manifest' => $manifest, 'target_wp_version' => '6.9.4', 'target_wp_db_version' => 60421]);
+        $this->assertSame(Result::OK, $same->get('wp_version')->level);
+
+        $this->assertSame([], $p->wordpress(['manifest' => $manifest])->all(), 'unknown target: no claim');
+    }
 }

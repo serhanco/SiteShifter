@@ -28,6 +28,14 @@ class SqlInspector
         $largest = 0;
         $multisite = false;
 
+        $server = null;
+        $head = (string) @file_get_contents($file, false, null, 0, 4096);
+        if (preg_match('/^--\s*(?:Server version|Sunucu sürümü)[:\s]+(\S+)/mi', $head, $m)) {
+            $server = $m[1];
+        } elseif (preg_match('/^--\s*Server:\s*(\S+)/mi', $head, $m)) {
+            $server = $m[1];
+        }
+
         $reader = new SqlReader($file);
         while (($sql = $reader->next()) !== null) {
             $largest = max($largest, strlen($sql));
@@ -87,6 +95,7 @@ class SqlInspector
                 'collations' => array_keys($collations),
                 'largest_row' => $largest,
                 'db_version' => $options['db_version'] ?? null,
+                'server' => $server,
             ],
             'plugins' => ['active' => $active],
             'themes' => array_values(array_unique(array_filter([$options['stylesheet'] ?? null, $options['template'] ?? null]))),

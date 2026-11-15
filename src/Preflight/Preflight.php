@@ -53,6 +53,7 @@ class Preflight
         if (array_key_exists('db', $ctx) || isset($ctx['db_error'])) {
             $report->merge($this->database($ctx['db'] ?? null, $ctx));
         }
+        $report->merge($this->wordpress($ctx));
         $report->merge($this->site($ctx));
         if (!empty($ctx['new_url'])) {
             $report->merge($this->url($ctx['new_url']));
@@ -71,12 +72,21 @@ class Preflight
         // PHP version: the site's own requirement first, then WordPress's.
         $required = self::maxVersion(self::WP_MIN_PHP, $manifest['php']['requires'] ?? '0');
         $source = $manifest['php']['version'] ?? null;
+        $needing = [];
+        foreach ($manifest['plugins']['details'] ?? [] as $plugin) {
+            if (!empty($plugin['requires_php']) && version_compare($php, $plugin['requires_php'], '<')) {
+                $needing[] = $plugin['name'] . ' (PHP ' . $plugin['requires_php'] . '+)';
+            }
+        }
         if (version_compare($php, $required, '<')) {
-            $r->add(new Result('php_version', Result::BLOCK, 'PHP version', "This server runs PHP {$php}, the site needs at least {$required}.", 'Select a newer PHP version in your hosting panel (cPanel: "Select PHP Version", hPanel: "PHP Configuration").'));
+            $r->add(new Result('php_version', Result::BLOCK, 'PHP version', "This server runs PHP {$php}, the site needs at least {$required}." . ($needing ? ' Needed by: ' . implode(', ', $needing) . '.' : ''), 'Select a newer PHP version in your hosting panel (cPanel: "Select PHP Version", hPanel: "PHP Configuration").'));
         } elseif ($source && version_compare(self::minor($php), self::minor($source), '<')) {
             $r->add(new Result('php_version', Result::WARN, 'PHP version', "The old server ran PHP {$source}, this one runs {$php}. Some plugins may rely on the newer version.", "Switch this server to PHP " . self::minor($source) . ' or newer if your panel allows it.'));
         } else {
-            $r->add(new Result('php_version', Result::OK, 'PHP version', "PHP {$php}"));
+            $r->add(new Result('php_version', Result::OK, 'PHP version', "PHP {$php}" . ($source ? " (old server: {$source})" : '')));
+        }
+        if ($source && (int) $php > (int) $source) {
+            $r->add(new Result('php_major_jump', Result::WARN, 'PHP major version change', "The site moves from PHP {$source} to PHP {$php}. Plugins or themes that were not updated for PHP " . (int) $php . ' can show errors or a white screen.', 'Update all plugins and the theme on the old site before moving, or select PHP ' . self::minor($source) . ' on this server first and upgrade PHP after testing.'));
         }
 
         // Extensions.
@@ -162,6 +172,10 @@ class Preflight
         $r->add(new Result('db_connect', Result::OK, 'Database connection', ($db->isMariaDb() ? 'MariaDB ' : 'MySQL ') . $version));
 
         $numeric = preg_replace('/[^0-9.].*$/', '', $version);
+        $sourceServer = $ctx['manifest']['db']['server'] ?? null;
+        if ($sourceServer) {
+            $r->add(self::compareDbServers($sourceServer, $version));
+        }
         if (!$db->isMariaDb() && version_compare($numeric, '5.5.3', '<')) {
             $r->add(new Result('db_utf8mb4', Result::BLOCK, 'utf8mb4 support', 'This database server is too old for utf8mb4 (emoji, some Turkish characters in plugins).', 'Ask the host for MySQL 5.7+ or MariaDB 10.4+.'));
         }
@@ -295,6 +309,86 @@ class Preflight
         }
 
         return $r;
+    }
+
+    /**
+     * WordPress core version on the destination vs the source.
+     * Context: target_wp_version, target_wp_db_version — the core that
+     * will run the site after the move (an existing install in plugin
+     * mode, or the downloaded core in installer mode).
+     */
+    public function wordpress(array $ctx): Report
+    {
+        $r = new Report();
+        $manifest = $ctx['manifest'] ?? [];
+        $source = $manifest['site']['wp_version'] ?? null;
+        $sourceDb = isset($manifest['db']['db_version']) ? (int) $manifest['db']['db_version'] : null;
+        $target = $ctx['target_wp_version'] ?? null;
+        $targetDb = isset($ctx['target_wp_db_version']) ? (int) $ctx['target_wp_db_version'] : null;
+        if ($target === null) {
+            return $r;
+        }
+
+        if (($sourceDb && $targetDb && $sourceDb > $targetDb) || ($source && version_compare(self::minor($target), self::minor($source), '<'))) {
+            $r->add(new Result('wp_version', Result::BLOCK, 'WordPress version', 'The destination runs WordPress ' . $target . ', older than the source' . ($source ? " ({$source})" : '') . '. A database from a newer WordPress can break on an older core.', 'Update WordPress on the destination to ' . ($source ?: 'the latest version') . ' or newer first.'));
+        } elseif ($source && version_compare(self::minor($target), self::minor($source), '>')) {
+            $r->add(new Result('wp_version', Result::WARN, 'WordPress version', "The site moves from WordPress {$source} to {$target}. The database will be upgraded automatically after the move; plugins and the theme should be tested on the new version.", 'Take note of plugins that have not been updated recently and test the main pages after the move.'));
+        } else {
+            $r->add(new Result('wp_version', Result::OK, 'WordPress version', $target . ($source ? " (old site: {$source})" : '')));
+        }
+
+        $tooNew = [];
+        foreach ($manifest['plugins']['details'] ?? [] as $plugin) {
+            if (!empty($plugin['requires_wp']) && version_compare(self::minor($target), self::minor($plugin['requires_wp']), '<')) {
+                $tooNew[] = $plugin['name'] . ' (WordPress ' . $plugin['requires_wp'] . '+)';
+            }
+        }
+        if ($tooNew !== []) {
+            $r->add(new Result('wp_plugin_requirements', Result::WARN, 'Plugin requirements', 'These plugins need a newer WordPress than ' . $target . ': ' . implode(', ', $tooNew) . '.', 'Update WordPress on the destination before moving.'));
+        }
+
+        return $r;
+    }
+
+    /**
+     * Compares database server versions: a downgrade or a switch between
+     * MySQL and MariaDB is a warning with the specific known differences.
+     */
+    public static function compareDbServers(string $source, string $target): Result
+    {
+        [$sFlavor, $sVersion] = self::dbFlavor($source);
+        [$tFlavor, $tVersion] = self::dbFlavor($target);
+        $label = static function ($f, $v) {
+            return ($f === 'mariadb' ? 'MariaDB ' : 'MySQL ') . $v;
+        };
+        $from = $label($sFlavor, $sVersion);
+        $to = $label($tFlavor, $tVersion);
+
+        if ($sFlavor !== $tFlavor) {
+            $notes = $sFlavor === 'mysql'
+                ? 'MySQL 8 collations (utf8mb4_0900_*) are converted automatically; JSON columns become LONGTEXT with a JSON check, which WordPress and common plugins handle fine.'
+                : 'MariaDB-only options (Aria engine, PAGE_CHECKSUM, uca1400 collations) are converted automatically.';
+
+            return new Result('db_version', Result::WARN, 'Database server', "The database moves from {$from} to {$to}. {$notes}", 'Nothing to do in most cases; test plugins that use their own tables (forms, shops, LMS) after the move.');
+        }
+        if (version_compare(self::minor($tVersion), self::minor($sVersion), '<')) {
+            return new Result('db_version', Result::WARN, 'Database server', "The database moves to an older server: {$from} → {$to}. Newer collations and features are converted where possible.", 'If the import reports an error, ask the host for ' . $from . ' or newer.');
+        }
+
+        return new Result('db_version', Result::OK, 'Database server', "{$from} → {$to}");
+    }
+
+    /** @return array{0:string,1:string} flavor, numeric version */
+    public static function dbFlavor(string $version): array
+    {
+        $flavor = stripos($version, 'mariadb') !== false ? 'mariadb' : 'mysql';
+        // "5.5.5-10.11.6-MariaDB" is how older clients report MariaDB.
+        if (preg_match('/^5\.5\.5-(\d+\.\d+(\.\d+)?)/', $version, $m)) {
+            return ['mariadb', $m[1]];
+        }
+        $numeric = preg_match('/^(\d+\.\d+(\.\d+)?)/', $version, $m) ? $m[1] : '0';
+
+        return [$flavor, $numeric];
     }
 
     public function licences(array $manifest): Report
