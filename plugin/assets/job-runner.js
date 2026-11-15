@@ -9,7 +9,7 @@
 
 	function post(op, payload) {
 		if (transport === 'rest') {
-			var path = { checks: 'checks', site_check: 'site-check' }[op];
+			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention' }[op];
 			var url = cfg.restUrl + (path ? path : 'jobs' + (payload.id ? '/' + payload.id + '/' + op : ''));
 			if (op === 'status') {
 				return fetch(url.replace(/\/status$/, ''), { headers: { 'X-WP-Nonce': cfg.restNonce }, credentials: 'same-origin', cache: 'no-store' });
@@ -232,4 +232,62 @@
 			});
 		}).catch(function (err) { btn.disabled = false; box.textContent = cfg.i18n.failed + ' ' + err.message; });
 	});
+})();
+
+/* Packages screen */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	var root = $('ss-packages');
+	if (!root) { return; }
+	var J = window.SiteShifterJobs;
+	function esc(t) { var d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; }
+	function human(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(i ? 1 : 0) + ' ' + u[i]; }
+
+	function draw(list) {
+		if (!list.length) { root.textContent = cfg.i18n.noPackages; return; }
+		var rows = list.map(function (p) {
+			var scope = (cfg.i18n.profiles[p.profile] || p.profile) + (p.manual_uploads ? ' (' + cfg.i18n.manualUploads + ')' : '');
+			return '<tr><th class="check-column"><input type="checkbox" class="ss-pick" value="' + p.id + '"></th>' +
+				'<td>' + esc(new Date(p.created * 1000).toLocaleString()) + '</td><td>' + esc(human(p.bytes)) + '</td><td>' + esc(scope) + '</td>' +
+				'<td>' + esc(p.source) + '</td><td>' + (p.valid ? esc(cfg.i18n.checkedOk) : '<strong>' + esc(cfg.i18n.checkedBad) + '</strong>') + '</td>' +
+				'<td><button class="button ss-dl" data-id="' + p.id + '">' + esc(cfg.i18n.download) + '</button> <button class="button ss-del" data-id="' + p.id + '">' + esc(cfg.i18n.deletePackage) + '</button></td></tr>';
+		}).join('');
+		root.innerHTML = '<table class="widefat striped"><thead><tr><td class="check-column"></td><th>' + esc(cfg.i18n.colDate) + '</th><th>' + esc(cfg.i18n.colSize) + '</th><th>' + esc(cfg.i18n.colScope) + '</th><th>' + esc(cfg.i18n.colSource) + '</th><th>' + esc(cfg.i18n.colStatus) + '</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
+			'<p><button class="button" id="ss-del-selected">' + esc(cfg.i18n.deleteSelected) + '</button></p>';
+	}
+
+	function load() {
+		J.call('packages', { params: {} }, J.ui(root)).then(function (r) {
+			if (!r.ok) { root.textContent = r.message; return; }
+			draw(r.packages);
+			if (r.retention) { $('ss-ret-on').checked = r.retention.enabled; $('ss-ret-count').value = r.retention.max_count; $('ss-ret-days').value = r.retention.max_days; }
+		});
+	}
+	function remove(ids) {
+		if (!ids.length || !window.confirm(cfg.i18n.confirmDelete)) { return; }
+		J.call('delete_many', { params: { ids: ids.join(',') } }, J.ui(root)).then(load);
+	}
+
+	root.addEventListener('click', function (e) {
+		var t = e.target;
+		if (t.classList.contains('ss-del')) { e.preventDefault(); remove([t.getAttribute('data-id')]); }
+		if (t.id === 'ss-del-selected') { e.preventDefault(); remove([].map.call(root.querySelectorAll('.ss-pick:checked'), function (c) { return c.value; })); }
+		if (t.classList.contains('ss-dl')) {
+			e.preventDefault();
+			var id = t.getAttribute('data-id');
+			J.call('download_link', { id: id }, J.ui(root)).then(function (d) {
+				if (d.ok) { window.location.href = cfg.ajaxUrl + '?action=' + encodeURIComponent(cfg.downloadAction) + '&job=' + id + '&token=' + d.token; }
+			});
+		}
+	});
+	$('ss-ret-save').addEventListener('click', function (e) {
+		e.preventDefault();
+		J.call('retention', { params: { enabled: $('ss-ret-on').checked ? 1 : 0, max_count: $('ss-ret-count').value, max_days: $('ss-ret-days').value } }, J.ui($('ss-ret-note'))).then(function (r) {
+			$('ss-ret-note').textContent = r.ok ? cfg.i18n.saved : r.message;
+			if (r.ok) { load(); }
+		});
+	});
+	load();
 })();

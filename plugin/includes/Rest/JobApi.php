@@ -26,8 +26,16 @@ class JobApi
     /** @var callable|null function (string $url): array  live site check */
     private $siteCheck;
 
-    public function __construct(Runner $runner, $checks = null, $siteCheck = null)
+    /** @var \SiteShifter\Plugin\Jobs\PackageLibrary|null */
+    private $library;
+
+    /** @var \SiteShifter\Plugin\Jobs\Retention|null */
+    private $retention;
+
+    public function __construct(Runner $runner, $checks = null, $siteCheck = null, $library = null, $retention = null)
     {
+        $this->library = $library;
+        $this->retention = $retention;
         $this->runner = $runner;
         $this->checks = $checks;
         $this->siteCheck = $siteCheck;
@@ -67,6 +75,19 @@ class JobApi
                     }
 
                     return $this->siteCheck ? ['ok' => true, 'notes' => call_user_func($this->siteCheck, $url)] : $this->fail('unavailable', 'Site check is not available.');
+                case 'packages':
+                    return $this->library ? ['ok' => true, 'packages' => $this->library->all(), 'retention' => $this->retention ? $this->retention->get() : null] : $this->fail('unavailable', 'The package list is not available.');
+                case 'delete_many':
+                    $ids = array_filter(explode(',', (string) ($input['params']['ids'] ?? '')));
+
+                    return $this->library ? ['ok' => true, 'deleted' => $this->library->deleteMany($ids)] : $this->fail('unavailable', 'The package list is not available.');
+                case 'retention':
+                    if (!$this->retention) {
+                        return $this->fail('unavailable', 'Not available.');
+                    }
+                    $saved = $this->retention->set((array) ($input['params'] ?? []));
+
+                    return ['ok' => true, 'retention' => $saved, 'deleted' => $this->retention->apply()];
                 case 'download_link':
                     $user = isset($input['user']) ? (int) $input['user'] : 0;
                     $d = $this->runner->issueDownload($this->id($input), $user);

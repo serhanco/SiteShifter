@@ -104,6 +104,25 @@ class Menu
                 'packageReady' => __('The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires.', 'siteshifter'),
                 'packageNote' => __('The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it.', 'siteshifter'),
                 'deleted' => __('Deleted.', 'siteshifter'),
+                'noPackages' => __('There are no packages on this server.', 'siteshifter'),
+                'colDate' => __('Created', 'siteshifter'),
+                'colSize' => __('Size', 'siteshifter'),
+                'colScope' => __('Scope', 'siteshifter'),
+                'colSource' => __('Source address', 'siteshifter'),
+                'colStatus' => __('Check', 'siteshifter'),
+                'checkedOk' => __('Passed', 'siteshifter'),
+                'checkedBad' => __('Failed', 'siteshifter'),
+                'manualUploads' => __('uploads copied by hand', 'siteshifter'),
+                'deleteSelected' => __('Delete selected', 'siteshifter'),
+                'confirmDelete' => __('Delete the selected packages from this server? This cannot be undone.', 'siteshifter'),
+                'saved' => __('Saved.', 'siteshifter'),
+                'profiles' => [
+                    'full' => __('Everything', 'siteshifter'),
+                    'structure' => __('Structure only', 'siteshifter'),
+                    'settings' => __('Settings only', 'siteshifter'),
+                    'content' => __('Content only', 'siteshifter'),
+                    'custom' => __('Custom', 'siteshifter'),
+                ],
                 'checking' => __('Checking…', 'siteshifter'),
                 /* translators: %d: number of database rows */
                 'changed' => __('Done. %d database rows were updated.', 'siteshifter'),
@@ -121,6 +140,7 @@ class Menu
     {
         return [
             'export' => __('Export', 'siteshifter'),
+            'packages' => __('Packages', 'siteshifter'),
             'import' => __('Import', 'siteshifter'),
             'address' => __('Change address', 'siteshifter'),
             'status' => __('Checks and history', 'siteshifter'),
@@ -169,6 +189,15 @@ class Menu
                 . '<label><input type="checkbox" id="ss-all-tables"> ' . esc_html__('Also include database tables that do not use this site\'s table prefix', 'siteshifter') . '</label>'
                 . '</td></tr></tbody></table><p><button class="button button-primary" id="ss-export-start">' . esc_html__('Check and create package', 'siteshifter') . '</button></p></form>'
                 . '<div id="ss-export-report"></div><div id="ss-export-progress"></div><div id="ss-export-result"></div>';
+        } elseif ($current === 'packages') {
+            echo '<p>' . esc_html__('Packages made on this server. They hold your database and wp-config.php, so delete them when you no longer need them.', 'siteshifter') . '</p>'
+                . '<div id="ss-packages"></div>'
+                . '<h2>' . esc_html__('Keep packages', 'siteshifter') . '</h2>'
+                . '<form id="ss-retention" onsubmit="return false"><p>'
+                . '<label><input type="checkbox" id="ss-ret-on"> ' . esc_html__('Delete old packages automatically (once a day)', 'siteshifter') . '</label></p><p>'
+                . '<label>' . esc_html__('Keep at most', 'siteshifter') . ' <input type="number" id="ss-ret-count" min="0" max="1000" class="small-text"> ' . esc_html__('packages', 'siteshifter') . '</label> '
+                . '<label>' . esc_html__('and none older than', 'siteshifter') . ' <input type="number" id="ss-ret-days" min="0" max="3650" class="small-text"> ' . esc_html__('days (0 = no limit)', 'siteshifter') . '</label></p>'
+                . '<p><button class="button" id="ss-ret-save">' . esc_html__('Save', 'siteshifter') . '</button> <span id="ss-ret-note"></span></p></form>';
         } elseif ($current === 'address') {
             $home = untrailingslashit((string) get_option('home'));
             echo '<p>' . esc_html__('Changes the site address in the database (including serialized data, Elementor, ACF and WPML values). A full database backup is taken first so you can undo it.', 'siteshifter') . '</p>'
