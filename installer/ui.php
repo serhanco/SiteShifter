@@ -151,7 +151,8 @@ function ss_settings(string $dir, array $in): array
 function ss_deadline(): float
 {
     $limit = (int) ini_get('max_execution_time');
-    $budget = $limit > 0 ? max(5, min(20, $limit * 0.5)) : 20;
+    // Short requests keep the percentages moving on screen; long enough to make real progress.
+    $budget = $limit > 0 ? max(1, min(3, $limit * 0.5)) : 3;
 
     return microtime(true) + $budget;
 }
@@ -210,8 +211,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     ss_json(['error' => $e->getMessage(), 'step' => $state['step'], 'can_rollback' => !empty($state['backup_tables']) || is_file($ssWork . '/wp-config.backup.php')], 500);
                 }
                 ss_store($ssWork . '/state.php', $state);
-                [$step, $percent] = Installer::progress($state);
-                ss_json(['done' => $state['done'], 'step' => $step, 'percent' => $percent, 'result' => $state['done'] ? $state['result'] : null, 'log' => array_slice($state['log'], -5)]);
+                [$step, $percent, $stepPercent, $detail] = Installer::progress($state);
+                ss_json(['done' => $state['done'], 'step' => $step, 'percent' => $percent, 'step_percent' => $stepPercent, 'detail' => $detail, 'step_index' => array_search($step, Installer::STEPS, true) + 1, 'step_count' => count(Installer::STEPS) - 1, 'result' => $state['done'] ? $state['result'] : null, 'log' => array_slice($state['log'], -5)]);
                 // no break
             case 'rollback':
                 $session = ss_store($ssWork . '/session.php');
@@ -258,7 +259,8 @@ button.secondary{background:transparent;color:var(--ink);border:1px solid var(--
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
 .badge{flex:0 0 58px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;border-radius:5px;padding:2px 0;height:fit-content;color:#fff}
 .b-ok{background:var(--ok)}.b-warn{background:var(--warn)}.b-block{background:var(--block)}.b-info{background:var(--info)}
-.item p{margin:2px 0 0;color:var(--muted);font-size:14px}.fix{color:var(--ink)!important}.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}.bar div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.item p{margin:2px 0 0;color:var(--muted);font-size:14px}.fix{color:var(--ink)!important}.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}.bar div{height:100%;width:0;background:var(--accent);transition:width .3s}.bar-sm div{background:var(--ok)}
+.bar-sm{height:6px}.progress-head{display:flex;justify-content:space-between;gap:8px;margin:0 0 6px}
 .err{color:var(--block);font-weight:600}.hidden{display:none}details summary{cursor:pointer;color:var(--muted);margin-top:12px}code{font-size:13px;word-break:break-all}
 ul.check{padding-left:20px}ul.check li{margin:6px 0}
 .sub a,footer a{color:inherit}footer{color:var(--muted);font-size:13px;text-align:center;margin-top:28px}
@@ -306,8 +308,11 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
 
   <section class="card hidden" id="s-run">
     <h2>Moving the site</h2>
+    <p class="progress-head"><strong id="run-overall">0%</strong> <span class="hint">overall</span></p>
     <div class="bar"><div id="bar"></div></div>
-    <p id="run-step" class="hint"></p>
+    <p class="progress-head" style="margin-top:16px"><span id="run-step">Starting…</span> <strong id="run-step-pct"></strong></p>
+    <div class="bar bar-sm"><div id="bar-step"></div></div>
+    <p id="run-detail" class="hint"></p>
     <p id="run-error" class="err"></p>
     <div class="actions hidden" id="run-fail"><button class="secondary" id="btn-retry">Try this step again</button><button class="secondary" id="btn-rollback">Restore the previous state</button></div>
   </section>
@@ -378,7 +383,12 @@ ul.check{padding-left:20px}ul.check li{margin:6px 0}
       while (true) {
         const r = await post('run');
         $('bar').style.width = r.percent + '%';
-        $('run-step').textContent = (stepNames[r.step] || r.step) + ' — ' + r.percent + '%';
+        $('run-overall').textContent = r.percent + '%';
+        $('run-step').textContent = 'Step ' + Math.min(r.step_index, r.step_count) + ' of ' + r.step_count + ': ' + (stepNames[r.step] || r.step);
+        $('run-step-pct').textContent = r.step_percent + '%';
+        $('bar-step').style.width = r.step_percent + '%';
+        $('run-detail').textContent = r.detail || '';
+        document.title = r.percent + '% · SiteShifter Installer';
         if (r.done) { showResult(r.result); return; }
       }
     } catch (e) {

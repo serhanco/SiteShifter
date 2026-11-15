@@ -4,9 +4,14 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   phpunit:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +35,8 @@ jobs:
           extensions: mysqli, zip, mbstring
           coverage: none
       - run: composer install --no-progress
-      - run: vendor/bin/phpunit
+      - run: vendor/bin/phpunit --debug
+        timeout-minutes: 8
         env:
           SS_DB_HOST: 127.0.0.1:3306
           SS_DB_USER: root

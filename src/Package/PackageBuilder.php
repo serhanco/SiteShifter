@@ -47,6 +47,24 @@ class PackageBuilder
         return ['phase' => 'dump', 'dump' => Dumper::initialState(), 'archive' => Archiver::initialState(), 'done' => false];
     }
 
+    /**
+     * @return array{phase:string,percent:int,phase_percent:int} database dump counts as 30%, files as 70%
+     */
+    public static function progress(array $state): array
+    {
+        if ($state['done']) {
+            return ['phase' => 'done', 'percent' => 100, 'phase_percent' => 100];
+        }
+        if ($state['phase'] === 'dump') {
+            $p = Dumper::percent($state['dump']);
+
+            return ['phase' => 'dump', 'percent' => (int) floor($p * 0.3), 'phase_percent' => $p];
+        }
+        $p = Archiver::percent($state['archive']);
+
+        return ['phase' => $state['phase'] === 'finish' ? 'finish' : 'files', 'percent' => min(99, 30 + (int) floor($p * 0.7)), 'phase_percent' => $p];
+    }
+
     public function run(array $state, float $deadline): array
     {
         if (!is_dir($this->workDir) && !@mkdir($this->workDir, 0755, true)) {

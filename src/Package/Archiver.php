@@ -74,6 +74,11 @@ class Archiver
         return ['phase' => 'scan', 'index' => 0, 'total' => 0, 'bytes' => 0, 'added_bytes' => 0, 'done' => false];
     }
 
+    public static function percent(array $state): int
+    {
+        return \SiteShifter\Support\Progress::percent($state['added_bytes'] ?? 0, $state['bytes'] ?? 0, $state['done']);
+    }
+
     public function run(array $state, float $deadline): array
     {
         if ($state['phase'] === 'scan') {

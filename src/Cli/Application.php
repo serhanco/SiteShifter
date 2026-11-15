@@ -21,8 +21,12 @@ class Application
     /** @var callable(string):void */
     private $out;
 
+    /** @var bool progress may use terminal control codes (only with the default output) */
+    private $ttyOut;
+
     public function __construct(?callable $out = null)
     {
+        $this->ttyOut = $out === null;
         $this->out = $out ?: static function (string $line): void {
             fwrite(STDOUT, $line . PHP_EOL);
         };
@@ -69,7 +73,14 @@ class Application
             'include_foreign_tables' => isset($o['all-tables']),
         ]);
         $this->line("Packaging {$path} …");
-        $state = $builder->runAll();
+        $state = PackageBuilder::initialState();
+        $labels = ['dump' => 'Exporting the database', 'files' => 'Adding files', 'finish' => 'Writing the package', 'done' => 'Done'];
+        while (!$state['done']) {
+            $state = $builder->run($state, microtime(true) + 1);
+            $p = PackageBuilder::progress($state);
+            $this->progress(sprintf('[%3d%%] %s — %d%%', $p['percent'], $labels[$p['phase']], $p['phase_percent']));
+        }
+        $this->progressEnd();
         Installer::removeTree($work);
         $m = $state['manifest'];
         $this->line(sprintf('Package written: %s (%s)', $out, \SiteShifter\Preflight\Preflight::human((int) filesize($out))));
@@ -114,11 +125,13 @@ class Application
         }
         $state = Installer::initialState($inspection);
         try {
+            $labels = ['backup' => 'Backing up existing tables', 'extract' => 'Extracting files', 'core' => 'Installing WordPress core', 'config' => 'Writing wp-config.php', 'import' => 'Importing the database', 'replace' => 'Replacing the old address', 'finalize' => 'Clearing caches, fixing server files', 'verify' => 'Verifying', 'done' => 'Done'];
             while (!$state['done']) {
-                $state = $installer->run($state, microtime(true) + 5);
-                [$step, $pct] = Installer::progress($state);
-                $this->line(sprintf('  [%3d%%] %s', $pct, $step));
+                $state = $installer->run($state, microtime(true) + 1);
+                [$step, $overall, $stepPercent, $detail] = Installer::progress($state);
+                $this->progress(sprintf('[%3d%%] %s — %d%%%s', $overall, $labels[$step] ?? $step, $stepPercent, $detail !== '' ? " ({$detail})" : ''));
             }
+            $this->progressEnd();
         } catch (\Throwable $e) {
             $this->line('Install failed: ' . $e->getMessage());
             if (!isset($o['keep-on-error'])) {
@@ -238,6 +251,36 @@ TXT
     private function version(): string
     {
         return self::VERSION;
+    }
+
+    /** @var string */
+    private $lastProgress = '';
+
+    /** Prints a progress line: rewritten in place on a terminal, one line per change otherwise. */
+    private function progress(string $text): void
+    {
+        if ($text === $this->lastProgress) {
+            return;
+        }
+        $this->lastProgress = $text;
+        if ($this->isTty()) {
+            fwrite(STDOUT, "\r\033[K  " . $text);
+        } else {
+            $this->line('  ' . $text);
+        }
+    }
+
+    private function progressEnd(): void
+    {
+        if ($this->isTty() && $this->lastProgress !== '') {
+            fwrite(STDOUT, PHP_EOL);
+        }
+        $this->lastProgress = '';
+    }
+
+    private function isTty(): bool
+    {
+        return $this->ttyOut && defined('STDOUT') && function_exists('stream_isatty') && @stream_isatty(STDOUT);
     }
 
     private function line(string $text): void

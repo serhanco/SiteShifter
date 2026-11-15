@@ -111,6 +111,11 @@ class Extractor
         return $data === false ? null : $data;
     }
 
+    public static function percent(array $state): int
+    {
+        return \SiteShifter\Support\Progress::percent($state['index'] ?? 0, $state['total'] ?? 0, $state['done']);
+    }
+
     public function run(array $state, float $deadline): array
     {
         $zip = self::openZip($this->zipPath);

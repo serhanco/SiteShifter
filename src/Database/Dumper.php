@@ -33,7 +33,12 @@ class Dumper
 
     public static function initialState(): array
     {
-        return ['started' => false, 'table' => 0, 'cursor' => null, 'offset' => 0, 'table_started' => false, 'done' => false, 'rows' => [], 'largest_row' => 0];
+        return ['started' => false, 'table' => 0, 'cursor' => null, 'offset' => 0, 'table_started' => false, 'done' => false, 'rows' => [], 'largest_row' => 0, 'rows_done' => 0, 'total_rows' => null];
+    }
+
+    public static function percent(array $state): int
+    {
+        return \SiteShifter\Support\Progress::percent($state['rows_done'] ?? 0, $state['total_rows'] ?? 0, $state['done']);
     }
 
     public function run(array $state, float $deadline): array
@@ -43,6 +48,9 @@ class Dumper
             throw new \RuntimeException("Cannot write {$this->file}");
         }
         try {
+            if (($state['total_rows'] ?? null) === null) {
+                $state['total_rows'] = \SiteShifter\Support\Progress::estimateRows($this->db, $this->tables);
+            }
             if (!$state['started']) {
                 $this->write($fh, $this->header());
                 $state['started'] = true;
@@ -136,6 +144,7 @@ class Dumper
             $this->write($fh, $prefix . implode(",\n", $values) . ";\n");
         }
         $state['rows'][$table] += $count;
+        $state['rows_done'] = ($state['rows_done'] ?? 0) + $count;
         $state['offset'] += $count;
         if ($pk !== [] && $last !== null) {
             $state['cursor'] = array_map(static function ($c) use ($last) {

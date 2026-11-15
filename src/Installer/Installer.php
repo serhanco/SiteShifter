@@ -211,18 +211,59 @@ class Installer
         return $this->run($state, INF);
     }
 
-    /** Step progress for the UI: [step, percent]. */
+    /** How much of the total time each step usually takes, for the overall bar. */
+    private const WEIGHTS = ['backup' => 2, 'extract' => 30, 'core' => 5, 'config' => 1, 'import' => 35, 'replace' => 20, 'finalize' => 2, 'verify' => 5, 'done' => 0];
+
+    /**
+     * Live progress for the UI and CLI.
+     *
+     * @return array{0:string,1:int,2:int,3:string} step, overall %, step %, detail text
+     */
     public static function progress(array $state): array
     {
-        $index = array_search($state['step'], self::STEPS, true);
-        $within = 0.0;
-        if ($state['step'] === 'extract' && !empty($state['extract']['total'])) {
-            $within = $state['extract']['index'] / $state['extract']['total'];
-        } elseif ($state['step'] === 'import' && !empty($state['import']['size'])) {
-            $within = $state['import']['offset'] / $state['import']['size'];
+        $step = $state['step'];
+        $stepPercent = 0;
+        $detail = '';
+        switch ($step) {
+            case 'extract':
+                $stepPercent = Extractor::percent($state['extract']);
+                if (!empty($state['extract']['total'])) {
+                    $detail = number_format($state['extract']['index']) . ' / ' . number_format($state['extract']['total']) . ' files';
+                }
+                break;
+            case 'import':
+                $stepPercent = Importer::percent($state['import']);
+                if (!empty($state['import']['size'])) {
+                    $detail = Preflight::human((int) $state['import']['offset']) . ' / ' . Preflight::human((int) $state['import']['size']);
+                }
+                break;
+            case 'replace':
+                $stepPercent = DatabaseReplacer::percent($state['replace']);
+                if (!empty($state['replace']['total_rows'])) {
+                    $detail = number_format($state['replace']['rows_done']) . ' / ~' . number_format($state['replace']['total_rows']) . ' rows';
+                }
+                break;
+            case 'verify':
+                $v = $state['verify'] ?? ['index' => 0, 'total' => 0];
+                $stepPercent = \SiteShifter\Support\Progress::percent($v['index'], $v['total']);
+                if (!empty($v['total'])) {
+                    $detail = $v['index'] . ' / ' . $v['total'] . ' tables';
+                }
+                break;
+            case 'done':
+                $stepPercent = 100;
         }
+        $done = 0;
+        foreach (self::WEIGHTS as $name => $weight) {
+            if ($name === $step) {
+                $done += $weight * $stepPercent / 100;
+                break;
+            }
+            $done += $weight;
+        }
+        $overall = $step === 'done' ? 100 : (int) min(99, floor(100 * $done / array_sum(self::WEIGHTS)));
 
-        return [$state['step'], (int) round(100 * ($index + $within) / (count(self::STEPS) - 1))];
+        return [$step, $overall, $stepPercent, $detail];
     }
 
     // ------------------------------------------------------------------ steps
@@ -367,7 +408,7 @@ class Installer
         return true;
     }
 
-    private function stepVerify(array &$state): bool
+    private function stepVerify(array &$state, float $deadline): bool
     {
         $db = $this->connect();
         $manifest = $state['inspection']['manifest'];
@@ -383,9 +424,24 @@ class Installer
             return $h !== $newHost; // http→https on the same domain: nothing to look for
         }));
 
+        // The leftover scan reads every text column; it runs table by table so it can resume.
+        if (!isset($state['verify'])) {
+            $state['verify'] = ['index' => 0, 'total' => count($tables), 'leftovers' => []];
+        }
+        while ($state['verify']['index'] < count($tables)) {
+            if ($hosts !== []) {
+                $table = $tables[$state['verify']['index']];
+                $state['verify']['leftovers'] = array_merge($state['verify']['leftovers'], $verifier->leftovers([$table], $hosts, [$prefix . 'posts' => ['guid']]));
+            }
+            $state['verify']['index']++;
+            if (microtime(true) >= $deadline) {
+                return false;
+            }
+        }
+
         $source = $manifest['db']['tables'] ?? [];
         $state['result'] = [
-            'leftovers' => $hosts === [] ? [] : $verifier->leftovers($tables, $hosts, [$prefix . 'posts' => ['guid']]),
+            'leftovers' => $state['verify']['leftovers'],
             'row_mismatches' => $source === [] ? [] : Verifier::compareRowCounts($source, $state['imported_rows'] ?? $verifier->rowCounts($tables), $prefix, $prefix),
             'replace_stats' => $state['replace']['stats'],
             'licences' => (new Preflight())->licences($manifest)->toArray(),

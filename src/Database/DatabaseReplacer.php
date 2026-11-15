@@ -46,7 +46,12 @@ class DatabaseReplacer
 
     public static function initialState(): array
     {
-        return ['table' => 0, 'cursor' => null, 'offset' => 0, 'done' => false, 'stats' => []];
+        return ['table' => 0, 'cursor' => null, 'offset' => 0, 'done' => false, 'stats' => [], 'rows_done' => 0, 'total_rows' => null];
+    }
+
+    public static function percent(array $state): int
+    {
+        return \SiteShifter\Support\Progress::percent($state['rows_done'] ?? 0, $state['total_rows'] ?? 0, $state['done']);
     }
 
     /**
@@ -54,6 +59,10 @@ class DatabaseReplacer
      */
     public function run(array $state, float $deadline): array
     {
+        if (($state['total_rows'] ?? null) === null) {
+            $state['total_rows'] = \SiteShifter\Support\Progress::estimateRows($this->db, $this->tables);
+            $state['rows_done'] = 0;
+        }
         while (!$state['done'] && microtime(true) < $deadline) {
             if (!isset($this->tables[$state['table']])) {
                 $state['done'] = true;
@@ -103,6 +112,7 @@ class DatabaseReplacer
 
         foreach ($rows as $row) {
             $state['stats'][$table]['rows']++;
+            $state['rows_done']++;
             $changes = [];
             foreach ($columns as $column) {
                 $value = $row[$column];

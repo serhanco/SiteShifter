@@ -43,6 +43,11 @@ class Importer
         return ['offset' => 0, 'delimiter' => ';', 'statements' => 0, 'done' => false, 'size' => 0];
     }
 
+    public static function percent(array $state): int
+    {
+        return \SiteShifter\Support\Progress::percent($state['offset'] ?? 0, $state['size'] ?? 0, $state['done']);
+    }
+
     public function run(array $state, float $deadline): array
     {
         $reader = new SqlReader($this->file, (int) $state['offset'], $state['delimiter']);
