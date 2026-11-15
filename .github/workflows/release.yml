@@ -1,0 +1,37 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, zip
+          coverage: none
+      - run: composer install --no-progress --no-dev
+      - name: Check the tag matches the plugin version
+        run: |
+          v="$(grep -oP "define\('SITESHIFTER_VERSION', '\K[^']+" plugin/siteshifter.php)"
+          test "v$v" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} does not match plugin version $v"; exit 1; }
+      - run: php bin/build-plugin.php
+      - run: php bin/build-installer.php
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum siteshifter.zip installer.php > SHA256SUMS
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/siteshifter.zip dist/installer.php dist/SHA256SUMS \
+            --title "SiteShifter ${GITHUB_REF_NAME#v}" --generate-notes
