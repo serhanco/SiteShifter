@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.1', '8.3']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
         db: ['mariadb:10.11', 'mysql:8.0']
     services:
       db:
@@ -42,3 +42,4 @@ jobs:
           SS_DB_USER: root
           SS_DB_PASS: root
       - run: php bin/build-installer.php
+      - run: php bin/build-plugin.php
