@@ -50,8 +50,12 @@ class JobApi
     /** @var callable|null function (string $zipPath): array  the import dry run */
     private $inspect;
 
-    public function withImport($incoming, $inspect)
+    /** @var \SiteShifter\Plugin\Jobs\ImportActions|null */
+    private $imports;
+
+    public function withImport($incoming, $imports, $inspect)
     {
+        $this->imports = $imports;
         $this->incoming = $incoming;
         $this->inspect = $inspect;
 
@@ -137,6 +141,12 @@ class JobApi
                     }, $this->incoming->all())] : $this->fail('unavailable', 'Not available.');
                 case 'incoming_delete':
                     return $this->incoming ? ['ok' => true, 'deleted' => $this->incoming->delete($this->id($input))] : $this->fail('unavailable', 'Not available.');
+                case 'imports':
+                    return $this->imports ? ['ok' => true, 'imports' => $this->imports->all()] : $this->fail('unavailable', 'Not available.');
+                case 'import_undo':
+                    return $this->imports ? ['ok' => true] + $this->imports->undo($this->id($input)) : $this->fail('unavailable', 'Not available.');
+                case 'import_discard':
+                    return $this->imports ? ['ok' => true] + $this->imports->discard($this->id($input)) : $this->fail('unavailable', 'Not available.');
                 case 'import_check':
                     $path = $this->incoming ? $this->incoming->path($this->id($input)) : null;
                     if ($path === null || !$this->inspect) {

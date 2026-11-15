@@ -87,6 +87,7 @@ class Menu
         wp_enqueue_script('siteshifter-jobs', SITESHIFTER_URL . 'assets/job-runner.js', [], SITESHIFTER_VERSION, true);
         wp_localize_script('siteshifter-jobs', 'siteshifterJobs', [
             'restUrl' => esc_url_raw(rest_url(\SiteShifter\Plugin\Rest\Routes::NAMESPACE_ . '/')),
+            'loginUrl' => esc_url_raw(wp_login_url()),
             'restNonce' => wp_create_nonce('wp_rest'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'ajaxAction' => \SiteShifter\Plugin\Rest\Routes::AJAX_ACTION,
@@ -137,6 +138,26 @@ class Menu
                     'content' => __('Content only', 'siteshifter'),
                     'custom' => __('Custom', 'siteshifter'),
                 ],
+                'confirmReplace' => __('I understand: this replaces the database, the themes, the plugins and the uploads of this site with the package. The current data is kept so I can undo it.', 'siteshifter'),
+                'importNow' => __('Import and replace this site', 'siteshifter'),
+                'importDone' => __('The import is finished and the site now runs the imported data.', 'siteshifter'),
+                /* translators: %d: number of places */
+                'importLeftovers' => __('The old address still appears in %d places.', 'siteshifter'),
+                /* translators: %d: number of tables */
+                'importMismatch' => __('%d tables have a different number of rows than in the package.', 'siteshifter'),
+                'importLogin' => __('The users of the package are now this site\'s users, so your login session has ended. Log in again at:', 'siteshifter'),
+                'appliedImports' => __('Imports on this site', 'siteshifter'),
+                'importStates' => [
+                    'live' => __('Applied (can be undone)', 'siteshifter'),
+                    'undone' => __('Undone', 'siteshifter'),
+                    'discarded' => __('Backup deleted', 'siteshifter'),
+                    'swapping' => __('Interrupted while switching', 'siteshifter'),
+                    'failed' => __('Failed, nothing was changed', 'siteshifter'),
+                ],
+                'undoImport' => __('Undo: put the previous site back', 'siteshifter'),
+                'discardBackup' => __('Delete the backup', 'siteshifter'),
+                'confirmUndo' => __('Put the site back as it was before this import? Changes made since the import are lost.', 'siteshifter'),
+                'confirmDiscard' => __('Delete the backup of the previous site? After this the import can no longer be undone.', 'siteshifter'),
                 'checking' => __('Checking…', 'siteshifter'),
                 /* translators: %d: number of database rows */
                 'changed' => __('Done. %d database rows were updated.', 'siteshifter'),
@@ -228,7 +249,7 @@ class Menu
                 . '<p><input type="file" id="ss-file" accept=".zip"> <button class="button button-primary" id="ss-upload">' . esc_html__('Upload package', 'siteshifter') . '</button></p>'
                 . '<div id="ss-upload-progress"></div>'
                 . '<h2>' . esc_html__('Packages ready to import', 'siteshifter') . '</h2><div id="ss-incoming"></div>'
-                . '<div id="ss-import-report"></div>'
+                . '<div id="ss-import-report"></div><div id="ss-imports"></div>'
                 . '<p class="description">' . esc_html(sprintf(
                     /* translators: %s: folder path */
                     __('FTP folder: %s', 'siteshifter'),

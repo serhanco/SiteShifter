@@ -152,11 +152,23 @@ class JobStore
         return $jobs;
     }
 
+    /** An applied import keeps the old site's tables and folders here until it is discarded. */
+    public function holdsBackup($id)
+    {
+        $file = $this->dir($id) . '/swap.json';
+        $swap = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+
+        return is_array($swap) && in_array($swap['state'] ?? '', ['live', 'swapping'], true);
+    }
+
     public function delete($id)
     {
         $dir = $this->dir($id);
         if (!is_dir($dir)) {
             return;
+        }
+        if ($this->holdsBackup($id)) {
+            throw new \RuntimeException('This import is live and its backup is kept here. Discard or undo the import first.');
         }
         $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($it as $f) {
@@ -173,7 +185,7 @@ class JobStore
     {
         $now = $now === null ? time() : $now;
         foreach ($this->all() as $job) {
-            if (in_array($job['status'], ['done', 'cancelled', 'failed'], true) && $now - $job['updated'] > $age) {
+            if (in_array($job['status'], ['done', 'cancelled', 'failed'], true) && $now - $job['updated'] > $age && !$this->holdsBackup($job['id'])) {
                 $this->delete($job['id']);
             }
         }

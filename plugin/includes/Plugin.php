@@ -22,12 +22,34 @@ class Plugin
 
         $store = new Jobs\JobStore(WP_CONTENT_DIR . '/siteshifter-work');
         $connect = ['SiteShifter\\Plugin\\Runtime\\Site', 'connection'];
+        $incoming = new Jobs\Incoming($store);
         $runner = new Jobs\Runner($store, [
             'host_test' => static function ($job, $dir) {
                 return new Jobs\HostTestTask($dir);
             },
             'address_change' => static function ($job, $dir) use ($connect) {
                 return new Jobs\AddressChangeTask($dir, Runtime\Site::prefix(), $connect);
+            },
+            'import' => static function ($job, $dir) use ($connect, $incoming) {
+                $zip = $incoming->path((string) ($job['params']['package'] ?? ''));
+                if ($zip === null) {
+                    throw new \InvalidArgumentException('That package was not found.');
+                }
+
+                return new Jobs\ImportTask($dir, [
+                    'zip' => $zip,
+                    'content_dir' => WP_CONTENT_DIR,
+                    'abspath' => untrailingslashit(ABSPATH),
+                    'home' => Runtime\Site::homeUrl(),
+                    'siteurl' => untrailingslashit((string) get_option('siteurl')),
+                    'prefix' => Runtime\Site::prefix(),
+                    'plugin_file' => plugin_basename(SITESHIFTER_FILE),
+                    'connect' => $connect,
+                    'inspect' => static function ($path) {
+                        return (new Import\Inspector())->inspect($path, Runtime\Site::importTarget());
+                    },
+                    'after_swap' => 'wp_cache_flush',
+                ]);
             },
             'measure' => static function () use ($connect) {
                 return new Jobs\MeasureTask(untrailingslashit(ABSPATH), array_merge(\SiteShifter\Package\Archiver::DEFAULT_EXCLUDES, [Jobs\ExportTask::WORK_FOLDER]), static function () use ($connect) {
@@ -82,8 +104,7 @@ class Plugin
 
             return $report;
         });
-        $incoming = new Jobs\Incoming($store);
-        $api->withImport($incoming, static function ($zip) {
+        $api->withImport($incoming, new Jobs\ImportActions($store, $connect, 'wp_cache_flush'), static function ($zip) {
             return (new Import\Inspector())->inspect($zip, Runtime\Site::importTarget());
         });
         (new Rest\Routes($api))->register();

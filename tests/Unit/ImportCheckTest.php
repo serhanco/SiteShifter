@@ -152,12 +152,11 @@ class ImportCheckTest extends TestCase
         unlink($zip);
     }
 
-    public function testDryRunBlocksDifferentPrefixMultisiteAndNonPackages(): void
+    public function testDryRunRenamesPrefixButBlocksMultisiteAndNonPackages(): void
     {
         $zip = $this->zip(['site' => ['table_prefix' => 'abc_']]);
         $r = (new Inspector())->inspect($zip, $this->target());
-        $this->assertSame('block', $this->ids($r)['plan_prefix']);
-        $this->assertTrue($r['blockers']);
+        $this->assertSame('info', $this->ids($r)['plan_prefix']);
 
         $ms = $this->zip(['site' => ['multisite' => true]]);
         $this->assertSame('block', $this->ids((new Inspector())->inspect($ms, $this->target()))['plan_multisite']);
@@ -192,7 +191,7 @@ class ImportCheckTest extends TestCase
         $id = $in->begin('p.zip', filesize($z));
         $in->append($id, 0, $z);
         $in->finish($id);
-        $api = (new JobApi(new Runner(new JobStore($this->base), [])))->withImport($in, static function ($path) {
+        $api = (new JobApi(new Runner(new JobStore($this->base), [])))->withImport($in, null, static function ($path) {
             return ['package' => null, 'rows' => [], 'path_seen' => basename($path)];
         });
 

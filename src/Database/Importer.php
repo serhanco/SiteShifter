@@ -27,6 +27,9 @@ class Importer
     /** @var bool */
     private $targetIsMariaDb;
 
+    /** @var PrefixMap|null */
+    private $prefixMap;
+
     /**
      * @param array<string,string> $collations from Preflight::collationPlan()['convert']
      */
@@ -36,6 +39,14 @@ class Importer
         $this->file = $file;
         $this->collations = $collations;
         $this->targetIsMariaDb = $db->isMariaDb();
+    }
+
+    /** Renames tables while importing (e.g. into a staging prefix). */
+    public function withPrefixMap(?PrefixMap $map): self
+    {
+        $this->prefixMap = $map;
+
+        return $this;
     }
 
     public static function initialState(): array
@@ -65,7 +76,7 @@ class Importer
                 $state['offset'] = $reader->offset();
                 break;
             }
-            $sql = $this->transform($statement);
+            $sql = $this->transform($this->prefixMap ? $this->prefixMap->transform($statement) : $statement);
             if ($sql !== '') {
                 try {
                     $this->db->exec($sql);
