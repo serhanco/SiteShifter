@@ -18,6 +18,8 @@ class MergePolicy
         'plugins' => ['keep_newer', 'overwrite', 'skip'],
         'media' => ['skip', 'overwrite', 'rename'],
         'other_files' => ['skip', 'overwrite'],
+        'settings' => ['keep', 'overwrite'],
+        'users' => ['map', 'skip'],
     ];
 
     /** @var array */

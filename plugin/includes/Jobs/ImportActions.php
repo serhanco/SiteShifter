@@ -42,7 +42,11 @@ class ImportActions
         }
         $dir = $this->store->dir($id);
         $db = call_user_func($this->connect);
-        DbSwap::undo($db, $swap['pairs']);
+        if (($swap['mode'] ?? 'replace') === 'merge') {
+            \SiteShifter\Plugin\Import\DbMerge::undo($db, $swap['copies']);
+        } else {
+            DbSwap::undo($db, $swap['pairs']);
+        }
         (new FileSwap('', '', ''))->undo($swap['files']);
         DbSwap::drop($db, $db->tables($swap['stage_prefix'])); // the imported tables are no longer needed
         $swap['state'] = 'undone';

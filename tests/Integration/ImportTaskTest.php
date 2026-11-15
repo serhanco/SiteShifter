@@ -40,11 +40,11 @@ class ImportTaskTest extends DatabaseTestCase
 
         // source site, prefix src_
         $this->createWordPressTables('src_');
-        $this->db->exec('CREATE TABLE src_users (ID bigint unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, PRIMARY KEY (ID))');
+        $this->db->exec('CREATE TABLE src_users (ID bigint unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, user_email varchar(100) NOT NULL, PRIMARY KEY (ID))');
         $this->db->exec('CREATE TABLE src_usermeta (umeta_id bigint unsigned NOT NULL AUTO_INCREMENT, user_id bigint unsigned NOT NULL, meta_key varchar(255), meta_value longtext, PRIMARY KEY (umeta_id))');
         $this->db->exec("INSERT INTO src_options (option_name, option_value) VALUES ('siteurl','http://old.test'),('home','http://old.test'),('active_plugins','a:1:{i:0;s:15:\"other/other.php\";}'),('src_user_roles','a:0:{}'),('_transient_x','1')");
         $this->db->exec("INSERT INTO src_posts (post_content, post_title, guid) VALUES ('see http://old.test/a', 'New post', 'http://old.test/?p=1')");
-        $this->db->exec("INSERT INTO src_users (user_login) VALUES ('newadmin')");
+        $this->db->exec("INSERT INTO src_users (user_login, user_email) VALUES ('newadmin','n@x.test')");
         $this->db->exec("INSERT INTO src_usermeta (user_id, meta_key, meta_value) VALUES (1,'src_capabilities','a:1:{s:13:\"administrator\";b:1;}'),(1,'nickname','n')");
         $db = $this->db;
         $src = $this->src;
@@ -66,12 +66,12 @@ class ImportTaskTest extends DatabaseTestCase
 
         // target site, prefix wp_
         $this->createWordPressTables('wp_');
-        $this->db->exec('CREATE TABLE wp_users (ID bigint unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, PRIMARY KEY (ID))');
+        $this->db->exec('CREATE TABLE wp_users (ID bigint unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, user_email varchar(100) NOT NULL, PRIMARY KEY (ID))');
         $this->db->exec('CREATE TABLE wp_usermeta (umeta_id bigint unsigned NOT NULL AUTO_INCREMENT, user_id bigint unsigned NOT NULL, meta_key varchar(255), meta_value longtext, PRIMARY KEY (umeta_id))');
         $this->db->exec('CREATE TABLE wp_localonly (id int)');
         $this->db->exec("INSERT INTO wp_options (option_name, option_value) VALUES ('siteurl','https://new.test'),('home','https://new.test'),('active_plugins','a:0:{}')");
         $this->db->exec("INSERT INTO wp_posts (post_content, post_title) VALUES ('x', 'Old post')");
-        $this->db->exec("INSERT INTO wp_users (user_login) VALUES ('oldadmin')");
+        $this->db->exec("INSERT INTO wp_users (user_login, user_email) VALUES ('oldadmin','o@x.test')");
         $this->base = $base;
     }
 
@@ -226,5 +226,40 @@ class ImportTaskTest extends DatabaseTestCase
         $view = $this->finish($runner, $view);
         $this->assertSame('done', $view['status'], (string) $view['error']);
         $this->assertSame('New post', $this->db->value('SELECT post_title FROM wp_posts'));
+    }
+
+    public function testMergeModeKeepsWhatIsHereAddsWhatIsNewAndUndoes(): void
+    {
+        $runner = $this->runner($store);
+        $view = $this->finish($runner, $runner->start('import', ['package' => 'x', 'mode' => 'merge', 'policy' => ['themes' => 'overwrite']]));
+        $this->assertSame('done', $view['status'], (string) $view['error']);
+        $this->assertSame('merge', $view['result']['mode']);
+        $this->assertFalse($view['result']['merge']['content_merged']);
+        $c = $this->dst . '/wp-content';
+
+        // files: nothing deleted, new things added
+        $this->assertFileExists($c . '/uploads/2020/old.txt');
+        $this->assertFileExists($c . '/uploads/2026/new.txt');
+        $this->assertFileExists($c . '/themes/old/style.css');
+        $this->assertFileExists($c . '/themes/new/style.css');
+        $this->assertFileExists($c . '/plugins/mine/m.php');
+        $this->assertFileExists($c . '/plugins/other/o.php');
+        $this->assertFileDoesNotExist($c . '/plugins/siteshifter/evil.php');
+        // database: own posts and users stay, package users are added, address stays
+        $this->assertSame('Old post', $this->db->value('SELECT post_title FROM wp_posts'));
+        $this->assertSame('2', $this->db->value('SELECT COUNT(*) FROM wp_users'));
+        $this->assertSame('https://new.test', $this->db->value("SELECT option_value FROM wp_options WHERE option_name = 'siteurl'"));
+        $this->assertSame('wp_capabilities', $this->db->value("SELECT meta_key FROM wp_usermeta WHERE meta_key LIKE '%capabilities'"));
+
+        $actions = new ImportActions($store, function () {
+            return $this->db;
+        });
+        $this->assertTrue($actions->undo($view['id'])['undone']);
+        $this->assertSame('1', $this->db->value('SELECT COUNT(*) FROM wp_users'));
+        $this->assertFileDoesNotExist($c . '/uploads/2026/new.txt');
+        $this->assertFileDoesNotExist($c . '/themes/new/style.css');
+        $this->assertFileExists($c . '/uploads/2020/old.txt');
+        $this->assertSame([], $this->db->tables('ssb'));
+        $this->assertSame([], $this->db->tables('ssi'));
     }
 }

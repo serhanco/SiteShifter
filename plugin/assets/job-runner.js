@@ -409,15 +409,26 @@
 	/* Replace-mode import: confirmation, live progress, result, undo. */
 	function importControls(id) {
 		var wrap = document.createElement('div');
-		wrap.innerHTML = '<p><label><input type="checkbox" class="ss-ok"> ' + esc(cfg.i18n.confirmReplace) + '</label></p>' +
+		var t = cfg.i18n.merge, sel = function (key) {
+			return '<label>' + esc(t.labels[key]) + ' <select class="ss-pol" data-key="' + key + '">' + t.choices[key].map(function (c) { return '<option value="' + c + '">' + esc(t.names[c]) + '</option>'; }).join('') + '</select></label> ';
+		};
+		wrap.innerHTML = '<p><label><input type="radio" name="ss-mode-' + id + '" class="ss-mode" value="replace" checked> ' + esc(t.replace) + '</label><br>' +
+			'<label><input type="radio" name="ss-mode-' + id + '" class="ss-mode" value="merge"> ' + esc(t.merge) + '</label></p>' +
+			'<div class="ss-merge" hidden><p>' + ['themes', 'plugins', 'media', 'other_files', 'settings', 'users'].map(sel).join('<br>') + '</p><p class="description">' + esc(t.note) + '</p></div>' +
+			'<p><label><input type="checkbox" class="ss-ok"> ' + esc(cfg.i18n.confirmReplace) + '</label></p>' +
 			'<p><button class="button button-primary ss-go" disabled>' + esc(cfg.i18n.importNow) + '</button></p><div class="ss-imp-progress"></div><div class="ss-imp-result"></div>';
+		var modes = wrap.querySelectorAll('.ss-mode');
+		function mode() { return wrap.querySelector('.ss-mode:checked').value; }
+		Array.prototype.forEach.call(modes, function (m) { m.addEventListener('change', function () { wrap.querySelector('.ss-merge').hidden = mode() !== 'merge'; }); });
 		var ok = wrap.querySelector('.ss-ok'), go = wrap.querySelector('.ss-go');
 		ok.addEventListener('change', function () { go.disabled = !ok.checked; });
 		go.addEventListener('click', function (e) {
 			e.preventDefault();
 			go.disabled = true; ok.disabled = true;
 			var res = wrap.querySelector('.ss-imp-result');
-			J.run('import', { package: id }, wrap.querySelector('.ss-imp-progress')).then(function (job) {
+			var policy = {};
+			Array.prototype.forEach.call(wrap.querySelectorAll('.ss-pol'), function (el) { policy[el.getAttribute('data-key')] = el.value; });
+			J.run('import', { package: id, mode: mode(), policy: policy }, wrap.querySelector('.ss-imp-progress')).then(function (job) {
 				if (!job || job.status !== 'done') { return; }
 				var r = job.result || {}, html = '<div class="notice notice-success inline"><p><strong>' + esc(cfg.i18n.importDone) + '</strong></p></div>';
 				if (r.leftovers && r.leftovers.length) { html += '<p>' + esc(cfg.i18n.importLeftovers.replace('%d', r.leftovers.length)) + '</p>'; }
