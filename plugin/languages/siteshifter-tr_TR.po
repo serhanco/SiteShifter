@@ -1,0 +1,754 @@
+# SiteShifter - Turkish translation.
+# by Serhan Demirel - https://serhandemirel.com
+msgid ""
+msgstr ""
+"Project-Id-Version: SiteShifter\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"MIME-Version: 1.0\n"
+
+#. translators: %d: number of tables
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "%d tables have a different number of rows than in the package."
+msgstr "%d tablonun satır sayısı paketteki ile farklı."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A database row or statement is larger than the server allows"
+msgstr "Bir veritabanı satırı veya sorgusu sunucunun izin verdiğinden büyük"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A file is busy or locked"
+msgstr "Bir dosya meşgul veya kilitli"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A file or folder could not be written"
+msgstr "Bir dosya veya klasör yazılamadı"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "A required PHP extension is missing"
+msgstr "Gerekli bir PHP eklentisi eksik"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Also include database tables that do not use this site's table prefix"
+msgstr "Bu sitenin tablo önekini kullanmayan veritabanı tablolarını da ekle"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Another SiteShifter job or a backup tool is using it. Wait a minute and resume."
+msgstr "Başka bir SiteShifter işi veya yedekleme aracı kullanıyor. Bir dakika bekleyip devam edin."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Another process is using the same tables. Try again in a moment; pause busy plugins or cron jobs if it keeps happening."
+msgstr "Başka bir işlem aynı tabloları kullanıyor. Birazdan tekrar deneyin; sürerse yoğun eklentileri veya cron işlerini durdurun."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Applied (can be undone)"
+msgstr "Uygulandı (geri alınabilir)"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Ask your host to add the folder to open_basedir, or choose a folder that is inside the allowed paths."
+msgstr "Barındırma firmanızdan klasörü open_basedir listesine eklemesini isteyin veya izin verilen yolların içinde bir klasör seçin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Backup deleted"
+msgstr "Yedek silindi"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Change address"
+msgstr "Adres değiştir"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Changes the site address in the database (including serialized data, Elementor, ACF and WPML values). A full database backup is taken first so you can undo it."
+msgstr "Site adresini veritabanında değiştirir (serileştirilmiş veri, Elementor, ACF ve WPML değerleri dahil). Geri alabilmeniz için önce tam veritabanı yedeği alınır."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check"
+msgstr "Kontrol"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check and change address"
+msgstr "Kontrol et ve adresi değiştir"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check and create package"
+msgstr "Kontrol et ve paket oluştur"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Check that the database host is correct and running. On shared hosting try \"localhost\" or the host name your provider shows. Then resume."
+msgstr "Veritabanı sunucusu adının doğru olduğunu ve çalıştığını kontrol edin. Paylaşımlı barındırmada \"localhost\" veya firmanızın gösterdiği sunucu adını deneyin. Sonra devam edin."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Check the database user name and the password stored in wp-config.php, and that the user may connect from this server."
+msgstr "wp-config.php içindeki veritabanı kullanıcı adını ve parolayı, ayrıca kullanıcının bu sunucudan bağlanabildiğini kontrol edin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Check this package"
+msgstr "Bu paketi kontrol et"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Checking…"
+msgstr "Kontrol ediliyor…"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Checks and history"
+msgstr "Kontroller ve geçmiş"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Choose a .zip file first."
+msgstr "Önce bir .zip dosyası seçin."
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Choose an existing user on the new site to own the imported content."
+msgstr "İçe aktarılan içeriğin sahibi olacak, yeni sitede var olan bir kullanıcı seçin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Comments"
+msgstr "Yorumlar"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Comments are not included"
+msgstr "Yorumlar dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Connection problem, trying again (%d)…"
+msgstr "Bağlantı sorunu, yeniden deneniyor (%d)…"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content only"
+msgstr "Yalnızca içerik"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content only: posts, pages, media, comments, users, no themes, plugins or settings"
+msgstr "Yalnızca içerik: yazılar, sayfalar, medya, yorumlar, kullanıcılar; tema, eklenti ve ayar yok"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Content that needs them may look wrong or break on the new site."
+msgstr "Bunlara ihtiyaç duyan içerik yeni sitede yanlış görünebilir veya bozulabilir."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Content types"
+msgstr "İçerik türleri"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Continue anyway"
+msgstr "Yine de devam et"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Copy wp-content/uploads to the new site yourself (SFTP or rsync), then run the import check again."
+msgstr "wp-content/uploads klasörünü yeni siteye kendiniz kopyalayın (SFTP veya rsync), sonra içe aktarma kontrolünü yeniden çalıştırın."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Could not finish:"
+msgstr "Tamamlanamadı:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Created"
+msgstr "Oluşturulma"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Current address"
+msgstr "Güncel adres"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Custom"
+msgstr "Özel"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Custom: choose content types and parts"
+msgstr "Özel: içerik türlerini ve bölümleri seçin"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Data that plugins keep in their own tables (forms, orders, bookings) is not packed."
+msgstr "Eklentilerin kendi tablolarında tuttuğu veriler (formlar, siparişler, rezervasyonlar) pakete eklenmez."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete old packages automatically (once a day)"
+msgstr "Eski paketleri otomatik sil (günde bir kez)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete package from this server"
+msgstr "Paketi bu sunucudan sil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete selected"
+msgstr "Seçilenleri sil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the backup"
+msgstr "Yedeği sil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the backup of the previous site? After this the import can no longer be undone."
+msgstr "Önceki sitenin yedeği silinsin mi? Bundan sonra içe aktarma geri alınamaz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Delete the selected packages from this server? This cannot be undone."
+msgstr "Seçilen paketler bu sunucudan silinsin mi? Bu işlem geri alınamaz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Deleted."
+msgstr "Silindi."
+
+#. translators: %d: number of database rows
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Done. %d database rows were updated."
+msgstr "Tamamlandı. %d veritabanı satırı güncellendi."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Download package"
+msgstr "Paketi indir"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Enable the mysqli and zip extensions in your PHP settings or ask your host."
+msgstr "PHP ayarlarınızda mysqli ve zip eklentilerini etkinleştirin veya barındırma firmanızdan isteyin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Everything"
+msgstr "Her şey"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Everything (the whole site)"
+msgstr "Her şey (tüm site)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Export"
+msgstr "Dışa aktar"
+
+#. translators: %s: folder path
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "FTP folder: %s"
+msgstr "FTP klasörü: %s"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Failed"
+msgstr "Başarısız"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Failed, nothing was changed"
+msgstr "Başarısız oldu, hiçbir şey değişmedi"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Files"
+msgstr "Dosyalar"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Finished."
+msgstr "Bitti."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Free some space (old packages, backups, caches) or ask your host to raise the disk quota, then resume."
+msgstr "Yer açın (eski paketler, yedekler, önbellekler) veya barındırma firmanızdan disk kotasını artırmasını isteyin, sonra devam edin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "GB"
+msgstr "GB"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Give the web server user write permission to the folder named in the message (usually 755 for folders and 644 for files, owned by the account that runs PHP), then resume."
+msgstr "Mesajda adı geçen klasör için web sunucusu kullanıcısına yazma izni verin (genellikle klasörler için 755, dosyalar için 644; PHP'yi çalıştıran hesaba ait olmalı), sonra devam edin."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Grant the database user ALL PRIVILEGES on this database (CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, DELETE, LOCK TABLES), then resume."
+msgstr "Veritabanı kullanıcısına bu veritabanında TÜM YETKİLERİ verin (CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, DELETE, LOCK TABLES), sonra devam edin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "I understand: this replaces the database, the themes, the plugins and the uploads of this site with the package. The current data is kept so I can undo it."
+msgstr "Anlıyorum: bu işlem sitenin veritabanını, temalarını, eklentilerini ve yüklemelerini paketle değiştirir. Geri alabilmem için mevcut veri saklanır."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Import"
+msgstr "İçe aktar"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Import and replace this site"
+msgstr "İçe aktar ve bu siteyi değiştir"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Imports on this site"
+msgstr "Bu sitedeki içe aktarmalar"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Include them if you need that data on the new site."
+msgstr "Bu veriye yeni sitede ihtiyacınız varsa ekleyin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Interrupted while switching"
+msgstr "Geçiş sırasında kesildi"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Keep at most"
+msgstr "En fazla şu kadar tut"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Keep packages"
+msgstr "Paketleri sakla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Links that could not be translated (cleared, please check):"
+msgstr "Çevrilemeyen bağlantılar (temizlendi, lütfen kontrol edin):"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Make sure the same themes and plugins are installed and active on the new site."
+msgstr "Aynı temaların ve eklentilerin yeni sitede kurulu ve etkin olduğundan emin olun."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Measuring the site (folders, database, free disk space)…"
+msgstr "Site ölçülüyor (klasörler, veritabanı, boş disk alanı)…"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Media is now switched off in the custom options. Copy wp-content/uploads to the new site by hand, then click \"Check and create package\" again."
+msgstr "Medya özel seçeneklerde kapatıldı. wp-content/uploads klasörünü yeni siteye elle kopyalayın, sonra \"Kontrol et ve paket oluştur\"a yeniden tıklayın."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Media library (uploads folder and attachments)"
+msgstr "Medya kitaplığı (uploads klasörü ve ekler)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge never deletes anything and never changes the site address, the active plugins or the roles. Posts, comments and categories are added next to yours and their links (parent, author, featured image, categories) are translated; a link that cannot be translated is cleared and listed after the import. IDs stored inside page-builder data are not translated."
+msgstr "Birleştirme hiçbir şeyi silmez; site adresini, etkin eklentileri ve rolleri değiştirmez. Yazılar, yorumlar ve kategoriler sizinkilerin yanına eklenir; bağlantıları (üst yazı, yazar, öne çıkan görsel, kategoriler) yeni kimliklere çevrilir. Çevrilemeyen bir bağlantı temizlenir ve içe aktarmadan sonra listelenir. Sayfa oluşturucu verisinin içindeki kimlikler çevrilmez."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge result (files by action, then database counts):"
+msgstr "Birleştirme sonucu (dosyalar işleme göre, sonra veritabanı sayıları):"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Merge: keep what is on this site, add what is new, and decide conflicts below."
+msgstr "Birleştir: bu sitedekini koru, yeniyi ekle, çakışmaları aşağıdan belirle."
+
+#: plugin/includes/Admin/Menu.php
+msgid "New address"
+msgstr "Yeni adres"
+
+#: plugin/includes/Admin/Menu.php
+msgid "No packages have been uploaded yet."
+msgstr "Henüz paket yüklenmedi."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time."
+msgstr "Hiçbir şey kaybolmaz: iş kaldığı yerden devam eder. Tekrarlarsa barındırma firmanızdan max_execution_time değerini artırmasını isteyin."
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Only the chosen content types are included"
+msgstr "Yalnızca seçilen içerik türleri dahil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Only wp-content (themes, plugins, uploads)"
+msgstr "Yalnızca wp-content (temalar, eklentiler, yüklemeler)"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Other post types, and their custom fields and category links, are left out."
+msgstr "Diğer yazı türleri ve bunların özel alanları ile kategori bağlantıları dışarıda bırakılır."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP is not allowed to use that folder (open_basedir)"
+msgstr "PHP'nin bu klasörü kullanmasına izin yok (open_basedir)"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP ran out of memory"
+msgstr "PHP belleği tükendi"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "PHP stopped the request because it took too long"
+msgstr "PHP, çok uzun sürdüğü için isteği durdurdu"
+
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Package from %1$s, %2$s, WordPress %3$s, %4$s tables, scope: %5$s"
+msgstr "Paket kaynağı %1$s, %2$s, WordPress %3$s, %4$s tablo, kapsam: %5$s"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages"
+msgstr "Paketler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages made on this server. They hold your database and wp-config.php, so delete them when you no longer need them."
+msgstr "Bu sunucuda oluşturulan paketler. Veritabanınızı ve wp-config.php dosyanızı içerirler; gerek kalmayınca silin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages ready to import"
+msgstr "İçe aktarılmaya hazır paketler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packs this site (files and database) into one zip you can move to another WordPress. The package is checked before you can download it."
+msgstr "Bu siteyi (dosyalar ve veritabanı) başka bir WordPress'e taşıyabileceğiniz tek bir zip dosyasına paketler. Paket, indirmeden önce kontrol edilir."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Parts"
+msgstr "Bölümler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Passed"
+msgstr "Geçti"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paused after repeated errors. You can resume from where it stopped."
+msgstr "Tekrarlanan hatalardan sonra duraklatıldı. Kaldığı yerden devam ettirebilirsiniz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Plugin data tables"
+msgstr "Eklenti veri tabloları"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Plugin data tables are not included"
+msgstr "Eklenti veri tabloları dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Plugins"
+msgstr "Eklentiler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Post revisions"
+msgstr "Yazı revizyonları"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Posts keep their author number, which may not exist on the new site."
+msgstr "Yazılar yazar numaralarını korur; bu numara yeni sitede olmayabilir."
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Posts that use images or files from the media library will show them as missing until the uploads folder is on the new site."
+msgstr "Medya kitaplığındaki görselleri veya dosyaları kullanan yazılarda, uploads klasörü yeni sitede olana kadar bunlar eksik görünür."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Posts, comments and categories of the package"
+msgstr "Paketteki yazılar, yorumlar ve kategoriler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Put the site back as it was before this import? Changes made since the import are lost."
+msgstr "Site bu içe aktarmadan önceki haline döndürülsün mü? İçe aktarmadan sonra yapılan değişiklikler kaybolur."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Raise max_allowed_packet (for example to 64M) in the MySQL settings or ask your host to, then resume."
+msgstr "MySQL ayarlarında max_allowed_packet değerini artırın (örneğin 64M) veya barındırma firmanızdan isteyin, sonra devam edin."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Raise memory_limit (256M or more) in php.ini or wp-config.php (WP_MEMORY_LIMIT), or ask your host, then resume."
+msgstr "php.ini veya wp-config.php içinde memory_limit değerini (256M veya üzeri, WP_MEMORY_LIMIT) artırın ya da barındırma firmanızdan isteyin, sonra devam edin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Replace: the site becomes exactly the package (the current data is kept for undo)."
+msgstr "Değiştir: site tam olarak paket haline gelir (mevcut veri geri alma için saklanır)."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Resume to try again. If it repeats, send the message below to support."
+msgstr "Yeniden denemek için devam edin. Tekrarlarsa aşağıdaki mesajı desteğe gönderin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Run checks"
+msgstr "Kontrolleri çalıştır"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Run server test"
+msgstr "Sunucu testini çalıştır"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same media file in both"
+msgstr "Her ikisinde de aynı medya dosyası"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same other file in both"
+msgstr "Her ikisinde de aynı diğer dosya"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same plugin in both"
+msgstr "Her ikisinde de aynı eklenti"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same post or page (type and slug) in both"
+msgstr "Her ikisinde de aynı yazı veya sayfa (tür ve kısa ad)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same setting in both"
+msgstr "Her ikisinde de aynı ayar"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same theme in both"
+msgstr "Her ikisinde de aynı tema"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Same user (e-mail or login) in both"
+msgstr "Her ikisinde de aynı kullanıcı (e-posta veya kullanıcı adı)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Save"
+msgstr "Kaydet"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Saved."
+msgstr "Kaydedildi."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Scope"
+msgstr "Kapsam"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings (options table)"
+msgstr "Ayarlar (options tablosu)"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Settings are not included"
+msgstr "Ayarlar dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings only"
+msgstr "Yalnızca ayarlar"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Settings only (the options table, no files)"
+msgstr "Yalnızca ayarlar (options tablosu, dosya yok)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "SiteShifter"
+msgstr "SiteShifter"
+
+#: plugin/includes/Plugin.php
+msgid "SiteShifter detected a multisite network. Export, import and address change are switched off on multisite in this version; a network-aware release is planned."
+msgstr "SiteShifter bir multisite ağı tespit etti. Bu sürümde dışa aktarma, içe aktarma ve adres değiştirme multisite'ta kapalıdır; ağı destekleyen bir sürüm planlanıyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Size"
+msgstr "Boyut"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "Something unexpected went wrong"
+msgstr "Beklenmeyen bir sorun oluştu"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Source address"
+msgstr "Kaynak adres"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Structure only"
+msgstr "Yalnızca yapı"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Structure only: themes, plugins, settings, menus and templates, no content"
+msgstr "Yalnızca yapı: temalar, eklentiler, ayarlar, menüler ve şablonlar; içerik yok"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Suggest copying uploads by hand above"
+msgstr "Eşiğin üzerinde uploads'ı elle kopyalamayı öner"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Technical detail:"
+msgstr "Teknik ayrıntı:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Test this server"
+msgstr "Bu sunucuyu test et"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database connection was lost"
+msgstr "Veritabanı bağlantısı koptu"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database refused the user name or password"
+msgstr "Veritabanı kullanıcı adını veya parolayı reddetti"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database server could not be reached"
+msgstr "Veritabanı sunucusuna ulaşılamadı"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database user lacks a permission"
+msgstr "Veritabanı kullanıcısının bir yetkisi eksik"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The database was busy (lock wait or deadlock)"
+msgstr "Veritabanı meşguldü (kilit beklemesi veya kilitlenme)"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The disk is full"
+msgstr "Disk dolu"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The file is incomplete or damaged. Create or upload the package again."
+msgstr "Dosya eksik veya hasarlı. Paketi yeniden oluşturun veya yükleyin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The import is finished and the site now runs the imported data."
+msgstr "İçe aktarma bitti, site artık içe aktarılan veriyle çalışıyor."
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "The new site keeps its own settings, menus and widgets."
+msgstr "Yeni site kendi ayarlarını, menülerini ve bileşenlerini korur."
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "The new site will have no comments from this one."
+msgstr "Yeni sitede bu sitenin yorumları olmayacak."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The old address no longer appears anywhere in the database."
+msgstr "Eski adres artık veritabanında hiçbir yerde geçmiyor."
+
+#. translators: %d: number of places
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The old address still appears in %d places (see the list in Checks and history after a reload)."
+msgstr "Eski adres hâlâ %d yerde geçiyor (sayfayı yeniledikten sonra Kontroller ve geçmiş bölümündeki listeye bakın)."
+
+#. translators: %d: number of places
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The old address still appears in %d places."
+msgstr "Eski adres hâlâ %d yerde geçiyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it."
+msgstr "Paket, kullanıcı parola özetleri dahil veritabanınızı ve wp-config.php dosyanızı içerir. Gizli tutun ve indirdikten sonra bu sunucudan silin."
+
+#. translators: 1: size, 2: number of files, 3: number of database tables
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires."
+msgstr "Paket hazır ve kontrol edildi: %1$s, %2$s dosya, %3$s veritabanı tablosu. Bağlantı 15 dakika çalışır; süresi dolarsa yenisini oluşturun."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The server closed the connection (timeout or restart). Resume; if it repeats, ask your host to raise wait_timeout."
+msgstr "Sunucu bağlantıyı kapattı (zaman aşımı veya yeniden başlatma). Devam edin; tekrarlarsa barındırma firmanızdan wait_timeout değerini artırmasını isteyin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
+msgstr "Sunucu beklenmeyen bir yanıt verdi (araya bir güvenlik duvarı veya önbellek girmiş olabilir)."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The users of the package are now this site's users, so your login session has ended. Log in again at:"
+msgstr "Paketin kullanıcıları artık bu sitenin kullanıcıları, bu yüzden oturumunuz sona erdi. Yeniden giriş yapın:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "The whole site (WordPress files, themes, plugins, uploads)"
+msgstr "Tüm site (WordPress dosyaları, temalar, eklentiler, yüklemeler)"
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The zip file cannot be read"
+msgstr "Zip dosyası okunamıyor"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Themes"
+msgstr "Temalar"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Themes or plugins are not included"
+msgstr "Temalar veya eklentiler dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "There are no packages on this server."
+msgstr "Bu sunucuda paket yok."
+
+#: plugin/includes/Admin/Menu.php
+msgid "This screen is coming in a later step."
+msgstr "Bu ekran sonraki bir adımda geliyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undo: put the previous site back"
+msgstr "Geri al: önceki siteyi yerine koy"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undo: restore the database from the backup taken before the change"
+msgstr "Geri al: veritabanını değişiklikten önce alınan yedekten geri yükle"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Undone"
+msgstr "Geri alındı"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Upload a package made by SiteShifter (or put it in the incoming folder by FTP for very large sites), then check it. The check changes nothing: it shows what would be replaced, what is incompatible and what you must do by hand."
+msgstr "SiteShifter ile hazırlanmış bir paketi yükleyin (çok büyük siteler için FTP ile gelen klasörüne koyun), sonra kontrol edin. Kontrol hiçbir şeyi değiştirmez: neyin değişeceğini, neyin uyumsuz olduğunu ve elle ne yapmanız gerektiğini gösterir."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Upload package"
+msgstr "Paketi yükle"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploaded and verified."
+msgstr "Yüklendi ve doğrulandı."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploading…"
+msgstr "Yükleniyor…"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Uploads are not included"
+msgstr "Yüklemeler dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Use \"without media\" and copy uploads myself"
+msgstr "\"Medyasız\" kullan ve uploads'ı kendim kopyalayayım"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Users"
+msgstr "Kullanıcılar"
+
+#: plugin/includes/Admin/ScopeText.php
+msgid "Users are not included"
+msgstr "Kullanıcılar dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "What to include"
+msgstr "Nelerin dahil edileceği"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Writes and checks a 32 MB test file in small steps, the way a real export would. It shows whether long jobs can run on this host."
+msgstr "Gerçek bir dışa aktarma gibi, 32 MB'lık bir test dosyasını küçük adımlarla yazar ve kontrol eder. Uzun işlerin bu sunucuda çalışıp çalışamayacağını gösterir."
+
+#: plugin/includes/Rest/Routes.php
+msgid "You do not have permission to download this file."
+msgstr "Bu dosyayı indirme izniniz yok."
+
+#: plugin/includes/Admin/Menu.php
+msgid "You do not have permission to open this page."
+msgstr "Bu sayfayı açma izniniz yok."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Your login session ends with the address change. Log in again at:"
+msgstr "Oturumunuz adres değişikliğiyle sona erer. Yeniden giriş yapın:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "add them"
+msgstr "ekle"
+
+#: plugin/includes/Admin/Menu.php
+msgid "and none older than"
+msgstr "ve şundan eski olmasın:"
+
+#. translators: %s: link to the author's website
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "by %s"
+msgstr "%s tarafından"
+
+#: plugin/includes/Admin/Menu.php
+msgid "days (0 = no limit)"
+msgstr "gün (0 = sınırsız)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "keep both (new name)"
+msgstr "ikisini de koru (yeni ad)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "keep this site's"
+msgstr "bu sitedekini koru"
+
+#: plugin/includes/Admin/Menu.php
+msgid "overwrite with the package"
+msgstr "paketle üzerine yaz"
+
+#: plugin/includes/Admin/Menu.php
+msgid "packages"
+msgstr "paket"
+
+#: plugin/includes/Admin/Menu.php
+msgid "uploads copied by hand"
+msgstr "uploads elle kopyalandı"
+
+#: plugin/includes/Admin/Menu.php
+msgid "use the existing user"
+msgstr "mevcut kullanıcıyı kullan"
+
+#: plugin/includes/Admin/Menu.php
+msgid "use the newer version"
+msgstr "yeni sürümü kullan"

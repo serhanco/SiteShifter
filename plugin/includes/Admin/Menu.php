@@ -273,10 +273,10 @@ class Menu
                 . '<div id="ss-address-report"></div><div id="ss-address-progress"></div><div id="ss-address-result"></div>';
         } elseif ($current === 'import') {
             echo '<p>' . esc_html__('Upload a package made by SiteShifter (or put it in the incoming folder by FTP for very large sites), then check it. The check changes nothing: it shows what would be replaced, what is incompatible and what you must do by hand.', 'siteshifter') . '</p>'
-                . '<p><input type="file" id="ss-file" accept=".zip"> <button class="button button-primary" id="ss-upload">' . esc_html__('Upload package', 'siteshifter') . '</button></p>'
+                . '<p><input type="file" id="ss-file" accept=".zip" aria-label="' . esc_attr__('Upload package', 'siteshifter') . '"> <button class="button button-primary" id="ss-upload">' . esc_html__('Upload package', 'siteshifter') . '</button></p>'
                 . '<div id="ss-upload-progress"></div>'
                 . '<h2>' . esc_html__('Packages ready to import', 'siteshifter') . '</h2><div id="ss-incoming"></div>'
-                . '<div id="ss-import-report"></div><div id="ss-imports"></div>'
+                . '<div id="ss-import-report" aria-live="polite"></div><div id="ss-imports" aria-live="polite"></div>'
                 . '<p class="description">' . esc_html(sprintf(
                     /* translators: %s: folder path */
                     __('FTP folder: %s', 'siteshifter'),

@@ -79,11 +79,12 @@
 	}
 
 	function bar(root) {
-		root.innerHTML = '<div class="ss-bar" style="background:#dcdcde;border-radius:3px;height:22px;max-width:520px"><div class="ss-fill" style="background:#2271b1;height:100%;width:0;border-radius:3px;transition:width .3s"></div></div><p class="ss-line" aria-live="polite"></p>';
-		var fill = root.querySelector('.ss-fill'), line = root.querySelector('.ss-line');
+		root.innerHTML = '<div class="ss-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="background:#dcdcde;border-radius:3px;height:22px;max-width:520px"><div class="ss-fill" style="background:#2271b1;height:100%;width:0;border-radius:3px;transition:width .3s"></div></div><p class="ss-line" aria-live="polite"></p>';
+		var fill = root.querySelector('.ss-fill'), line = root.querySelector('.ss-line'), barEl = root.querySelector('.ss-bar');
 		return {
 			set: function (job) {
 				fill.style.width = job.percent + '%';
+				barEl.setAttribute('aria-valuenow', String(job.percent));
 				line.textContent = job.percent + '% ' + (job.detail || job.phase || '');
 			},
 			note: function (t) { line.textContent = t; },
