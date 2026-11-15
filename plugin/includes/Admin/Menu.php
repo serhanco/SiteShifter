@@ -106,6 +106,10 @@ class Menu
                 'deleted' => __('Deleted.', 'siteshifter'),
                 'problems' => ProblemText::all(),
                 'technical' => __('Technical detail:', 'siteshifter'),
+                'measuring' => __('Measuring the site (folders, database, free disk space)…', 'siteshifter'),
+                'useNoMedia' => __('Use "without media" and copy uploads myself', 'siteshifter'),
+                'continueAnyway' => __('Continue anyway', 'siteshifter'),
+                'mediaOffNote' => __('Media is now switched off in the custom options. Copy wp-content/uploads to the new site by hand, then click "Check and create package" again.', 'siteshifter'),
                 'noPackages' => __('There are no packages on this server.', 'siteshifter'),
                 'colDate' => __('Created', 'siteshifter'),
                 'colSize' => __('Size', 'siteshifter'),
@@ -189,8 +193,10 @@ class Menu
                 . '<label><input type="radio" name="ss-scope" value="root" checked> ' . esc_html__('The whole site (WordPress files, themes, plugins, uploads)', 'siteshifter') . '</label><br>'
                 . '<label><input type="radio" name="ss-scope" value="wp-content"> ' . esc_html__('Only wp-content (themes, plugins, uploads)', 'siteshifter') . '</label><br>'
                 . '<label><input type="checkbox" id="ss-all-tables"> ' . esc_html__('Also include database tables that do not use this site\'s table prefix', 'siteshifter') . '</label>'
+                . '</td></tr><tr><th><label for="ss-threshold">' . esc_html__('Suggest copying uploads by hand above', 'siteshifter') . '</label></th><td>'
+                . '<input type="number" id="ss-threshold" min="0.1" step="0.1" value="2" class="small-text"> ' . esc_html__('GB', 'siteshifter')
                 . '</td></tr></tbody></table><p><button class="button button-primary" id="ss-export-start">' . esc_html__('Check and create package', 'siteshifter') . '</button></p></form>'
-                . '<div id="ss-export-report"></div><div id="ss-export-progress"></div><div id="ss-export-result"></div>';
+                . '<div id="ss-export-report"></div><div id="ss-export-choice"></div><div id="ss-export-progress"></div><div id="ss-export-result"></div>';
         } elseif ($current === 'packages') {
             echo '<p>' . esc_html__('Packages made on this server. They hold your database and wp-config.php, so delete them when you no longer need them.', 'siteshifter') . '</p>'
                 . '<div id="ss-packages"></div>'

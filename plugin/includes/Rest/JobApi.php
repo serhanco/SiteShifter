@@ -41,6 +41,16 @@ class JobApi
         $this->siteCheck = $siteCheck;
     }
 
+    /** @var callable|null function (array $measured, array $params): array */
+    private $estimate;
+
+    public function withEstimate($estimate)
+    {
+        $this->estimate = $estimate;
+
+        return $this;
+    }
+
     /**
      * @param string $op     start|step|status|resume|cancel
      * @param array  $input  already sanitised: type, id, params
@@ -75,6 +85,16 @@ class JobApi
                     }
 
                     return $this->siteCheck ? ['ok' => true, 'notes' => call_user_func($this->siteCheck, $url)] : $this->fail('unavailable', 'Site check is not available.');
+                case 'estimate':
+                    if (!$this->estimate) {
+                        return $this->fail('unavailable', 'Not available.');
+                    }
+                    $job = $this->runner->get($this->id($input));
+                    if ($job['type'] !== 'measure' || $job['status'] !== 'done' || !is_array($job['result'])) {
+                        return $this->fail('invalid', 'The measurement is not finished.');
+                    }
+
+                    return ['ok' => true] + call_user_func($this->estimate, $job['result'], (array) ($input['params'] ?? []));
                 case 'packages':
                     return $this->library ? ['ok' => true, 'packages' => $this->library->all(), 'retention' => $this->retention ? $this->retention->get() : null] : $this->fail('unavailable', 'The package list is not available.');
                 case 'delete_many':
