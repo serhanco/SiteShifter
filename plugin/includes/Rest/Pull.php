@@ -48,20 +48,21 @@ class Pull
     }
 
     /** Sends bytes $start..$end of $file in 1 MB pieces; the caller exits afterwards. */
-    public static function send($file, $size, $start, $end, $partial)
+    public static function send($file, $size, $start, $end, $partial, $plainStatus = false)
     {
         @set_time_limit(0);
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         nocache_headers();
-        status_header($partial ? 206 : 200);
+        status_header($partial && !$plainStatus ? 206 : 200);
         header('Content-Type: application/zip');
         header('Accept-Ranges: bytes');
         header('X-Content-Type-Options: nosniff');
         header('Content-Length: ' . ($end - $start + 1));
         if ($partial) {
             header('Content-Range: bytes ' . $start . '-' . $end . '/' . $size);
+            header('X-SiteShifter-Range: ' . $start . '-' . $end . '/' . $size);
         }
         $fh = fopen($file, 'rb');
         if (!$fh) {

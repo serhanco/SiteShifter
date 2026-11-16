@@ -155,7 +155,12 @@ class Routes
             nocache_headers();
             wp_die(esc_html($found), 403);
         }
-        $header = isset($_SERVER['HTTP_RANGE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])) : '';
+        // The piece can also be asked for in the address (&range=0-99): some hosts and caches drop the Range header.
+        $header = isset($_GET['range']) ? 'bytes=' . sanitize_text_field(wp_unslash($_GET['range'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $byQuery = $header !== '';
+        if (!$byQuery) {
+            $header = isset($_SERVER['HTTP_RANGE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])) : '';
+        }
         $range = $header !== '' ? Pull::range($header, $found['size']) : null;
         if ($header !== '' && $range === null) {
             status_header(416);
@@ -164,12 +169,12 @@ class Routes
         }
         $range = $range ?: [0, $found['size'] - 1];
         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'HEAD') {
-            status_header($header !== '' ? 206 : 200);
+            status_header($header !== '' && !$byQuery ? 206 : 200);
             header('Accept-Ranges: bytes');
             header('Content-Length: ' . ($range[1] - $range[0] + 1));
             exit;
         }
-        Pull::send($found['file'], $found['size'], $range[0], $range[1], $header !== '');
+        Pull::send($found['file'], $found['size'], $range[0], $range[1], $header !== '', $byQuery);
         exit;
     }
 

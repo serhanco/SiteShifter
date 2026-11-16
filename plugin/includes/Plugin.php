@@ -58,7 +58,7 @@ class Plugin
                         return ['code' => 0, 'headers' => []];
                     }
                     $h = [];
-                    foreach (['content-range', 'content-length'] as $k) {
+                    foreach (['content-range', 'x-siteshifter-range', 'content-length'] as $k) {
                         $h[$k] = (string) wp_remote_retrieve_header($r, $k);
                     }
 

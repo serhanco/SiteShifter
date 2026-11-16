@@ -64,8 +64,8 @@ class FetchTask implements Task
             $first = false;
             $end = min($state['offset'] + static::PIECE, $state['total']) - 1;
             $tmp = $this->dir . '/piece.tmp';
-            $r = call_user_func($this->http, $state['url'], ['Range' => 'bytes=' . $state['offset'] . '-' . $end], $tmp);
-            if ($r['code'] !== 206 || !is_file($tmp)) {
+            $r = call_user_func($this->http, self::piece($state['url'], $state['offset'], $end), [], $tmp);
+            if (!in_array($r['code'], [200, 206], true) || !is_file($tmp) || filesize($tmp) !== $end - $state['offset'] + 1) {
                 @unlink($tmp);
                 throw new \RuntimeException(self::explain($r['code']));
             }
@@ -96,13 +96,19 @@ class FetchTask implements Task
         return [];
     }
 
+    private static function piece($url, $from, $to)
+    {
+        return $url . '&range=' . $from . '-' . $to;
+    }
+
     private function size($url)
     {
         $tmp = $this->dir . '/probe.tmp';
-        $r = call_user_func($this->http, $url, ['Range' => 'bytes=0-0'], $tmp);
+        $r = call_user_func($this->http, self::piece($url, 0, 0), [], $tmp);
+        $ok = is_file($tmp) && filesize($tmp) === 1; // a host that ignores the range would send the whole file
         @unlink($tmp);
-        $range = $r['headers']['content-range'] ?? '';
-        if ($r['code'] !== 206 || !preg_match('#/(\d+)$#', (string) $range, $m) || (int) $m[1] < 1) {
+        $range = $r['headers']['x-siteshifter-range'] ?? ($r['headers']['content-range'] ?? '');
+        if (!in_array($r['code'], [200, 206], true) || !$ok || !preg_match('#/(\d+)$#', (string) $range, $m) || (int) $m[1] < 1) {
             throw new \RuntimeException(self::explain($r['code']));
         }
 

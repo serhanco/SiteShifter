@@ -47,13 +47,14 @@ class PullFetchTest extends TestCase
         return function ($url, array $headers, $to) use ($file, &$calls) {
             $calls++;
             $size = filesize($file);
-            $r = Pull::range($headers['Range'], $size);
+            parse_str((string) parse_url($url, PHP_URL_QUERY), $q);
+            $r = Pull::range('bytes=' . $q['range'], $size);
             if ($r === null) {
                 return ['code' => 416, 'headers' => []];
             }
             file_put_contents($to, file_get_contents($file, false, null, $r[0], $r[1] - $r[0] + 1));
 
-            return ['code' => 206, 'headers' => ['content-range' => "bytes {$r[0]}-{$r[1]}/{$size}"]];
+            return ['code' => 200, 'headers' => ['x-siteshifter-range' => "{$r[0]}-{$r[1]}/{$size}"]];
         };
     }
 
