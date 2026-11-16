@@ -78,6 +78,53 @@ class JobApi
         }
     }
 
+    /** @var callable|null function (): \SiteShifter\Plugin\Cloud\GoogleAccount */
+    private $cloud;
+
+    public function withCloud($cloud)
+    {
+        $this->cloud = $cloud;
+
+        return $this;
+    }
+
+    /** Google Drive: connection, packages in the SiteShifter folder. */
+    private function cloud($op, array $input)
+    {
+        if (!$this->cloud) {
+            return $this->fail('unavailable', 'Cloud storage is not available.');
+        }
+        /** @var \SiteShifter\Plugin\Cloud\GoogleAccount $g */
+        $g = call_user_func($this->cloud);
+        $p = (array) ($input['params'] ?? []);
+        switch ($op) {
+            case 'cloud_status':
+                return ['ok' => true] + $g->status();
+            case 'cloud_connect':
+                return ['ok' => true, 'pending' => $g->connect()];
+            case 'cloud_poll':
+                return ['ok' => true] + $g->poll();
+            case 'cloud_disconnect':
+                $g->disconnect();
+
+                return ['ok' => true] + $g->status();
+            case 'cloud_client':
+                $g->setClient((string) ($p['client_id'] ?? ''), (string) ($p['client_secret'] ?? ''));
+
+                return ['ok' => true] + $g->status();
+            case 'cloud_items':
+                $drive = $g->drive();
+
+                return ['ok' => true, 'items' => $drive->items(), 'space' => $drive->space(), 'account' => $drive->account()];
+            case 'cloud_delete':
+                $g->drive()->delete((string) ($p['item'] ?? ''));
+
+                return ['ok' => true];
+        }
+
+        return $this->fail('unknown_op', 'Unknown operation.');
+    }
+
     public function withEstimate($estimate)
     {
         $this->estimate = $estimate;
@@ -93,6 +140,9 @@ class JobApi
     public function handle($op, array $input)
     {
         try {
+            if (strpos($op, 'cloud_') === 0) {
+                return $this->cloud($op, $input);
+            }
             switch ($op) {
                 case 'start':
                     $type = isset($input['type']) ? (string) $input['type'] : '';

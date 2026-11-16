@@ -40,6 +40,15 @@ interface Storage
     public function uploadPiece(array $session, $offset, $file, $length);
 
     /**
+     * Asks the storage how many bytes of an interrupted upload it really holds,
+     * so the next piece starts at the right place after a failure.
+     *
+     * @return int
+     * @throws TransferError
+     */
+    public function confirmed(array $session);
+
+    /**
      * Completes the upload and stores the Pieces listing beside it.
      *
      * @return array{id:string,name:string,size:int,created:int,digest:string|null}

@@ -93,6 +93,14 @@ class Upload
                 break;
             case 'send':
                 if ($state['offset'] < $size) {
+                    if (!empty($state['last_error'])) {
+                        // The last piece failed half way: start from what the storage really holds.
+                        $state['offset'] = max(0, min($size, (int) $this->storage->confirmed($state['session'])));
+                        $state['last_error'] = null;
+                        if ($state['offset'] >= $size) {
+                            break;
+                        }
+                    }
                     $length = (int) min(Pieces::PIECE, $size - $state['offset']);
                     $r = $this->storage->uploadPiece($state['session'], $state['offset'], $state['file'], $length);
                     $state['session'] = $r['session'];

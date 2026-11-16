@@ -26,6 +26,7 @@ class Problem
     public const ZIP_BAD = 'SS_E_ZIP_BAD';
     public const MEMORY = 'SS_E_MEMORY';
     public const TIMEOUT = 'SS_E_TIMEOUT';
+    public const TRANSFER = 'SS_E_TRANSFER';
     public const UNKNOWN = 'SS_E_UNKNOWN';
 
     /** code => [English title, English fix, can a retry help?] */
@@ -44,6 +45,7 @@ class Problem
         self::ZIP_BAD => ['The zip file cannot be read', 'The file is incomplete or damaged. Create or upload the package again.', false],
         self::MEMORY => ['PHP ran out of memory', 'Raise memory_limit (256M or more) in php.ini or wp-config.php (WP_MEMORY_LIMIT), or ask your host, then resume.', false],
         self::TIMEOUT => ['PHP stopped the request because it took too long', 'Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time.', true],
+        self::TRANSFER => ['The transfer could not go on', 'The message below says why and what to do. After fixing it, resume: the transfer continues from the last piece that arrived safely.', false],
         self::UNKNOWN => ['Something unexpected went wrong', 'Resume to try again. If it repeats, send the message below to support.', true],
     ];
 
@@ -52,7 +54,8 @@ class Problem
      */
     public static function classify(\Throwable $e): array
     {
-        $code = self::codeFor((string) $e->getMessage(), (int) $e->getCode());
+        // Transfers retry passing trouble themselves (Backoff); what reaches here needs a person.
+        $code = $e instanceof \SiteShifter\Transfer\TransferError ? self::TRANSFER : self::codeFor((string) $e->getMessage(), (int) $e->getCode());
         [$title, $fix, $retry] = self::CATALOG[$code];
 
         return ['code' => $code, 'retryable' => $retry, 'title' => $title, 'fix' => $fix, 'message' => $e->getMessage()];

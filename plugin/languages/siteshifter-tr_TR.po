@@ -601,6 +601,11 @@ msgstr "Dosya eksik veya hasarlı. Paketi yeniden oluşturun veya yükleyin."
 msgid "The import is finished and the site now runs the imported data."
 msgstr "İçe aktarma bitti, site artık içe aktarılan veriyle çalışıyor."
 
+#: plugin/includes/Admin/ProblemText.php
+msgid "The message below says why and what to do. After fixing it, resume: the transfer continues from the last piece that arrived safely."
+msgstr "Aşağıdaki mesaj nedenini ve ne yapılacağını söylüyor. Sorunu giderdikten sonra devam ettirin: aktarım sağlam gelen son parçadan sürer."
+
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "The new site keeps its own settings, menus and widgets."
 msgstr "Yeni site kendi ayarlarını, menülerini ve bileşenlerini korur."
@@ -642,6 +647,10 @@ msgstr "Sunucu bağlantıyı kapattı (zaman aşımı veya yeniden başlatma). D
 #: plugin/includes/Admin/Menu.php
 msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
 msgstr "Sunucu beklenmeyen bir yanıt verdi (araya bir güvenlik duvarı veya önbellek girmiş olabilir)."
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The transfer could not go on"
+msgstr "Aktarım sürdürülemedi"
 
 #: plugin/includes/Admin/Menu.php
 msgid "The users of the package are now this site's users, so your login session has ended. Log in again at:"

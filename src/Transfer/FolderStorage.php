@@ -94,6 +94,14 @@ class FolderStorage implements Storage
         return ['session' => $session, 'offset' => (int) filesize($part)];
     }
 
+    public function confirmed(array $session)
+    {
+        $part = $this->dir . '/' . $session['name'] . '.part';
+        clearstatcache(true, $part);
+
+        return is_file($part) ? (int) filesize($part) : 0;
+    }
+
     public function finishUpload(array $session, array $pieces)
     {
         $part = $this->dir . '/' . $session['name'] . '.part';
