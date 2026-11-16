@@ -96,6 +96,7 @@ class Menu
             'pullAction' => \SiteShifter\Plugin\Rest\Routes::PULL_ACTION,
             'downloadAction' => \SiteShifter\Plugin\Rest\Routes::DOWNLOAD_ACTION,
             'ajaxNonce' => wp_create_nonce(\SiteShifter\Plugin\Rest\Routes::NONCE),
+            'importUrl' => esc_url_raw(add_query_arg(['page' => self::SLUG, 'tab' => 'import'], admin_url('tools.php'))),
             'i18n' => [
                 'retrying' => __('Connection problem, trying again (%d)…', 'siteshifter'),
                 'badReply' => __('The server sent an unexpected reply (a firewall or cache may be in the way).', 'siteshifter'),
@@ -197,6 +198,40 @@ class Menu
                 'noLeftovers' => __('The old address no longer appears anywhere in the database.', 'siteshifter'),
                 'login' => __('Your login session ends with the address change. Log in again at:', 'siteshifter'),
                 'rollback' => __('Undo: restore the database from the backup taken before the change', 'siteshifter'),
+                'cloud' => [
+                    'intro' => __('Connect your own Google Drive to keep packages there and to bring them into another site. SiteShifter only sees the files it creates (a "SiteShifter" folder), never the rest of your Drive.', 'siteshifter'),
+                    'notConfigured' => __('This copy of SiteShifter has no Google Drive client. Use an official release, add SITESHIFTER_GOOGLE_CLIENT_ID and SITESHIFTER_GOOGLE_CLIENT_SECRET to wp-config.php, or enter your own client under "Advanced".', 'siteshifter'),
+                    'connect' => __('Connect Google Drive', 'siteshifter'),
+                    'step1' => __('Open this address on any device:', 'siteshifter'),
+                    'step2' => __('Sign in with your Google account and enter this code:', 'siteshifter'),
+                    'step3' => __('Allow access. This page notices it by itself.', 'siteshifter'),
+                    'waiting' => __('Waiting for your approval…', 'siteshifter'),
+                    'cancel' => __('Cancel', 'siteshifter'),
+                    'denied' => __('Access was not allowed. You can try again.', 'siteshifter'),
+                    'expired' => __('The code expired before it was used. Start again.', 'siteshifter'),
+                    /* translators: %s: Google account e-mail address */
+                    'connectedAs' => __('Connected to Google Drive as %s.', 'siteshifter'),
+                    'disconnect' => __('Disconnect', 'siteshifter'),
+                    'confirmDisconnect' => __('Disconnect Google Drive from this site? Packages already in Drive stay there.', 'siteshifter'),
+                    'uploadTitle' => __('Upload a package to Google Drive', 'siteshifter'),
+                    'noLocal' => __('There are no checked packages on this server. Create one on the Export screen.', 'siteshifter'),
+                    'upload' => __('Upload to Google Drive', 'siteshifter'),
+                    'uploaded' => __('Uploaded to Google Drive and checked.', 'siteshifter'),
+                    'driveTitle' => __('Packages in Google Drive', 'siteshifter'),
+                    'sameAccount' => __('To move a site, connect the same Google account on both sites: upload here, then press "Bring to this site" on the other one.', 'siteshifter'),
+                    'noItems' => __('There are no SiteShifter packages in this Google Drive yet.', 'siteshifter'),
+                    /* translators: %s: free space, e.g. 12.5 GB */
+                    'free' => __('Free space in Google Drive: %s', 'siteshifter'),
+                    'colName' => __('Name', 'siteshifter'),
+                    'colChecksum' => __('Checksum', 'siteshifter'),
+                    'hasChecksum' => __('every piece is checked', 'siteshifter'),
+                    'noChecksum' => __('size only', 'siteshifter'),
+                    'bring' => __('Bring to this site', 'siteshifter'),
+                    'fetched' => __('The package is on this server and ready to import.', 'siteshifter'),
+                    'goImport' => __('Go to Import', 'siteshifter'),
+                    'remove' => __('Delete from Google Drive', 'siteshifter'),
+                    'confirmDelete' => __('Delete this package from Google Drive? It goes to the Drive trash.', 'siteshifter'),
+                ],
             ],
         ]);
     }
@@ -208,6 +243,7 @@ class Menu
             'export' => __('Export', 'siteshifter'),
             'packages' => __('Packages', 'siteshifter'),
             'import' => __('Import', 'siteshifter'),
+            'cloud' => __('Cloud', 'siteshifter'),
             'address' => __('Change address', 'siteshifter'),
             'status' => __('Checks and history', 'siteshifter'),
         ];
@@ -283,6 +319,7 @@ class Menu
                 . '<p>' . esc_html__('Faster than downloading and uploading: this server fetches the package directly from the other site, in pieces, using the link made on its Export screen.', 'siteshifter') . '</p>'
                 . '<p><input type="url" id="ss-fetch-url" class="large-text code" placeholder="https://" aria-label="' . esc_attr__('Link from the other site', 'siteshifter') . '"></p>'
                 . '<p><button class="button button-primary" id="ss-fetch">' . esc_html__('Fetch package', 'siteshifter') . '</button></p><div id="ss-fetch-progress"></div>'
+                . '<p class="description">' . esc_html__('A package in Google Drive can be brought here from the Cloud tab.', 'siteshifter') . '</p>'
                 . '<h2>' . esc_html__('Packages ready to import', 'siteshifter') . '</h2><div id="ss-incoming"></div>'
                 . '<div id="ss-import-report" aria-live="polite"></div><div id="ss-imports" aria-live="polite"></div>'
                 . '<p class="description">' . esc_html(sprintf(
@@ -290,6 +327,14 @@ class Menu
                     __('FTP folder: %s', 'siteshifter'),
                     'wp-content/siteshifter-work/incoming/'
                 )) . '</p>';
+        } elseif ($current === 'cloud') {
+            echo '<h2>' . esc_html__('Google Drive', 'siteshifter') . '</h2><div id="ss-cloud" aria-live="polite"></div>'
+                . '<details id="ss-cloud-advanced" style="margin-top:2em"><summary>' . esc_html__('Advanced: use my own Google OAuth client', 'siteshifter') . '</summary>'
+                . '<p class="description">' . esc_html__('Only needed if you prefer your own Google Cloud project. Create an OAuth client of type "TVs and Limited Input devices" with the Google Drive API enabled. Saving disconnects the current connection.', 'siteshifter') . '</p>'
+                . '<p><label><input type="checkbox" id="ss-cloud-own"> ' . esc_html__('Use my own client', 'siteshifter') . '</label></p>'
+                . '<p><label>' . esc_html__('Client ID', 'siteshifter') . '<br><input type="text" id="ss-cloud-id" class="large-text code" autocomplete="off"></label></p>'
+                . '<p><label>' . esc_html__('Client secret', 'siteshifter') . '<br><input type="password" id="ss-cloud-secret" class="regular-text code" autocomplete="new-password"></label></p>'
+                . '<p><button class="button" id="ss-cloud-save-client">' . esc_html__('Save', 'siteshifter') . '</button> <span id="ss-cloud-client-note"></span></p></details>';
         } else {
             echo '<p>' . esc_html__('This screen is coming in a later step.', 'siteshifter') . '</p>';
         }

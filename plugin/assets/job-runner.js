@@ -9,7 +9,9 @@
 
 	function post(op, payload) {
 		if (transport === 'rest') {
-			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention' }[op];
+			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention',
+				cloud_status: 'cloud/status', cloud_connect: 'cloud/connect', cloud_poll: 'cloud/poll', cloud_disconnect: 'cloud/disconnect',
+				cloud_client: 'cloud/client', cloud_items: 'cloud/items', cloud_delete: 'cloud/delete' }[op];
 			var inc = { upload_begin: 'incoming/begin', incoming: 'incoming', upload_end: 'end', incoming_delete: 'delete', import_check: 'check' }[op];
 			var imp = { imports: 'imports', import_undo: 'imports/' + payload.id + '/undo', import_discard: 'imports/' + payload.id + '/discard' }[op];
 			if (imp) { return fetch(cfg.restUrl + imp, { method: 'POST', headers: { 'X-WP-Nonce': cfg.restNonce, 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', body: JSON.stringify(payload) }); }
@@ -404,6 +406,7 @@
 		});
 	}
 
+	document.addEventListener('siteshifter:incoming', function () { list(); });
 	function list() {
 		J.call('incoming', { params: {} }, J.ui($('ss-incoming'))).then(function (r) {
 			var box = $('ss-incoming');
@@ -538,4 +541,143 @@
 	});
 	list();
 	imports();
+})();
+
+/* Cloud screen: connect Google Drive (device code), upload packages, bring them back. */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	var root = $('ss-cloud');
+	if (!root) { return; }
+	var J = window.SiteShifterJobs, t = cfg.i18n.cloud;
+	function esc(v) { var d = document.createElement('div'); d.textContent = v == null ? '' : String(v); return d.innerHTML; }
+	function human(n) { var u = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0; while (n >= 1024 && i < 4) { n /= 1024; i++; } return n.toFixed(i ? 1 : 0) + ' ' + u[i]; }
+	function fmt(s) { var a = [].slice.call(arguments, 1); return s.replace(/%(\d)\$s|%s/g, function (m, n) { return esc(n ? a[n - 1] : a.shift()); }); }
+	var polling = false;
+
+	function status() {
+		J.call('cloud_status', { params: {} }, J.ui(root)).then(function (r) {
+			if (!r.ok) { root.textContent = r.message; return; }
+			$('ss-cloud-own').checked = !!r.own_client;
+			if (!r.configured) {
+				root.innerHTML = '<p>' + esc(t.notConfigured) + '</p>';
+				$('ss-cloud-advanced').open = true;
+				return;
+			}
+			if (r.connected) { connected(r.account); return; }
+			if (r.pending) { showCode(r.pending); return; }
+			root.innerHTML = '<p>' + esc(t.intro) + '</p><p><button class="button button-primary" id="ss-cloud-connect">' + esc(t.connect) + '</button></p>';
+		});
+	}
+
+	function showCode(p) {
+		root.innerHTML = '<ol><li>' + esc(t.step1) + ' <a href="' + esc(p.verification_url) + '" target="_blank" rel="noopener">' + esc(p.verification_url) + '</a></li>' +
+			'<li>' + esc(t.step2) + ' <code style="font-size:1.6em;padding:4px 10px;user-select:all">' + esc(p.user_code) + '</code></li>' +
+			'<li>' + esc(t.step3) + '</li></ol><p id="ss-cloud-wait" aria-live="polite">' + esc(t.waiting) + '</p>' +
+			'<p><button class="button" id="ss-cloud-cancel">' + esc(t.cancel) + '</button></p>';
+		if (!polling) { poll(p.interval || 5); }
+	}
+
+	function poll(interval) {
+		polling = true;
+		J.sleep(interval * 1000).then(function () {
+			if (!$('ss-cloud-wait')) { polling = false; return; }
+			return J.call('cloud_poll', { params: {} }, J.ui($('ss-cloud-wait'))).then(function (r) {
+				if (!r.ok) { polling = false; $('ss-cloud-wait').textContent = r.message; return; }
+				if (r.status === 'pending') { return poll(interval); }
+				polling = false;
+				if (r.status === 'approved') { status(); return; }
+				root.innerHTML = '<p>' + esc(r.status === 'denied' ? t.denied : t.expired) + '</p><p><button class="button button-primary" id="ss-cloud-connect">' + esc(t.connect) + '</button></p>';
+			});
+		});
+	}
+
+	function connected(account) {
+		root.innerHTML = '<p>' + fmt(t.connectedAs, account || '?') + ' <button class="button-link" id="ss-cloud-disconnect">' + esc(t.disconnect) + '</button></p>' +
+			'<h2>' + esc(t.uploadTitle) + '</h2><div id="ss-cloud-local"></div><div id="ss-cloud-up-progress"></div>' +
+			'<h2>' + esc(t.driveTitle) + '</h2><p class="description">' + esc(t.sameAccount) + '</p><div id="ss-cloud-items"></div><div id="ss-cloud-fetch-progress"></div>';
+		local();
+		items();
+	}
+
+	function local() {
+		var box = $('ss-cloud-local');
+		J.call('packages', { params: {} }, J.ui(box)).then(function (r) {
+			if (!r.ok) { box.textContent = r.message; return; }
+			var ok = r.packages.filter(function (p) { return p.valid; });
+			if (!ok.length) { box.textContent = t.noLocal; return; }
+			box.innerHTML = '<table class="widefat striped"><tbody>' + ok.map(function (p) {
+				return '<tr><td>' + esc(new Date(p.created * 1000).toLocaleString()) + '</td><td>' + esc(human(p.bytes)) + '</td><td>' + esc(cfg.i18n.profiles[p.profile] || p.profile) + '</td>' +
+					'<td><button class="button ss-cloud-up" data-id="' + esc(p.id) + '">' + esc(t.upload) + '</button></td></tr>';
+			}).join('') + '</tbody></table>';
+		});
+	}
+
+	function items() {
+		var box = $('ss-cloud-items');
+		J.call('cloud_items', { params: {} }, J.ui(box)).then(function (r) {
+			if (!r.ok) { box.textContent = r.message; return; }
+			var space = r.space == null ? '' : '<p class="description">' + fmt(t.free, human(r.space)) + '</p>';
+			if (!r.items.length) { box.innerHTML = '<p>' + esc(t.noItems) + '</p>' + space; return; }
+			box.innerHTML = '<table class="widefat striped"><thead><tr><th>' + esc(t.colName) + '</th><th>' + esc(cfg.i18n.colDate) + '</th><th>' + esc(cfg.i18n.colSize) + '</th><th>' + esc(t.colChecksum) + '</th><th></th></tr></thead><tbody>' + r.items.map(function (i) {
+				return '<tr><td>' + esc(i.name) + '</td><td>' + esc(new Date(i.created * 1000).toLocaleString()) + '</td><td>' + esc(human(i.size)) + '</td><td>' + esc(i.digest ? t.hasChecksum : t.noChecksum) + '</td>' +
+					'<td><button class="button button-primary ss-cloud-get" data-id="' + esc(i.id) + '">' + esc(t.bring) + '</button> <button class="button ss-cloud-del" data-id="' + esc(i.id) + '">' + esc(t.remove) + '</button></td></tr>';
+			}).join('') + '</tbody></table>' + space;
+		});
+	}
+
+	root.addEventListener('click', function (e) {
+		var el = e.target, id = el.getAttribute('data-id');
+		if (el.id === 'ss-cloud-connect') {
+			e.preventDefault();
+			el.disabled = true;
+			J.call('cloud_connect', { params: {} }, J.ui(root)).then(function (r) {
+				if (!r.ok) { root.textContent = r.message; return; }
+				showCode(r.pending);
+			});
+		}
+		if (el.id === 'ss-cloud-cancel' || el.id === 'ss-cloud-disconnect') {
+			e.preventDefault();
+			if (el.id === 'ss-cloud-disconnect' && !window.confirm(t.confirmDisconnect)) { return; }
+			J.call('cloud_disconnect', { params: {} }, J.ui(root)).then(status);
+		}
+		if (el.classList.contains('ss-cloud-up')) {
+			e.preventDefault();
+			[].forEach.call(root.querySelectorAll('.ss-cloud-up'), function (b) { b.disabled = true; });
+			J.run('cloud_upload', { job: id }, $('ss-cloud-up-progress')).then(function (job) {
+				[].forEach.call(root.querySelectorAll('.ss-cloud-up'), function (b) { b.disabled = false; });
+				if (job && job.status === 'done') { $('ss-cloud-up-progress').querySelector('.ss-line').textContent = t.uploaded; items(); }
+			});
+		}
+		if (el.classList.contains('ss-cloud-get')) {
+			e.preventDefault();
+			[].forEach.call(root.querySelectorAll('.ss-cloud-get'), function (b) { b.disabled = true; });
+			J.run('cloud_fetch', { item: id }, $('ss-cloud-fetch-progress')).then(function (job) {
+				[].forEach.call(root.querySelectorAll('.ss-cloud-get'), function (b) { b.disabled = false; });
+				if (job && job.status === 'done') {
+					$('ss-cloud-fetch-progress').querySelector('.ss-line').innerHTML = esc(t.fetched) + ' <a href="' + esc(cfg.importUrl) + '">' + esc(t.goImport) + '</a>';
+				}
+			});
+		}
+		if (el.classList.contains('ss-cloud-del')) {
+			e.preventDefault();
+			if (!window.confirm(t.confirmDelete)) { return; }
+			J.call('cloud_delete', { params: { item: id } }, J.ui($('ss-cloud-items'))).then(function (r) {
+				if (!r.ok) { $('ss-cloud-items').textContent = r.message; return; }
+				items();
+			});
+		}
+	});
+
+	$('ss-cloud-save-client').addEventListener('click', function (e) {
+		e.preventDefault();
+		var own = $('ss-cloud-own').checked;
+		J.call('cloud_client', { params: { client_id: own ? $('ss-cloud-id').value.trim() : '', client_secret: own ? $('ss-cloud-secret').value.trim() : '' } }, J.ui($('ss-cloud-client-note'))).then(function (r) {
+			$('ss-cloud-client-note').textContent = r.ok ? cfg.i18n.saved : r.message;
+			$('ss-cloud-secret').value = '';
+			if (r.ok) { status(); }
+		});
+	});
+	status();
 })();

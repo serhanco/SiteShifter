@@ -76,6 +76,9 @@ class FakeGoogle implements HttpClient
         if ($path === '/drive/v3/files' && $method === 'GET') {
             $out = [];
             foreach ($this->files as $id => $f) {
+                if (!empty($f['trashed'])) {
+                    continue;
+                }
                 $isFolder = $f['mimeType'] === Drive::FOLDER_TYPE;
                 if (strpos($q['q'], 'vnd.google-apps.folder') !== false ? $isFolder : (!$isFolder && $f['mimeType'] === 'application/zip')) {
                     $out[] = ['id' => $id, 'name' => $f['name'], 'size' => (string) strlen($f['data']), 'createdTime' => '2026-11-16T10:00:00Z', 'appProperties' => $f['appProperties']];
@@ -138,7 +141,13 @@ class FakeGoogle implements HttpClient
                 return ['code' => 204];
             }
             if ($method === 'PATCH') {
-                $f['appProperties'] = json_decode($body, true)['appProperties'] + $f['appProperties'];
+                $patch = json_decode($body, true);
+                if (!empty($patch['trashed'])) {
+                    $f['trashed'] = true;
+
+                    return $this->json(200, ['id' => $id]);
+                }
+                $f['appProperties'] = $patch['appProperties'] + $f['appProperties'];
             }
             if (($q['alt'] ?? '') === 'media') {
                 if (isset($h['Range']) && preg_match('/bytes=(\d+)-(\d+)/', $h['Range'], $r)) {
@@ -148,7 +157,7 @@ class FakeGoogle implements HttpClient
                 return ['code' => 200, 'body' => $f['data']];
             }
 
-            return $this->json(200, ['id' => $id, 'name' => $f['name'], 'size' => (string) strlen($f['data']), 'trashed' => false, 'createdTime' => '2026-11-16T10:00:00Z', 'appProperties' => $f['appProperties']]);
+            return $this->json(200, ['id' => $id, 'name' => $f['name'], 'size' => (string) strlen($f['data']), 'trashed' => !empty($f['trashed']), 'createdTime' => '2026-11-16T10:00:00Z', 'appProperties' => $f['appProperties']]);
         }
 
         return $this->json(500, ['error' => ['message' => 'fake: no route for ' . $method . ' ' . $url]]);
@@ -272,7 +281,10 @@ class GoogleDriveTest extends TestCase
 
         $drive->delete($items[0]['id']);
         $this->assertSame([], $drive->items());
-        $this->assertCount(1, $g->files, 'checksum list deleted too, folder kept');
+        $trashed = array_filter($g->files, function ($f) {
+            return !empty($f['trashed']);
+        });
+        $this->assertCount(2, $trashed, 'package and checksum list go to the Drive trash');
     }
 
     public function testAPieceCutHalfWayResumesFromWhatDriveHolds(): void
