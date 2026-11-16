@@ -190,6 +190,41 @@ class Runner
         return ['file' => $file, 'created' => (int) $job['created']];
     }
 
+    /**
+     * A link another site can fetch the finished package from without a login: long random token, short life,
+     * gone with the job. Only the hash of the token is stored.
+     *
+     * @return array{token:string,expires:int}
+     */
+    public function issuePull($id, $now = null)
+    {
+        $job = $this->mustLoad($id);
+        if ($job['type'] !== 'export' || $job['status'] !== 'done') {
+            throw new \InvalidArgumentException('There is no finished package for this job.');
+        }
+        $now = $now === null ? time() : $now;
+        $token = bin2hex(random_bytes(24));
+        $job['pull'] = ['hash' => hash('sha256', $token), 'expires' => $now + \SiteShifter\Plugin\Rest\Pull::TTL];
+        $this->store->save($job);
+
+        return ['token' => $token, 'expires' => $job['pull']['expires']];
+    }
+
+    /** @return array{file:string,size:int,created:int}|string the package to serve, or why it is refused */
+    public function pullFile($id, $token, $now = null)
+    {
+        $job = JobStore::validId($id) ? $this->store->load($id) : null;
+        if (!$job || !\SiteShifter\Plugin\Rest\Pull::check($job, $token, $now === null ? time() : $now)) {
+            return 'The link is not valid or has expired.';
+        }
+        $file = $this->store->dir($id) . '/package.zip';
+        if (!is_file($file)) {
+            return 'The package file is gone. Create a new export.';
+        }
+
+        return ['file' => $file, 'size' => (int) filesize($file), 'created' => (int) $job['created']];
+    }
+
     /** Deletes a job and every file it made (package, backup, work files). */
     public function delete($id)
     {

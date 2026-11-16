@@ -18,7 +18,7 @@ use SiteShifter\Support\WpConfigReader;
  */
 class Application
 {
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.2.1';
 
     /** @var callable(string):void */
     private $out;

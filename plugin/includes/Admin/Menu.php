@@ -93,6 +93,7 @@ class Menu
             'ajaxAction' => \SiteShifter\Plugin\Rest\Routes::AJAX_ACTION,
             'uploadAction' => \SiteShifter\Plugin\Rest\Routes::UPLOAD_ACTION,
             'chunkBytes' => max(262144, (int) floor(min((int) wp_max_upload_size(), 8 * 1048576) * 0.9)),
+            'pullAction' => \SiteShifter\Plugin\Rest\Routes::PULL_ACTION,
             'downloadAction' => \SiteShifter\Plugin\Rest\Routes::DOWNLOAD_ACTION,
             'ajaxNonce' => wp_create_nonce(\SiteShifter\Plugin\Rest\Routes::NONCE),
             'i18n' => [
@@ -102,6 +103,9 @@ class Menu
                 'paused' => __('Paused after repeated errors. You can resume from where it stopped.', 'siteshifter'),
                 'failed' => __('Could not finish:', 'siteshifter'),
                 'download' => __('Download package', 'siteshifter'),
+                'pullLink' => __('Create a link for another site', 'siteshifter'),
+                'pullNote' => __('Paste this link into SiteShifter > Import > "Fetch from another site" on the other site. It works for 30 minutes and anyone who has it can download the package, so share it only there.', 'siteshifter'),
+                'fetchEmpty' => __('Paste the link first.', 'siteshifter'),
                 'deletePackage' => __('Delete package from this server', 'siteshifter'),
                 /* translators: 1: size, 2: number of files, 3: number of database tables */
                 'packageReady' => __('The package is ready and checked: %1$s, %2$s files, %3$s database tables. The link works for 15 minutes; create a new one if it expires.', 'siteshifter'),
@@ -275,6 +279,10 @@ class Menu
             echo '<p>' . esc_html__('Upload a package made by SiteShifter (or put it in the incoming folder by FTP for very large sites), then check it. The check changes nothing: it shows what would be replaced, what is incompatible and what you must do by hand.', 'siteshifter') . '</p>'
                 . '<p><input type="file" id="ss-file" accept=".zip" aria-label="' . esc_attr__('Upload package', 'siteshifter') . '"> <button class="button button-primary" id="ss-upload">' . esc_html__('Upload package', 'siteshifter') . '</button></p>'
                 . '<div id="ss-upload-progress"></div>'
+                . '<h2>' . esc_html__('Fetch from another site', 'siteshifter') . '</h2>'
+                . '<p>' . esc_html__('Faster than downloading and uploading: this server fetches the package directly from the other site, in pieces, using the link made on its Export screen.', 'siteshifter') . '</p>'
+                . '<p><input type="url" id="ss-fetch-url" class="large-text code" placeholder="https://" aria-label="' . esc_attr__('Link from the other site', 'siteshifter') . '"></p>'
+                . '<p><button class="button button-primary" id="ss-fetch">' . esc_html__('Fetch package', 'siteshifter') . '</button></p><div id="ss-fetch-progress"></div>'
                 . '<h2>' . esc_html__('Packages ready to import', 'siteshifter') . '</h2><div id="ss-incoming"></div>'
                 . '<div id="ss-import-report" aria-live="polite"></div><div id="ss-imports" aria-live="polite"></div>'
                 . '<p class="description">' . esc_html(sprintf(

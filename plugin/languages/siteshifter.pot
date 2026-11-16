@@ -143,6 +143,10 @@ msgid "Could not finish:"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Create a link for another site"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Created"
 msgstr ""
 
@@ -231,6 +235,18 @@ msgid "Failed, nothing was changed"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Faster than downloading and uploading: this server fetches the package directly from the other site, in pieces, using the link made on its Export screen."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Fetch from another site"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Fetch package"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Files"
 msgstr ""
 
@@ -284,6 +300,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Keep packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Link from the other site"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -381,6 +401,14 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Passed"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste the link first."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste this link into SiteShifter > Import > \"Fetch from another site\" on the other site. It works for 30 minutes and anyone who has it can download the package, so share it only there."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php

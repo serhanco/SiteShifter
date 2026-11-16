@@ -22,7 +22,7 @@ use SiteShifter\Preflight\Result;
 if (!defined('SITESHIFTER_PASSWORD')) {
     define('SITESHIFTER_PASSWORD', ''); // optional: set a password before uploading
 }
-const SS_VERSION = '0.2.0';
+const SS_VERSION = '0.2.1';
 const SS_MAX_AGE = 6 * 3600;
 
 error_reporting(E_ALL);

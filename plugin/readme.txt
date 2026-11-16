@@ -4,7 +4,7 @@ Tags: migration, backup, move site, change domain, search replace
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,6 +43,10 @@ Replace mode keeps the previous database tables and files until you delete the b
 No. A package contains your database (including password hashes) and wp-config.php. Keep it private and delete it after use.
 
 == Changelog ==
+
+= 0.2.1 =
+* Fetch a package straight from another site with a 30 minute link (Export > Create a link for another site, Import > Fetch from another site).
+* Removed the installer's "will be replaced" warning from the Export screen.
 
 = 0.2.0 =
 * Selective export, size check, packages screen, error codes with fixes.

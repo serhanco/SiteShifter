@@ -3,7 +3,7 @@
  * Plugin Name:       SiteShifter
  * Plugin URI:        https://github.com/serhanco/SiteShifter
  * Description:       Shift WordPress sites safely: pre-flight checks, resumable export and import, and serialization-safe address changes.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Serhan Demirel
@@ -18,7 +18,7 @@
 
 defined('ABSPATH') || exit;
 
-define('SITESHIFTER_VERSION', '0.2.0');
+define('SITESHIFTER_VERSION', '0.2.1');
 define('SITESHIFTER_FILE', __FILE__);
 define('SITESHIFTER_DIR', plugin_dir_path(__FILE__));
 define('SITESHIFTER_URL', plugin_dir_url(__FILE__));
