@@ -21,13 +21,18 @@ class Routes
     const DOWNLOAD_ACTION = 'siteshifter_download';
     const UPLOAD_ACTION = 'siteshifter_upload';
     const PULL_ACTION = 'siteshifter_pull';
+    const CLONE_ACTION = 'siteshifter_clone';
 
     /** @var JobApi */
     private $api;
 
-    public function __construct(JobApi $api)
+    /** @var callable|null function (): \SiteShifter\Plugin\Remote\Server */
+    private $cloneServer;
+
+    public function __construct(JobApi $api, $cloneServer = null)
     {
         $this->api = $api;
+        $this->cloneServer = $cloneServer;
     }
 
     public function register()
@@ -39,6 +44,11 @@ class Routes
         // Another site fetches a package with the token in the link, not a login.
         add_action('wp_ajax_' . self::PULL_ACTION, [$this, 'pull']);
         add_action('wp_ajax_nopriv_' . self::PULL_ACTION, [$this, 'pull']);
+        // Another SiteShifter clones this site with a signed request from a clone key, not a login.
+        if ($this->cloneServer) {
+            add_action('wp_ajax_' . self::CLONE_ACTION, [$this, 'cloneRequest']);
+            add_action('wp_ajax_nopriv_' . self::CLONE_ACTION, [$this, 'cloneRequest']);
+        }
     }
 
     public static function can()
@@ -58,6 +68,12 @@ class Routes
             '/cloud/client' => ['POST', 'cloud_client', []],
             '/cloud/items' => ['POST', 'cloud_items', []],
             '/cloud/delete' => ['POST', 'cloud_delete', []],
+            '/clone/keys' => ['POST', 'clone_keys', []],
+            '/clone/keys/create' => ['POST', 'clone_key_create', []],
+            '/clone/keys/revoke' => ['POST', 'clone_key_revoke', []],
+            '/clone/remote/set' => ['POST', 'clone_remote_set', []],
+            '/clone/remote/test' => ['POST', 'clone_remote_test', []],
+            '/clone/remote/forget' => ['POST', 'clone_remote_forget', []],
             '/checks' => ['POST', 'checks', []],
             '/site-check' => ['POST', 'site_check', []],
             '/packages' => ['POST', 'packages', []],
@@ -189,6 +205,34 @@ class Routes
         }
         Pull::send($found['file'], $found['size'], $range[0], $range[1], $header !== '', $byQuery);
         exit;
+    }
+
+    /** admin-ajax.php?action=siteshifter_clone&op=... (signed; see Remote\Server) */
+    public function cloneRequest()
+    {
+        $op = isset($_GET['op']) ? sanitize_key(wp_unslash($_GET['op'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the request signature is the credential
+        $headers = [];
+        foreach (['key', 'time', 'nonce', 'sign'] as $h) {
+            $k = 'HTTP_X_SITESHIFTER_' . strtoupper($h);
+            $headers['x-siteshifter-' . $h] = isset($_SERVER[$k]) ? sanitize_text_field(wp_unslash($_SERVER[$k])) : '';
+        }
+        $query = [
+            'job' => isset($_GET['job']) ? sanitize_key(wp_unslash($_GET['job'])) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            'range' => isset($_GET['range']) ? preg_replace('/[^0-9\-]/', '', (string) wp_unslash($_GET['range'])) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        ];
+        $body = (string) file_get_contents('php://input', false, null, 0, 65536);
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        nocache_headers();
+        try {
+            $r = call_user_func($this->cloneServer)->handle($op, $headers, $body, $query, $ip);
+        } catch (\Throwable $e) {
+            $r = ['code' => 500, 'json' => ['ok' => false, 'message' => $e->getMessage(), 'retry' => true]];
+        }
+        if (isset($r['file'])) {
+            Pull::send($r['file'], $r['size'], $r['range'][0], $r['range'][1], true);
+            exit;
+        }
+        wp_send_json($r['json'], $r['code']);
     }
 
     public function ajax()

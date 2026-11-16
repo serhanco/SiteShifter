@@ -24,15 +24,26 @@ class Plugin
         $connect = ['SiteShifter\\Plugin\\Runtime\\Site', 'connection'];
         $incoming = new Jobs\Incoming($store);
         // Cloud connections live in an encrypted file beside the jobs, never in the database (see Vault).
-        $google = null;
-        $cloud = static function () use ($store, &$google) {
-            if ($google === null) {
+        $vault = static function () use ($store) {
+            static $v = null;
+            if ($v === null) {
                 $store->protect();
-                $vault = new \SiteShifter\Transfer\Vault($store->base() . '/vault.php', wp_salt('auth') . wp_salt('secure_auth'));
-                $google = new Cloud\GoogleAccount($vault, new Cloud\WpHttp(), Cloud\Client::builtIn());
+                $v = new \SiteShifter\Transfer\Vault($store->base() . '/vault.php', wp_salt('auth') . wp_salt('secure_auth'));
+            }
+
+            return $v;
+        };
+        $google = null;
+        $cloud = static function () use ($vault, &$google) {
+            if ($google === null) {
+                $google = new Cloud\GoogleAccount($vault(), new Cloud\WpHttp(), Cloud\Client::builtIn());
             }
 
             return $google;
+        };
+        // Clone keys share the vault: secrets never reach the database or a package.
+        $keys = static function () use ($vault) {
+            return new Remote\Keys($vault());
         };
         $drive = static function () use ($cloud) {
             return $cloud()->drive();
@@ -136,6 +147,23 @@ class Plugin
         };
         $api = new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention);
         $api->withCloud($cloud);
+        $api->withClone($keys, static function (array $key) {
+            return new \SiteShifter\Remote\CloneClient(new Cloud\WpHttp(), $key);
+        }, Runtime\Site::homeUrl());
+        $cloneServer = static function () use ($keys, $store, $runner, $connect) {
+            return new Remote\Server($keys(), new Remote\Guard($store->base() . '/clone-guard.php'), $store, $runner, static function () use ($connect) {
+                $db = call_user_func($connect);
+                $prefix = Runtime\Site::prefix();
+
+                return [
+                    'plugin' => SITESHIFTER_VERSION,
+                    'manifest' => \SiteShifter\Package\Manifest::build($db, $prefix, untrailingslashit(ABSPATH), $db->tables($prefix)),
+                    'free' => function_exists('disk_free_space') ? @disk_free_space(WP_CONTENT_DIR) : false,
+                ];
+            }, static function () {
+                return Jobs\Budget::deadline(microtime(true), (int) ini_get('max_execution_time'), isset($_SERVER['REQUEST_TIME_FLOAT']) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : null);
+            });
+        };
         if (defined('WP_CLI') && WP_CLI) {
             \WP_CLI::add_command('siteshifter-cloud', new Cli\CloudCommand($runner, $cloud, [$library, 'all']), ['shortdesc' => 'Google Drive for SiteShifter packages.']);
         }
@@ -148,7 +176,7 @@ class Plugin
         $api->withImport($incoming, new Jobs\ImportActions($store, $connect, 'wp_cache_flush'), static function ($zip) {
             return (new Import\Inspector())->inspect($zip, Runtime\Site::importTarget());
         });
-        (new Rest\Routes($api))->register();
+        (new Rest\Routes($api, $cloneServer))->register();
 
         if (is_admin()) {
             (new Admin\Menu())->register();

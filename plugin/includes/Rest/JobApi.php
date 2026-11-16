@@ -125,6 +125,94 @@ class JobApi
         return $this->fail('unknown_op', 'Unknown operation.');
     }
 
+    /** @var callable|null function (): \SiteShifter\Plugin\Remote\Keys */
+    private $cloneKeys;
+
+    /** @var callable|null function (array $key): \SiteShifter\Remote\CloneClient */
+    private $cloneClient;
+
+    /** @var string this site's address */
+    private $home = '';
+
+    public function withClone($keys, $client, $home)
+    {
+        $this->cloneKeys = $keys;
+        $this->cloneClient = $client;
+        $this->home = rtrim((string) $home, '/');
+
+        return $this;
+    }
+
+    /** Clone keys: the ones this site hands out (source) and the one pasted here (target). */
+    private function cloneOp($op, array $input)
+    {
+        if (!$this->cloneKeys) {
+            return $this->fail('unavailable', 'Cloning is not available.');
+        }
+        /** @var \SiteShifter\Plugin\Remote\Keys $keys */
+        $keys = call_user_func($this->cloneKeys);
+        $p = (array) ($input['params'] ?? []);
+        switch ($op) {
+            case 'clone_keys':
+                return ['ok' => true, 'keys' => $keys->all(), 'remote' => $keys->remoteView(), 'https' => stripos($this->home, 'https://') === 0];
+            case 'clone_key_create':
+                $made = $keys->create($this->home, isset($p['hours']) ? (int) $p['hours'] * 3600 : \SiteShifter\Plugin\Remote\Keys::TTL);
+
+                return ['ok' => true, 'created' => $made, 'keys' => $keys->all()];
+            case 'clone_key_revoke':
+                $keys->revoke((string) ($p['key'] ?? ''));
+
+                return ['ok' => true, 'keys' => $keys->all()];
+            case 'clone_remote_set':
+                $key = \SiteShifter\Remote\CloneKey::decode((string) ($p['key'] ?? ''));
+                if (self::sameSite($key['url'], $this->home)) {
+                    return $this->fail('invalid', 'This key belongs to this site. Paste it into the site you want to copy to.');
+                }
+                $keys->setRemote((string) $p['key']);
+
+                return ['ok' => true, 'remote' => $keys->remoteView(), 'test' => $this->cloneTest($keys)];
+            case 'clone_remote_test':
+                return ['ok' => true, 'remote' => $keys->remoteView(), 'test' => $this->cloneTest($keys)];
+            case 'clone_remote_forget':
+                $keys->forgetRemote();
+
+                return ['ok' => true, 'remote' => null];
+        }
+
+        return $this->fail('unknown_op', 'Unknown operation.');
+    }
+
+    /** Asks the source who it is: proves the address, the key and the way between the two servers. */
+    private function cloneTest($keys)
+    {
+        $key = $keys->remote();
+        if (!$key) {
+            return ['ok' => false, 'message' => 'No clone key is saved.'];
+        }
+        try {
+            $hello = call_user_func($this->cloneClient, $key)->call('hello');
+            if ((int) ($hello['protocol'] ?? 0) !== \SiteShifter\Remote\CloneClient::PROTOCOL) {
+                return ['ok' => false, 'message' => 'The source site runs a SiteShifter version that clones differently. Update SiteShifter on both sites to the same version.'];
+            }
+            unset($hello['ok']);
+
+            return ['ok' => true, 'source' => $hello];
+        } catch (\SiteShifter\Transfer\TransferError $e) {
+            return ['ok' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    private static function sameSite($a, $b)
+    {
+        $host = static function ($u) {
+            $h = strtolower((string) parse_url((string) $u, PHP_URL_HOST));
+
+            return (strpos($h, 'www.') === 0 ? substr($h, 4) : $h) . rtrim((string) parse_url((string) $u, PHP_URL_PATH), '/');
+        };
+
+        return $host($a) !== '' && $host($a) === $host($b);
+    }
+
     public function withEstimate($estimate)
     {
         $this->estimate = $estimate;
@@ -142,6 +230,9 @@ class JobApi
         try {
             if (strpos($op, 'cloud_') === 0) {
                 return $this->cloud($op, $input);
+            }
+            if (strpos($op, 'clone_') === 0) {
+                return $this->cloneOp($op, $input);
             }
             switch ($op) {
                 case 'start':
