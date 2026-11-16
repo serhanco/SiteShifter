@@ -271,7 +271,16 @@
 			var out = $('ss-export-result'), r = job.result;
 			out.innerHTML = '<p><strong>' + esc(cfg.i18n.packageReady.replace('%1$s', human(r.bytes)).replace('%2$s', r.files).replace('%3$s', r.tables)) + '</strong></p>' +
 				'<p>' + esc(cfg.i18n.packageNote) + '</p>' +
-				'<p><button class="button button-primary" id="ss-download">' + esc(cfg.i18n.download) + '</button> <button class="button" id="ss-delete-package">' + esc(cfg.i18n.deletePackage) + '</button></p>';
+				'<p><button class="button button-primary" id="ss-download">' + esc(cfg.i18n.download) + '</button> <button class="button" id="ss-pull">' + esc(cfg.i18n.pullLink) + '</button> <button class="button" id="ss-delete-package">' + esc(cfg.i18n.deletePackage) + '</button></p><div id="ss-pull-out" aria-live="polite"></div>';
+			$('ss-pull').addEventListener('click', function (ev) {
+				ev.preventDefault();
+				J.call('pull_link', { id: job.id }, J.ui($('ss-pull-out'))).then(function (d) {
+					if (!d.ok) { $('ss-pull-out').textContent = d.message; return; }
+					var link = cfg.ajaxUrl + '?action=' + encodeURIComponent(cfg.pullAction) + '&job=' + job.id + '&token=' + d.token;
+					$('ss-pull-out').innerHTML = '<p>' + esc(cfg.i18n.pullNote) + '</p><p><input type="text" readonly class="large-text code" id="ss-pull-url" value="' + esc(link) + '"></p>';
+					$('ss-pull-url').addEventListener('focus', function () { this.select(); });
+				});
+			});
 			$('ss-download').addEventListener('click', function (ev) {
 				ev.preventDefault();
 				J.call('download_link', { id: job.id }, J.ui(out)).then(function (d) {
@@ -473,6 +482,19 @@
 				if (!r.ok) { window.alert(r.message); }
 				imports();
 			});
+		});
+	}
+
+	if ($('ss-fetch')) {
+		$('ss-fetch').addEventListener('click', function (e) {
+			e.preventDefault();
+			var url = $('ss-fetch-url').value.trim(), btn = e.target;
+			if (!url) { $('ss-fetch-progress').textContent = cfg.i18n.fetchEmpty; return; }
+			btn.disabled = true;
+			J.run('fetch', { url: url }, $('ss-fetch-progress')).then(function (job) {
+				btn.disabled = false;
+				if (job && job.status === 'done') { $('ss-fetch-url').value = ''; list(); }
+			}).catch(function (err) { btn.disabled = false; $('ss-fetch-progress').textContent = cfg.i18n.failed + ' ' + err.message; });
 		});
 	}
 

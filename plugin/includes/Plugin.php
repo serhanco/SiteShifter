@@ -51,6 +51,20 @@ class Plugin
                     'after_swap' => 'wp_cache_flush',
                 ]);
             },
+            'fetch' => static function ($job, $dir) use ($incoming) {
+                return new Jobs\FetchTask($dir, $incoming, static function ($url, array $headers, $file) {
+                    $r = wp_safe_remote_get($url, ['headers' => $headers, 'timeout' => 60, 'stream' => true, 'filename' => $file, 'redirection' => 0]);
+                    if (is_wp_error($r)) {
+                        return ['code' => 0, 'headers' => []];
+                    }
+                    $h = [];
+                    foreach (['content-range', 'content-length'] as $k) {
+                        $h[$k] = (string) wp_remote_retrieve_header($r, $k);
+                    }
+
+                    return ['code' => (int) wp_remote_retrieve_response_code($r), 'headers' => $h];
+                });
+            },
             'measure' => static function () use ($connect) {
                 return new Jobs\MeasureTask(untrailingslashit(ABSPATH), array_merge(\SiteShifter\Package\Archiver::DEFAULT_EXCLUDES, [Jobs\ExportTask::WORK_FOLDER]), static function () use ($connect) {
                     $db = call_user_func($connect);
@@ -87,7 +101,10 @@ class Plugin
         add_action('siteshifter_prune', [$retention, 'apply']);
         $checks = static function ($newUrl, $params = []) {
             $report = (new \SiteShifter\Preflight\Preflight())->run(Runtime\Site::preflightContext($newUrl));
-            $results = $report->toArray();
+            // The plugin never installs over this site from these screens, so the installer's "will be replaced" warning does not apply.
+            $results = array_values(array_filter($report->toArray(), static function ($row) {
+                return !isset($row['id']) || $row['id'] !== 'existing_site';
+            }));
             if (isset($params['profile'])) {
                 $results = array_merge($results, Admin\ScopeText::rows(Jobs\ExportTask::scope($params)));
             }

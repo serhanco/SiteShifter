@@ -145,6 +145,10 @@ msgid "Could not finish:"
 msgstr "Tamamlanamadı:"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Create a link for another site"
+msgstr "Başka site için bağlantı oluştur"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Created"
 msgstr "Oluşturulma"
 
@@ -233,6 +237,18 @@ msgid "Failed, nothing was changed"
 msgstr "Başarısız oldu, hiçbir şey değişmedi"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Faster than downloading and uploading: this server fetches the package directly from the other site, in pieces, using the link made on its Export screen."
+msgstr "İndirip yüklemekten hızlı: bu sunucu paketi, diğer sitenin Dışa aktar ekranında oluşturulan bağlantıyla doğrudan ve parça parça alır."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Fetch from another site"
+msgstr "Başka bir siteden getir"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Fetch package"
+msgstr "Paketi getir"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Files"
 msgstr "Dosyalar"
 
@@ -287,6 +303,10 @@ msgstr "En fazla şu kadar tut"
 #: plugin/includes/Admin/Menu.php
 msgid "Keep packages"
 msgstr "Paketleri sakla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Link from the other site"
+msgstr "Diğer sitenin bağlantısı"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Links that could not be translated (cleared, please check):"
@@ -384,6 +404,14 @@ msgstr "Bölümler"
 #: plugin/includes/Admin/Menu.php
 msgid "Passed"
 msgstr "Geçti"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste the link first."
+msgstr "Önce bağlantıyı yapıştırın."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste this link into SiteShifter > Import > \"Fetch from another site\" on the other site. It works for 30 minutes and anyone who has it can download the package, so share it only there."
+msgstr "Bu bağlantıyı diğer sitede SiteShifter > İçe aktar > \"Başka bir siteden getir\" alanına yapıştırın. 30 dakika çalışır ve elinde olan herkes paketi indirebilir; yalnızca oraya yapıştırın."
 
 #: plugin/includes/Admin/Menu.php
 msgid "Paused after repeated errors. You can resume from where it stopped."

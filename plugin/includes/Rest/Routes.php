@@ -20,6 +20,7 @@ class Routes
     const NONCE = 'siteshifter_job';
     const DOWNLOAD_ACTION = 'siteshifter_download';
     const UPLOAD_ACTION = 'siteshifter_upload';
+    const PULL_ACTION = 'siteshifter_pull';
 
     /** @var JobApi */
     private $api;
@@ -35,6 +36,9 @@ class Routes
         add_action('wp_ajax_' . self::AJAX_ACTION, [$this, 'ajax']); // logged-in only: no wp_ajax_nopriv_
         add_action('wp_ajax_' . self::DOWNLOAD_ACTION, [$this, 'download']);
         add_action('wp_ajax_' . self::UPLOAD_ACTION, [$this, 'uploadPiece']);
+        // Another site fetches a package with the token in the link, not a login.
+        add_action('wp_ajax_' . self::PULL_ACTION, [$this, 'pull']);
+        add_action('wp_ajax_nopriv_' . self::PULL_ACTION, [$this, 'pull']);
     }
 
     public static function can()
@@ -66,6 +70,7 @@ class Routes
             '/jobs/(?P<id>[a-f0-9]{32})/estimate' => ['POST', 'estimate', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/cancel' => ['POST', 'cancel', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/download_link' => ['POST', 'download_link', $idArg],
+            '/jobs/(?P<id>[a-f0-9]{32})/pull_link' => ['POST', 'pull_link', $idArg],
             '/jobs/(?P<id>[a-f0-9]{32})/delete' => ['POST', 'delete', $idArg],
         ];
         register_rest_route(self::NAMESPACE_, '/incoming/(?P<id>[a-f0-9]{32})/piece', [
@@ -137,6 +142,34 @@ class Routes
             wp_die(esc_html($found), 403);
         }
         Download::stream($found['file'], Download::filename(get_option('home'), $found['created']));
+        exit;
+    }
+
+    /** GET|HEAD admin-ajax.php?action=siteshifter_pull&job=<id>&token=<token>, with optional Range */
+    public function pull()
+    {
+        $id = isset($_GET['job']) ? sanitize_key(wp_unslash($_GET['job'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the token below is the credential
+        $token = isset($_GET['token']) ? sanitize_key(wp_unslash($_GET['token'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $found = $this->api->pullTarget($id, $token);
+        if (!is_array($found)) {
+            nocache_headers();
+            wp_die(esc_html($found), 403);
+        }
+        $header = isset($_SERVER['HTTP_RANGE']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])) : '';
+        $range = $header !== '' ? Pull::range($header, $found['size']) : null;
+        if ($header !== '' && $range === null) {
+            status_header(416);
+            header('Content-Range: bytes */' . $found['size']);
+            exit;
+        }
+        $range = $range ?: [0, $found['size'] - 1];
+        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'HEAD') {
+            status_header($header !== '' ? 206 : 200);
+            header('Accept-Ranges: bytes');
+            header('Content-Length: ' . ($range[1] - $range[0] + 1));
+            exit;
+        }
+        Pull::send($found['file'], $found['size'], $range[0], $range[1], $header !== '');
         exit;
     }
 

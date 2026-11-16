@@ -172,6 +172,10 @@ class JobApi
                     $d = $this->runner->issueDownload($this->id($input), $user);
 
                     return ['ok' => true, 'token' => $d['token'], 'expires' => $d['expires']];
+                case 'pull_link':
+                    $d = $this->runner->issuePull($this->id($input));
+
+                    return ['ok' => true, 'token' => $d['token'], 'expires' => $d['expires']];
                 case 'delete':
                     return ['ok' => true] + $this->runner->delete($this->id($input));
                 case 'status':
@@ -198,6 +202,12 @@ class JobApi
         $found = $this->runner->downloadFile($id, $token, $userId);
 
         return $found;
+    }
+
+    /** @return array{file:string,size:int,created:int}|string */
+    public function pullTarget($id, $token)
+    {
+        return $this->runner->pullFile($id, $token);
     }
 
     private function id(array $input)
