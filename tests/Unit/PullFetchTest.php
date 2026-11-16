@@ -8,6 +8,7 @@ use SiteShifter\Plugin\Jobs\Incoming;
 use SiteShifter\Plugin\Jobs\JobStore;
 use SiteShifter\Plugin\Jobs\Runner;
 use SiteShifter\Plugin\Rest\Pull;
+use SiteShifter\Transfer\Pieces;
 
 class PullFetchTest extends TestCase
 {
@@ -123,38 +124,53 @@ class PullFetchTest extends TestCase
         $state = $task->run($state, microtime(true) + 5);
         $this->assertTrue($state['done']);
         $this->assertSame(100, $task->progress($state)['percent']);
-        $this->assertSame(filesize($this->zip), $state['total']);
+        $this->assertSame(filesize($this->zip), $state['dl']['size']);
+        $this->assertFalse($state['dl']['verified'], 'an older site sends no checksum list');
         $path = $incoming->path($state['result']['id']);
         $this->assertSame(md5_file($this->zip), md5_file($path));
     }
 
-    public function testSmallPiecesAndResumeAfterAnInterruption(): void
+    public function testResumesAfterAnInterruptionAndChecksPieces(): void
     {
-        $incoming = new Incoming(new JobStore($this->base . '/in'));
+        // 3 pieces of 8 MB; the network drops once mid-way; the other site publishes its checksum list.
+        $big = $this->base . '/big.zip';
+        $z = new \ZipArchive();
+        $z->open($big, \ZipArchive::CREATE);
+        $z->addFromString('database.sql', random_bytes(18 * 1048576));
+        $z->setCompressionName('database.sql', \ZipArchive::CM_STORE);
+        $z->close();
+        $this->zip = $big;
+        $listing = json_encode(Pieces::ofFile($big));
         $http = $this->http();
         $count = 0;
-        $flaky = function ($url, array $h, $to) use ($http, &$count) {
-            if (++$count === 4) {
+        $flaky = function ($url, array $h, $to) use ($http, &$count, $listing) {
+            if (++$count === 3) {
                 return ['code' => 0, 'headers' => []]; // the network drops once
+            }
+            if (strpos($url, '&pieces=1') !== false) {
+                file_put_contents($to, $listing);
+
+                return ['code' => 200, 'headers' => ['x-siteshifter-pieces' => '1']];
             }
 
             return $http($url, $h, $to);
         };
-        $task = new class($this->base . '/job', $incoming, $flaky) extends FetchTask {
-            const PIECE = 1024;
+        $now = 1000.0;
+        $clock = function () use (&$now) {
+            return $now;
         };
+        $incoming = new Incoming(new JobStore($this->base . '/in'));
+        $task = new FetchTask($this->base . '/job', $incoming, $flaky, $clock, function ($s) use (&$now) {
+            $now += $s;
+        });
         $state = $task->initialState(['url' => $this->url()]);
-        $failed = false;
-        for ($i = 0; $i < 200 && !$state['done']; $i++) {
-            try {
-                $state = $task->run($state, microtime(true) - 1); // one piece per call
-            } catch (\RuntimeException $e) {
-                $failed = true; // the runner would retry from the saved state
-            }
+        for ($i = 0; $i < 50 && !$state['done']; $i++) {
+            $state = $task->run($state, $now - 1); // one step per call
+            $now += 1;
         }
-        $this->assertTrue($failed);
         $this->assertTrue($state['done']);
-        $this->assertSame(md5_file($this->zip), md5_file($incoming->path($state['result']['id'])));
+        $this->assertTrue($state['dl']['verified']);
+        $this->assertSame(md5_file($big), md5_file($incoming->path($state['result']['id'])));
     }
 
     public function testExplainsARefusedLink(): void

@@ -7,13 +7,15 @@ namespace SiteShifter\Plugin\Jobs;
 
 use SiteShifter\Package\PackageBuilder;
 use SiteShifter\Package\Scope;
+use SiteShifter\Transfer\Pieces;
 
 defined('ABSPATH') || exit;
 
 /**
  * Builds a SiteShifter package (files + database.sql + manifest) and then
  * proves it is complete. Phases: build (resumable, from the core's
- * PackageBuilder) -> verify -> done. The zip is rewritten atomically by
+ * PackageBuilder) -> verify -> pieces (resumable checksum list, so
+ * another site or a cloud copy can check every 8 MB piece) -> done. The zip is rewritten atomically by
  * ZipArchive, so only the SQL dump is a checkpointed append-only file.
  */
 class ExportTask implements Task
@@ -35,6 +37,11 @@ class ExportTask implements Task
     public function zipFile()
     {
         return $this->dir . '/package.zip';
+    }
+
+    public function piecesFile()
+    {
+        return $this->dir . '/package.pieces.json';
     }
 
     public function sqlFile()
@@ -94,8 +101,19 @@ class ExportTask implements Task
                 // Not a retryable condition: the Runner will pause the job and show this message.
                 throw new \RuntimeException('The package failed its check: ' . implode(' ', $state['check']['problems']));
             }
-            $state['phase'] = 'done';
-            $state['done'] = true;
+            $state['phase'] = 'pieces';
+            $state['pieces'] = Pieces::start($this->zipFile());
+
+            return $state;
+        }
+        if ($state['phase'] === 'pieces') {
+            $state['pieces'] = Pieces::run($state['pieces'], $deadline);
+            if ($state['pieces']['done']) {
+                file_put_contents($this->piecesFile(), json_encode(Pieces::listing($state['pieces'])));
+                $state['pieces'] = null;
+                $state['phase'] = 'done';
+                $state['done'] = true;
+            }
         }
 
         return $state;
@@ -112,7 +130,7 @@ class ExportTask implements Task
                 'tables' => $c['tables'],
             ]];
         }
-        if ($state['phase'] === 'verify') {
+        if ($state['phase'] === 'verify' || $state['phase'] === 'pieces') {
             return ['percent' => 99, 'phase' => 'verify', 'detail' => 'verify'];
         }
         $p = PackageBuilder::progress($state['build']);

@@ -5,17 +5,19 @@
 
 namespace SiteShifter\Plugin\Jobs;
 
+use SiteShifter\Transfer\Download;
+use SiteShifter\Transfer\LinkSource;
+
 defined('ABSPATH') || exit;
 
 /**
  * Fetches a package from another SiteShifter site (the link made on its Export screen)
- * into the incoming folder, in pieces with HTTP Range requests, so a slow host or a time
- * limit only costs the piece in flight. The result is a normal uploaded package.
+ * into the incoming folder with the core Download: 8 MB pieces, each checked against
+ * the other site's checksum list when it has one, transient failures retried with
+ * growing waits. The result is a normal uploaded package.
  */
 class FetchTask implements Task
 {
-    const PIECE = 8388608;
-
     /** @var string */
     private $dir;
 
@@ -25,56 +27,39 @@ class FetchTask implements Task
     /** @var callable function (string $url, array $headers, string $toFile): array{code:int,headers:array}  headers lower-cased */
     private $http;
 
-    public function __construct($dir, Incoming $incoming, $http)
+    /** @var callable|null */
+    private $clock;
+
+    /** @var callable|null */
+    private $sleep;
+
+    public function __construct($dir, Incoming $incoming, $http, $clock = null, $sleep = null)
     {
         $this->dir = rtrim($dir, '/');
         $this->incoming = $incoming;
         $this->http = $http;
+        $this->clock = $clock;
+        $this->sleep = $sleep;
     }
 
-    /** Only the link format SiteShifter itself makes is accepted. */
     public static function validate($url)
     {
-        $p = parse_url((string) $url);
-        if (!$p || empty($p['host']) || !in_array($p['scheme'] ?? '', ['http', 'https'], true)) {
-            throw new \InvalidArgumentException('Paste the full link made on the other site (it starts with https://).');
-        }
-        parse_str((string) ($p['query'] ?? ''), $q);
-        if (($q['action'] ?? '') !== 'siteshifter_pull' || !preg_match('/^[a-f0-9]{32}$/', (string) ($q['job'] ?? '')) || !preg_match('/^[a-f0-9]{48}$/', (string) ($q['token'] ?? ''))) {
-            throw new \InvalidArgumentException('That is not a SiteShifter package link. Create it with "Create a link for another site" on the other site.');
-        }
-
-        return (string) $url;
+        return LinkSource::validate($url);
     }
 
     public function initialState(array $params)
     {
-        return ['url' => self::validate($params['url'] ?? ''), 'total' => null, 'id' => null, 'offset' => 0, 'done' => false, 'result' => null];
+        return ['url' => self::validate($params['url'] ?? ''), 'dl' => Download::initialState(), 'done' => false, 'result' => null];
     }
 
     public function run(array $state, $deadline)
     {
-        $first = true;
-        if ($state['total'] === null) {
-            $state['total'] = $this->size($state['url']);
-            $host = (string) parse_url($state['url'], PHP_URL_HOST);
-            $state['id'] = $this->incoming->begin('siteshifter-from-' . preg_replace('/[^a-z0-9.-]+/i', '-', $host) . '.zip', $state['total']);
-        }
-        while ($state['offset'] < $state['total'] && ($first || microtime(true) < $deadline)) {
-            $first = false;
-            $end = min($state['offset'] + static::PIECE, $state['total']) - 1;
-            $tmp = $this->dir . '/piece.tmp';
-            $r = call_user_func($this->http, self::piece($state['url'], $state['offset'], $end), [], $tmp);
-            if (!in_array($r['code'], [200, 206], true) || !is_file($tmp) || filesize($tmp) !== $end - $state['offset'] + 1) {
-                @unlink($tmp);
-                throw new \RuntimeException(self::explain($r['code']));
-            }
-            $done = $this->incoming->append($state['id'], $state['offset'], $tmp);
-            @unlink($tmp);
-            $state['offset'] = $done['size']; // if a piece was repeated, carry on from what the file really holds
-        }
-        if ($state['offset'] >= $state['total']) {
-            $state['result'] = $this->incoming->finish($state['id']);
+        $state = self::upgrade($state);
+        $source = new LinkSource($state['url'], $this->http, $this->dir . '/probe.tmp');
+        $download = new Download($source, new IncomingSink($this->incoming), $this->dir . '/piece.tmp', $this->clock, $this->sleep);
+        $state['dl'] = $download->run($state['dl'], $deadline);
+        if ($state['dl']['done']) {
+            $state['result'] = $state['dl']['result'];
             $state['done'] = true;
         }
 
@@ -83,12 +68,12 @@ class FetchTask implements Task
 
     public function progress(array $state)
     {
+        $state = self::upgrade($state);
         if ($state['done']) {
             return ['percent' => 100, 'phase' => 'done', 'detail' => '', 'result' => $state['result']];
         }
-        $total = (int) $state['total'];
 
-        return ['percent' => $total > 0 ? (int) min(99, floor(100 * $state['offset'] / $total)) : 0, 'phase' => 'fetch', 'detail' => $total > 0 ? round($state['offset'] / 1048576) . ' / ' . round($total / 1048576) . ' MB' : ''];
+        return Download::progress($state['dl']);
     }
 
     public function checkpointFiles(array $state)
@@ -96,34 +81,20 @@ class FetchTask implements Task
         return [];
     }
 
-    private static function piece($url, $from, $to)
+    /** A fetch started by 0.2.x kept its fields at the top level; carry them on. */
+    private static function upgrade(array $state)
     {
-        return $url . '&range=' . $from . '-' . $to;
-    }
-
-    private function size($url)
-    {
-        $tmp = $this->dir . '/probe.tmp';
-        $r = call_user_func($this->http, self::piece($url, 0, 0), [], $tmp);
-        $ok = is_file($tmp) && filesize($tmp) === 1; // a host that ignores the range would send the whole file
-        @unlink($tmp);
-        $range = $r['headers']['x-siteshifter-range'] ?? ($r['headers']['content-range'] ?? '');
-        if (!in_array($r['code'], [200, 206], true) || !$ok || !preg_match('#/(\d+)$#', (string) $range, $m) || (int) $m[1] < 1) {
-            throw new \RuntimeException(self::explain($r['code']));
+        if (isset($state['dl'])) {
+            return $state;
+        }
+        $dl = Download::initialState();
+        if (isset($state['total'])) {
+            $dl['size'] = (int) $state['total'];
+            $dl['name'] = 'package.zip';
+            $dl['id'] = $state['id'] ?? null;
+            $dl['offset'] = (int) ($state['offset'] ?? 0);
         }
 
-        return (int) $m[1];
-    }
-
-    private static function explain($code)
-    {
-        if ($code === 403) {
-            return 'The other site refused the link. It may have expired (links last 30 minutes) or the package was deleted. Create a new link there.';
-        }
-        if ($code === 0) {
-            return 'This server could not reach the other site. Check the address and that this host may make outgoing requests.';
-        }
-
-        return 'The other site answered with an unexpected reply (' . $code . '). A firewall or cache may be in the way; use the download and upload route instead.';
+        return ['url' => $state['url'], 'dl' => $dl, 'done' => !empty($state['done']), 'result' => $state['result'] ?? null];
     }
 }

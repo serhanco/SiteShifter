@@ -65,6 +65,9 @@ class ExportTaskTest extends DatabaseTestCase
         $this->assertSame(100, $view['percent']);
         $this->assertGreaterThan(25, $view['result']['files']);
         $this->assertGreaterThan(0, $view['result']['tables']);
+        $pieces = \SiteShifter\Transfer\Pieces::parse((string) file_get_contents($store->dir($view['id']) . '/package.pieces.json'));
+        $this->assertNotNull($pieces, 'a checksum list is written beside the package');
+        $this->assertSame(\SiteShifter\Transfer\Pieces::ofFile($store->dir($view['id']) . '/package.zip')['digest'], $pieces['digest']);
 
         $zip = new \ZipArchive();
         $zip->open($store->dir($view['id']) . '/package.zip');
