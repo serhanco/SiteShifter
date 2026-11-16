@@ -27,9 +27,25 @@ msgstr "Bir dosya meşgul veya kilitli"
 msgid "A file or folder could not be written"
 msgstr "Bir dosya veya klasör yazılamadı"
 
+#: plugin/includes/Admin/Menu.php
+msgid "A package in Google Drive can be brought here from the Cloud tab."
+msgstr "Google Drive'daki bir paketi Bulut sekmesinden buraya getirebilirsiniz."
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "A required PHP extension is missing"
 msgstr "Gerekli bir PHP eklentisi eksik"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Access was not allowed. You can try again."
+msgstr "Erişime izin verilmedi. Yeniden deneyebilirsiniz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Advanced: use my own Google OAuth client"
+msgstr "Gelişmiş: kendi Google OAuth istemcimi kullan"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Allow access. This page notices it by itself."
+msgstr "Erişime izin verin. Bu sayfa bunu kendiliğinden fark eder."
 
 #: plugin/includes/Admin/Menu.php
 msgid "Also include database tables that do not use this site's table prefix"
@@ -54,6 +70,14 @@ msgstr "Barındırma firmanızdan klasörü open_basedir listesine eklemesini is
 #: plugin/includes/Admin/Menu.php
 msgid "Backup deleted"
 msgstr "Yedek silindi"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Bring to this site"
+msgstr "Bu siteye getir"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Cancel"
+msgstr "Vazgeç"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Change address"
@@ -96,6 +120,10 @@ msgid "Checks and history"
 msgstr "Kontroller ve geçmiş"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Checksum"
+msgstr "Sağlama"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Choose a .zip file first."
 msgstr "Önce bir .zip dosyası seçin."
 
@@ -104,12 +132,36 @@ msgid "Choose an existing user on the new site to own the imported content."
 msgstr "İçe aktarılan içeriğin sahibi olacak, yeni sitede var olan bir kullanıcı seçin."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Client ID"
+msgstr "İstemci kimliği"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Client secret"
+msgstr "İstemci gizli anahtarı"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Cloud"
+msgstr "Bulut"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Comments"
 msgstr "Yorumlar"
 
 #: plugin/includes/Admin/ScopeText.php
 msgid "Comments are not included"
 msgstr "Yorumlar dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect Google Drive"
+msgstr "Google Drive'ı bağla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect your own Google Drive to keep packages there and to bring them into another site. SiteShifter only sees the files it creates (a \"SiteShifter\" folder), never the rest of your Drive."
+msgstr "Paketleri saklamak ve başka bir siteye oradan getirmek için kendi Google Drive'ınızı bağlayın. SiteShifter yalnızca kendi oluşturduğu dosyaları (\"SiteShifter\" klasörü) görür, Drive'ınızın geri kalanını asla görmez."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connected to Google Drive as %s."
+msgstr "Google Drive'a %s hesabıyla bağlı."
 
 #: plugin/includes/Admin/Menu.php
 #, php-format
@@ -169,6 +221,10 @@ msgid "Data that plugins keep in their own tables (forms, orders, bookings) is n
 msgstr "Eklentilerin kendi tablolarında tuttuğu veriler (formlar, siparişler, rezervasyonlar) pakete eklenmez."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Delete from Google Drive"
+msgstr "Google Drive'dan sil"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Delete old packages automatically (once a day)"
 msgstr "Eski paketleri otomatik sil (günde bir kez)"
 
@@ -193,8 +249,20 @@ msgid "Delete the selected packages from this server? This cannot be undone."
 msgstr "Seçilen paketler bu sunucudan silinsin mi? Bu işlem geri alınamaz."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Delete this package from Google Drive? It goes to the Drive trash."
+msgstr "Bu paket Google Drive'dan silinsin mi? Drive çöp kutusuna gider."
+
+#: plugin/includes/Admin/Menu.php
 msgid "Deleted."
 msgstr "Silindi."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Disconnect"
+msgstr "Bağlantıyı kes"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Disconnect Google Drive from this site? Packages already in Drive stay there."
+msgstr "Google Drive bu siteden ayrılsın mı? Drive'daki paketler orada kalır."
 
 #. translators: %d: number of database rows
 #: plugin/includes/Admin/Menu.php
@@ -261,12 +329,24 @@ msgid "Free some space (old packages, backups, caches) or ask your host to raise
 msgstr "Yer açın (eski paketler, yedekler, önbellekler) veya barındırma firmanızdan disk kotasını artırmasını isteyin, sonra devam edin."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Free space in Google Drive: %s"
+msgstr "Google Drive'daki boş alan: %s"
+
+#: plugin/includes/Admin/Menu.php
 msgid "GB"
 msgstr "GB"
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "Give the web server user write permission to the folder named in the message (usually 755 for folders and 644 for files, owned by the account that runs PHP), then resume."
 msgstr "Mesajda adı geçen klasör için web sunucusu kullanıcısına yazma izni verin (genellikle klasörler için 755, dosyalar için 644; PHP'yi çalıştıran hesaba ait olmalı), sonra devam edin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Go to Import"
+msgstr "İçe aktarmaya git"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Google Drive"
+msgstr "Google Drive"
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "Grant the database user ALL PRIVILEGES on this database (CREATE, DROP, ALTER, INSERT, SELECT, UPDATE, DELETE, LOCK TABLES), then resume."
@@ -341,6 +421,10 @@ msgid "Merge: keep what is on this site, add what is new, and decide conflicts b
 msgstr "Birleştir: bu sitedekini koru, yeniyi ekle, çakışmaları aşağıdan belirle."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Name"
+msgstr "Ad"
+
+#: plugin/includes/Admin/Menu.php
 msgid "New address"
 msgstr "Yeni adres"
 
@@ -352,6 +436,10 @@ msgstr "Henüz paket yüklenmedi."
 msgid "Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time."
 msgstr "Hiçbir şey kaybolmaz: iş kaldığı yerden devam eder. Tekrarlarsa barındırma firmanızdan max_execution_time değerini artırmasını isteyin."
 
+#: plugin/includes/Admin/Menu.php
+msgid "Only needed if you prefer your own Google Cloud project. Create an OAuth client of type \"TVs and Limited Input devices\" with the Google Drive API enabled. Saving disconnects the current connection."
+msgstr "Yalnızca kendi Google Cloud projenizi kullanmak isterseniz gerekir. Google Drive API etkin bir projede \"TVs and Limited Input devices\" türünde bir OAuth istemcisi oluşturun. Kaydetmek mevcut bağlantıyı keser."
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "Only the chosen content types are included"
 msgstr "Yalnızca seçilen içerik türleri dahil"
@@ -359,6 +447,10 @@ msgstr "Yalnızca seçilen içerik türleri dahil"
 #: plugin/includes/Admin/Menu.php
 msgid "Only wp-content (themes, plugins, uploads)"
 msgstr "Yalnızca wp-content (temalar, eklentiler, yüklemeler)"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Open this address on any device:"
+msgstr "Herhangi bir cihazda bu adresi açın:"
 
 #: plugin/includes/Admin/ScopeText.php
 msgid "Other post types, and their custom fields and category links, are left out."
@@ -384,6 +476,10 @@ msgstr "Paket kaynağı %1$s, %2$s, WordPress %3$s, %4$s tablo, kapsam: %5$s"
 #: plugin/includes/Admin/Menu.php
 msgid "Packages"
 msgstr "Paketler"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages in Google Drive"
+msgstr "Google Drive'daki paketler"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Packages made on this server. They hold your database and wp-config.php, so delete them when you no longer need them."
@@ -530,6 +626,10 @@ msgid "Settings only (the options table, no files)"
 msgstr "Yalnızca ayarlar (options tablosu, dosya yok)"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Sign in with your Google account and enter this code:"
+msgstr "Google hesabınızla giriş yapın ve bu kodu girin:"
+
+#: plugin/includes/Admin/Menu.php
 msgid "SiteShifter"
 msgstr "SiteShifter"
 
@@ -568,6 +668,10 @@ msgstr "Teknik ayrıntı:"
 #: plugin/includes/Admin/Menu.php
 msgid "Test this server"
 msgstr "Bu sunucuyu test et"
+
+#: plugin/includes/Admin/Menu.php
+msgid "The code expired before it was used. Start again."
+msgstr "Kodun süresi kullanılmadan doldu. Yeniden başlayın."
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "The database connection was lost"
@@ -634,6 +738,10 @@ msgstr "Eski adres hâlâ %d yerde geçiyor."
 msgid "The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it."
 msgstr "Paket, kullanıcı parola özetleri dahil veritabanınızı ve wp-config.php dosyanızı içerir. Gizli tutun ve indirdikten sonra bu sunucudan silin."
 
+#: plugin/includes/Admin/Menu.php
+msgid "The package is on this server and ready to import."
+msgstr "Paket bu sunucuda ve içe aktarmaya hazır."
+
 #. translators: 1: size, 2: number of files, 3: number of database tables
 #: plugin/includes/Admin/Menu.php
 #, php-format
@@ -673,12 +781,28 @@ msgid "Themes or plugins are not included"
 msgstr "Temalar veya eklentiler dahil değil"
 
 #: plugin/includes/Admin/Menu.php
+msgid "There are no SiteShifter packages in this Google Drive yet."
+msgstr "Bu Google Drive'da henüz SiteShifter paketi yok."
+
+#: plugin/includes/Admin/Menu.php
+msgid "There are no checked packages on this server. Create one on the Export screen."
+msgstr "Bu sunucuda kontrol edilmiş paket yok. Dışa aktarma ekranında bir paket oluşturun."
+
+#: plugin/includes/Admin/Menu.php
 msgid "There are no packages on this server."
 msgstr "Bu sunucuda paket yok."
 
 #: plugin/includes/Admin/Menu.php
+msgid "This copy of SiteShifter has no Google Drive client. Use an official release, add SITESHIFTER_GOOGLE_CLIENT_ID and SITESHIFTER_GOOGLE_CLIENT_SECRET to wp-config.php, or enter your own client under \"Advanced\"."
+msgstr "Bu SiteShifter kopyasında Google Drive istemcisi yok. Resmi bir sürüm kullanın, wp-config.php dosyasına SITESHIFTER_GOOGLE_CLIENT_ID ve SITESHIFTER_GOOGLE_CLIENT_SECRET ekleyin veya \"Gelişmiş\" bölümünde kendi istemcinizi girin."
+
+#: plugin/includes/Admin/Menu.php
 msgid "This screen is coming in a later step."
 msgstr "Bu ekran sonraki bir adımda geliyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "To move a site, connect the same Google account on both sites: upload here, then press \"Bring to this site\" on the other one."
+msgstr "Bir siteyi taşımak için iki sitede de aynı Google hesabını bağlayın: burada yükleyin, sonra diğer sitede \"Bu siteye getir\" düğmesine basın."
 
 #: plugin/includes/Admin/Menu.php
 msgid "Undo: put the previous site back"
@@ -697,12 +821,24 @@ msgid "Upload a package made by SiteShifter (or put it in the incoming folder by
 msgstr "SiteShifter ile hazırlanmış bir paketi yükleyin (çok büyük siteler için FTP ile gelen klasörüne koyun), sonra kontrol edin. Kontrol hiçbir şeyi değiştirmez: neyin değişeceğini, neyin uyumsuz olduğunu ve elle ne yapmanız gerektiğini gösterir."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Upload a package to Google Drive"
+msgstr "Google Drive'a paket yükle"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Upload package"
 msgstr "Paketi yükle"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Upload to Google Drive"
+msgstr "Google Drive'a yükle"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Uploaded and verified."
 msgstr "Yüklendi ve doğrulandı."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploaded to Google Drive and checked."
+msgstr "Google Drive'a yüklendi ve kontrol edildi."
 
 #: plugin/includes/Admin/Menu.php
 msgid "Uploading…"
@@ -717,12 +853,20 @@ msgid "Use \"without media\" and copy uploads myself"
 msgstr "\"Medyasız\" kullan ve uploads'ı kendim kopyalayayım"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Use my own client"
+msgstr "Kendi istemcimi kullan"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Users"
 msgstr "Kullanıcılar"
 
 #: plugin/includes/Admin/ScopeText.php
 msgid "Users are not included"
 msgstr "Kullanıcılar dahil değil"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Waiting for your approval…"
+msgstr "Onayınız bekleniyor…"
 
 #: plugin/includes/Admin/Menu.php
 msgid "What to include"
@@ -763,6 +907,10 @@ msgid "days (0 = no limit)"
 msgstr "gün (0 = sınırsız)"
 
 #: plugin/includes/Admin/Menu.php
+msgid "every piece is checked"
+msgstr "her parça kontrol edilir"
+
+#: plugin/includes/Admin/Menu.php
 msgid "keep both (new name)"
 msgstr "ikisini de koru (yeni ad)"
 
@@ -779,6 +927,10 @@ msgid "packages"
 msgstr "paket"
 
 #: plugin/includes/Admin/Menu.php
+msgid "size only"
+msgstr "yalnızca boyut"
+
+#: plugin/includes/Admin/Menu.php
 msgid "uploads copied by hand"
 msgstr "uploads elle kopyalandı"
 
@@ -789,3 +941,4 @@ msgstr "mevcut kullanıcıyı kullan"
 #: plugin/includes/Admin/Menu.php
 msgid "use the newer version"
 msgstr "yeni sürümü kullan"
+

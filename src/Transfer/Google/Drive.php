@@ -193,8 +193,9 @@ class Drive implements Storage
         $f = $this->json('GET', self::API . '/files/' . rawurlencode($id) . '?fields=appProperties');
         foreach ([$f['appProperties']['ss_pieces'] ?? null, $id] as $one) {
             if ($one) {
-                $r = $this->call('DELETE', self::API . '/files/' . rawurlencode($one));
-                if ($r['code'] !== 204 && $r['code'] !== 404) {
+                // To the Drive trash, not gone for good: the person can still restore it there for 30 days.
+                $r = $this->call('PATCH', self::API . '/files/' . rawurlencode($one) . '?fields=id', ['Content-Type' => 'application/json; charset=UTF-8'], json_encode(['trashed' => true]));
+                if ($r['code'] !== 200 && $r['code'] !== 404) {
                     throw self::error($r, 'Google Drive did not delete the package');
                 }
             }

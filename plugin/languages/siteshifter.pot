@@ -25,8 +25,24 @@ msgstr ""
 msgid "A file or folder could not be written"
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "A package in Google Drive can be brought here from the Cloud tab."
+msgstr ""
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "A required PHP extension is missing"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Access was not allowed. You can try again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Advanced: use my own Google OAuth client"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Allow access. This page notices it by itself."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -51,6 +67,14 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Backup deleted"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Bring to this site"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Cancel"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -94,6 +118,10 @@ msgid "Checks and history"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Checksum"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Choose a .zip file first."
 msgstr ""
 
@@ -102,11 +130,37 @@ msgid "Choose an existing user on the new site to own the imported content."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Client ID"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Client secret"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Cloud"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Comments"
 msgstr ""
 
 #: plugin/includes/Admin/ScopeText.php
 msgid "Comments are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect Google Drive"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect your own Google Drive to keep packages there and to bring them into another site. SiteShifter only sees the files it creates (a \"SiteShifter\" folder), never the rest of your Drive."
+msgstr ""
+
+#. translators: %s: Google account e-mail address
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Connected to Google Drive as %s."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -167,6 +221,10 @@ msgid "Data that plugins keep in their own tables (forms, orders, bookings) is n
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Delete from Google Drive"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Delete old packages automatically (once a day)"
 msgstr ""
 
@@ -191,7 +249,19 @@ msgid "Delete the selected packages from this server? This cannot be undone."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Delete this package from Google Drive? It goes to the Drive trash."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Deleted."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Disconnect"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Disconnect Google Drive from this site? Packages already in Drive stay there."
 msgstr ""
 
 #. translators: %d: number of database rows
@@ -258,12 +328,26 @@ msgstr ""
 msgid "Free some space (old packages, backups, caches) or ask your host to raise the disk quota, then resume."
 msgstr ""
 
+#. translators: %s: free space, e.g. 12.5 GB
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Free space in Google Drive: %s"
+msgstr ""
+
 #: plugin/includes/Admin/Menu.php
 msgid "GB"
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "Give the web server user write permission to the folder named in the message (usually 755 for folders and 644 for files, owned by the account that runs PHP), then resume."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Go to Import"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Google Drive"
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
@@ -339,6 +423,10 @@ msgid "Merge: keep what is on this site, add what is new, and decide conflicts b
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Name"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "New address"
 msgstr ""
 
@@ -350,12 +438,20 @@ msgstr ""
 msgid "Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time."
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "Only needed if you prefer your own Google Cloud project. Create an OAuth client of type \"TVs and Limited Input devices\" with the Google Drive API enabled. Saving disconnects the current connection."
+msgstr ""
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "Only the chosen content types are included"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Only wp-content (themes, plugins, uploads)"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Open this address on any device:"
 msgstr ""
 
 #: plugin/includes/Admin/ScopeText.php
@@ -381,6 +477,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Packages in Google Drive"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -528,6 +628,10 @@ msgid "Settings only (the options table, no files)"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Sign in with your Google account and enter this code:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "SiteShifter"
 msgstr ""
 
@@ -565,6 +669,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Test this server"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The code expired before it was used. Start again."
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
@@ -631,6 +739,10 @@ msgstr ""
 msgid "The package contains your database, including user password hashes and wp-config.php. Keep it private and delete it from this server after you have downloaded it."
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "The package is on this server and ready to import."
+msgstr ""
+
 #. translators: 1: size, 2: number of files, 3: number of database tables
 #: plugin/includes/Admin/Menu.php
 #, php-format
@@ -670,11 +782,27 @@ msgid "Themes or plugins are not included"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "There are no SiteShifter packages in this Google Drive yet."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "There are no checked packages on this server. Create one on the Export screen."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "There are no packages on this server."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "This copy of SiteShifter has no Google Drive client. Use an official release, add SITESHIFTER_GOOGLE_CLIENT_ID and SITESHIFTER_GOOGLE_CLIENT_SECRET to wp-config.php, or enter your own client under \"Advanced\"."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "This screen is coming in a later step."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "To move a site, connect the same Google account on both sites: upload here, then press \"Bring to this site\" on the other one."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -694,11 +822,23 @@ msgid "Upload a package made by SiteShifter (or put it in the incoming folder by
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Upload a package to Google Drive"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Upload package"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Upload to Google Drive"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Uploaded and verified."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Uploaded to Google Drive and checked."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -714,11 +854,19 @@ msgid "Use \"without media\" and copy uploads myself"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Use my own client"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Users"
 msgstr ""
 
 #: plugin/includes/Admin/ScopeText.php
 msgid "Users are not included"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Waiting for your approval…"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -760,6 +908,10 @@ msgid "days (0 = no limit)"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "every piece is checked"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "keep both (new name)"
 msgstr ""
 
@@ -773,6 +925,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "size only"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php

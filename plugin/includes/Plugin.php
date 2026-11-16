@@ -136,6 +136,9 @@ class Plugin
         };
         $api = new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention);
         $api->withCloud($cloud);
+        if (defined('WP_CLI') && WP_CLI) {
+            \WP_CLI::add_command('siteshifter-cloud', new Cli\CloudCommand($runner, $cloud, [$library, 'all']), ['shortdesc' => 'Google Drive for SiteShifter packages.']);
+        }
         $api->withEstimate(static function (array $measured, array $params) {
             $threshold = isset($params['threshold_mb']) ? max(0, (int) $params['threshold_mb']) * 1048576 : \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD;
             $report = \SiteShifter\Package\Estimate::report((array) $measured['bytes'], (int) $measured['db'], Jobs\ExportTask::scope($params), $measured['free'], $threshold ?: \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD);
