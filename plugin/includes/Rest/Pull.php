@@ -47,6 +47,21 @@ class Pull
         return $start > $end || $start >= $size ? null : [$start, $end];
     }
 
+    /** Sends the package's checksum list (Pieces listing, JSON) instead of bytes. */
+    public static function sendPieces($file)
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        nocache_headers();
+        status_header(200);
+        header('Content-Type: application/json');
+        header('X-Content-Type-Options: nosniff');
+        header('X-SiteShifter-Pieces: 1');
+        header('Content-Length: ' . filesize($file));
+        readfile($file);
+    }
+
     /** Sends bytes $start..$end of $file in 1 MB pieces; the caller exits afterwards. */
     public static function send($file, $size, $start, $end, $partial, $plainStatus = false)
     {

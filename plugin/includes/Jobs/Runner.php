@@ -222,7 +222,9 @@ class Runner
             return 'The package file is gone. Create a new export.';
         }
 
-        return ['file' => $file, 'size' => (int) filesize($file), 'created' => (int) $job['created']];
+        $pieces = $this->store->dir($id) . '/package.pieces.json';
+
+        return ['file' => $file, 'size' => (int) filesize($file), 'created' => (int) $job['created'], 'pieces' => is_file($pieces) ? $pieces : null];
     }
 
     /** Deletes a job and every file it made (package, backup, work files). */

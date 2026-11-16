@@ -155,6 +155,12 @@ class Routes
             nocache_headers();
             wp_die(esc_html($found), 403);
         }
+        // A 0.3+ fetcher asks for the checksum list with its first request (&range=0-0&pieces=1); an older
+        // site ignores pieces=1 and sends the first byte, which the fetcher also understands.
+        if (!empty($_GET['pieces']) && !empty($found['pieces'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            Pull::sendPieces($found['pieces']);
+            exit;
+        }
         // The piece can also be asked for in the address (&range=0-99): some hosts and caches drop the Range header.
         $header = isset($_GET['range']) ? 'bytes=' . sanitize_text_field(wp_unslash($_GET['range'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $byQuery = $header !== '';
