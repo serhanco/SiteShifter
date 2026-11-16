@@ -74,6 +74,7 @@ class Routes
             '/clone/remote/set' => ['POST', 'clone_remote_set', []],
             '/clone/remote/test' => ['POST', 'clone_remote_test', []],
             '/clone/remote/forget' => ['POST', 'clone_remote_forget', []],
+            '/clone/check' => ['POST', 'clone_check', []],
             '/checks' => ['POST', 'checks', []],
             '/site-check' => ['POST', 'site_check', []],
             '/packages' => ['POST', 'packages', []],

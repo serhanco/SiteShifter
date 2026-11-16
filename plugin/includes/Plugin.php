@@ -90,6 +90,18 @@ class Plugin
                     return ['code' => (int) wp_remote_retrieve_response_code($r), 'headers' => $h];
                 });
             },
+            'clone' => static function ($job, $dir) use ($incoming, $keys) {
+                return new Jobs\CloneTask($dir, $incoming, static function () use ($keys) {
+                    $key = $keys()->remote();
+                    if (!$key) {
+                        throw new \InvalidArgumentException('Paste a clone key from the source site first.');
+                    }
+
+                    return new \SiteShifter\Remote\CloneClient(new Cloud\WpHttp(), $key);
+                }, static function () {
+                    return function_exists('disk_free_space') ? @disk_free_space(WP_CONTENT_DIR) : false;
+                });
+            },
             'cloud_upload' => static function () use ($store, $drive) {
                 return new Jobs\CloudUploadTask($store, $drive, (string) wp_parse_url(home_url(), PHP_URL_HOST));
             },
@@ -149,7 +161,31 @@ class Plugin
         $api->withCloud($cloud);
         $api->withClone($keys, static function (array $key) {
             return new \SiteShifter\Remote\CloneClient(new Cloud\WpHttp(), $key);
-        }, Runtime\Site::homeUrl());
+        }, Runtime\Site::homeUrl(), static function (array $source, array $params) {
+            // The import dry run's checks, against the source's facts instead of a package (it does not exist yet).
+            $t = Runtime\Site::importTarget();
+            $m = (array) ($source['manifest'] ?? []);
+            $report = (new \SiteShifter\Preflight\Preflight())->run([
+                'target_wp_version' => $t['wp_version'],
+                'target_wp_db_version' => $t['wp_db_version'],
+                'target_dir' => $t['abspath'],
+                'new_url' => $t['home'],
+                'old_url' => $m['site']['url'] ?? null,
+                'manifest' => $m,
+                'db' => $t['db'],
+                'db_error' => $t['db_error'] ?? null,
+            ]);
+            // Replace or Merge is chosen on the Import screen after the copy, with its own check.
+            $rows = array_values(array_filter($report->toArray(), static function ($row) {
+                return !isset($row['id']) || $row['id'] !== 'existing_site';
+            }));
+            if ((string) ($source['plugin'] ?? '') !== SITESHIFTER_VERSION) {
+                $rows[] = (new \SiteShifter\Preflight\Result('clone_versions', \SiteShifter\Preflight\Result::WARN, 'Different SiteShifter versions', 'The source runs SiteShifter ' . (string) ($source['plugin'] ?? '?') . ', this site ' . SITESHIFTER_VERSION . '.', 'Update SiteShifter on both sites to the same version for the most reliable copy.'))->toArray();
+            }
+            $rows = array_merge($rows, Admin\ScopeText::rows(Jobs\ExportTask::scope($params)));
+
+            return ['blockers' => $report->hasBlockers(), 'results' => $rows];
+        });
         $cloneServer = static function () use ($keys, $store, $runner, $connect) {
             return new Remote\Server($keys(), new Remote\Guard($store->base() . '/clone-guard.php'), $store, $runner, static function () use ($connect) {
                 $db = call_user_func($connect);
@@ -166,6 +202,9 @@ class Plugin
         };
         if (defined('WP_CLI') && WP_CLI) {
             \WP_CLI::add_command('siteshifter-cloud', new Cli\CloudCommand($runner, $cloud, [$library, 'all']), ['shortdesc' => 'Google Drive for SiteShifter packages.']);
+        }
+        if (defined('WP_CLI') && WP_CLI) {
+            \WP_CLI::add_command('siteshifter-clone', new Cli\CloneCommand($api, $runner), ['shortdesc' => 'Copy another SiteShifter site into this one, or let one copy this site.']);
         }
         $api->withEstimate(static function (array $measured, array $params) {
             $threshold = isset($params['threshold_mb']) ? max(0, (int) $params['threshold_mb']) * 1048576 : \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD;

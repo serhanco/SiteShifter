@@ -134,8 +134,12 @@ class JobApi
     /** @var string this site's address */
     private $home = '';
 
-    public function withClone($keys, $client, $home)
+    /** @var callable|null function (array $source, array $params): array{blockers:bool,results:array} */
+    private $cloneChecks;
+
+    public function withClone($keys, $client, $home, $checks = null)
     {
+        $this->cloneChecks = $checks;
         $this->cloneKeys = $keys;
         $this->cloneClient = $client;
         $this->home = rtrim((string) $home, '/');
@@ -173,6 +177,16 @@ class JobApi
                 return ['ok' => true, 'remote' => $keys->remoteView(), 'test' => $this->cloneTest($keys)];
             case 'clone_remote_test':
                 return ['ok' => true, 'remote' => $keys->remoteView(), 'test' => $this->cloneTest($keys)];
+            case 'clone_check':
+                $test = $this->cloneTest($keys);
+                if (!$test['ok']) {
+                    return $this->fail('unreachable', $test['message']);
+                }
+                if (!$this->cloneChecks) {
+                    return $this->fail('unavailable', 'Checks are not available.');
+                }
+
+                return ['ok' => true, 'source' => $test['source']] + call_user_func($this->cloneChecks, $test['source'], $p);
             case 'clone_remote_forget':
                 $keys->forgetRemote();
 
