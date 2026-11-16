@@ -51,6 +51,13 @@ class Routes
         $idArg = ['id' => ['type' => 'string', 'required' => true, 'validate_callback' => ['SiteShifter\\Plugin\\Jobs\\JobStore', 'validId']]];
         $routes = [
             '/jobs' => ['POST', 'start', []],
+            '/cloud/status' => ['POST', 'cloud_status', []],
+            '/cloud/connect' => ['POST', 'cloud_connect', []],
+            '/cloud/poll' => ['POST', 'cloud_poll', []],
+            '/cloud/disconnect' => ['POST', 'cloud_disconnect', []],
+            '/cloud/client' => ['POST', 'cloud_client', []],
+            '/cloud/items' => ['POST', 'cloud_items', []],
+            '/cloud/delete' => ['POST', 'cloud_delete', []],
             '/checks' => ['POST', 'checks', []],
             '/site-check' => ['POST', 'site_check', []],
             '/packages' => ['POST', 'packages', []],

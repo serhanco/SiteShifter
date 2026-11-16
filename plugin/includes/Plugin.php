@@ -23,6 +23,20 @@ class Plugin
         $store = new Jobs\JobStore(WP_CONTENT_DIR . '/siteshifter-work');
         $connect = ['SiteShifter\\Plugin\\Runtime\\Site', 'connection'];
         $incoming = new Jobs\Incoming($store);
+        // Cloud connections live in an encrypted file beside the jobs, never in the database (see Vault).
+        $google = null;
+        $cloud = static function () use ($store, &$google) {
+            if ($google === null) {
+                $store->protect();
+                $vault = new \SiteShifter\Transfer\Vault($store->base() . '/vault.php', wp_salt('auth') . wp_salt('secure_auth'));
+                $google = new Cloud\GoogleAccount($vault, new Cloud\WpHttp(), Cloud\Client::builtIn());
+            }
+
+            return $google;
+        };
+        $drive = static function () use ($cloud) {
+            return $cloud()->drive();
+        };
         $runner = new Jobs\Runner($store, [
             'host_test' => static function ($job, $dir) {
                 return new Jobs\HostTestTask($dir);
@@ -64,6 +78,12 @@ class Plugin
 
                     return ['code' => (int) wp_remote_retrieve_response_code($r), 'headers' => $h];
                 });
+            },
+            'cloud_upload' => static function () use ($store, $drive) {
+                return new Jobs\CloudUploadTask($store, $drive, (string) wp_parse_url(home_url(), PHP_URL_HOST));
+            },
+            'cloud_fetch' => static function ($job, $dir) use ($incoming, $drive) {
+                return new Jobs\CloudFetchTask($dir, $incoming, $drive);
             },
             'measure' => static function () use ($connect) {
                 return new Jobs\MeasureTask(untrailingslashit(ABSPATH), array_merge(\SiteShifter\Package\Archiver::DEFAULT_EXCLUDES, [Jobs\ExportTask::WORK_FOLDER]), static function () use ($connect) {
@@ -115,6 +135,7 @@ class Plugin
             return \SiteShifter\Support\SiteCheck::check($url);
         };
         $api = new Rest\JobApi($runner, $checks, $siteCheck, $library, $retention);
+        $api->withCloud($cloud);
         $api->withEstimate(static function (array $measured, array $params) {
             $threshold = isset($params['threshold_mb']) ? max(0, (int) $params['threshold_mb']) * 1048576 : \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD;
             $report = \SiteShifter\Package\Estimate::report((array) $measured['bytes'], (int) $measured['db'], Jobs\ExportTask::scope($params), $measured['free'], $threshold ?: \SiteShifter\Package\Estimate::DEFAULT_THRESHOLD);

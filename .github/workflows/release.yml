@@ -24,6 +24,11 @@ jobs:
           v="$(grep -oP "define\('SITESHIFTER_VERSION', '\K[^']+" plugin/siteshifter.php)"
           test "v$v" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} does not match plugin version $v"; exit 1; }
       - run: php bin/build-plugin.php
+        env:
+          SITESHIFTER_GOOGLE_CLIENT_ID: ${{ secrets.SITESHIFTER_GOOGLE_CLIENT_ID }}
+          SITESHIFTER_GOOGLE_CLIENT_SECRET: ${{ secrets.SITESHIFTER_GOOGLE_CLIENT_SECRET }}
+      - name: Check the Google Drive client is in the release
+        run: unzip -p dist/siteshifter.zip siteshifter/includes/Cloud/client.php | grep -q "apps.googleusercontent.com" || { echo "Add the SITESHIFTER_GOOGLE_CLIENT_ID and _SECRET repository secrets"; exit 1; }
       - run: php bin/build-installer.php
       - name: Checksums
         run: |

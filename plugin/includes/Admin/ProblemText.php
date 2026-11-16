@@ -72,6 +72,10 @@ class ProblemText
                 'title' => __('PHP stopped the request because it took too long', 'siteshifter'),
                 'fix' => __('Nothing is lost: the job continues from where it stopped. If it repeats, ask your host to raise max_execution_time.', 'siteshifter'),
             ],
+            'SS_E_TRANSFER' => [
+                'title' => __('The transfer could not go on', 'siteshifter'),
+                'fix' => __('The message below says why and what to do. After fixing it, resume: the transfer continues from the last piece that arrived safely.', 'siteshifter'),
+            ],
             'SS_E_UNKNOWN' => [
                 'title' => __('Something unexpected went wrong', 'siteshifter'),
                 'fix' => __('Resume to try again. If it repeats, send the message below to support.', 'siteshifter'),

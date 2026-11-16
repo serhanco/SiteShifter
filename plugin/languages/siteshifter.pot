@@ -599,6 +599,10 @@ msgstr ""
 msgid "The import is finished and the site now runs the imported data."
 msgstr ""
 
+#: plugin/includes/Admin/ProblemText.php
+msgid "The message below says why and what to do. After fixing it, resume: the transfer continues from the last piece that arrived safely."
+msgstr ""
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "The new site keeps its own settings, menus and widgets."
 msgstr ""
@@ -639,6 +643,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
+msgstr ""
+
+#: plugin/includes/Admin/ProblemText.php
+msgid "The transfer could not go on"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
