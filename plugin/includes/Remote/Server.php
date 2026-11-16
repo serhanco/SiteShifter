@@ -93,6 +93,11 @@ class Server
                     return $this->start($id, is_array($in['params'] ?? null) ? $in['params'] : []);
                 case 'export_step':
                     $job = $this->own($id, $in);
+                    if ($job['status'] === 'paused') {
+                        // The target retries a stopped build: continue it from its last good state.
+                        $this->runner->resume($job['id']);
+                        $job['status'] = 'running';
+                    }
                     $view = $job['status'] === 'running' ? $this->runner->step($job['id'], call_user_func($this->deadline)) : Runner::view($job);
 
                     return ['code' => 200, 'json' => ['ok' => true, 'job' => $view] + ($view['status'] === 'done' ? $this->package($job['id']) : [])];

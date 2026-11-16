@@ -11,7 +11,9 @@
 		if (transport === 'rest') {
 			var path = { checks: 'checks', site_check: 'site-check', packages: 'packages', delete_many: 'packages/delete', retention: 'retention',
 				cloud_status: 'cloud/status', cloud_connect: 'cloud/connect', cloud_poll: 'cloud/poll', cloud_disconnect: 'cloud/disconnect',
-				cloud_client: 'cloud/client', cloud_items: 'cloud/items', cloud_delete: 'cloud/delete' }[op];
+				cloud_client: 'cloud/client', cloud_items: 'cloud/items', cloud_delete: 'cloud/delete',
+				clone_keys: 'clone/keys', clone_key_create: 'clone/keys/create', clone_key_revoke: 'clone/keys/revoke', clone_remote_set: 'clone/remote/set',
+				clone_remote_test: 'clone/remote/test', clone_remote_forget: 'clone/remote/forget', clone_check: 'clone/check' }[op];
 			var inc = { upload_begin: 'incoming/begin', incoming: 'incoming', upload_end: 'end', incoming_delete: 'delete', import_check: 'check' }[op];
 			var imp = { imports: 'imports', import_undo: 'imports/' + payload.id + '/undo', import_discard: 'imports/' + payload.id + '/discard' }[op];
 			if (imp) { return fetch(cfg.restUrl + imp, { method: 'POST', headers: { 'X-WP-Nonce': cfg.restNonce, 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', body: JSON.stringify(payload) }); }
@@ -680,4 +682,135 @@
 		});
 	});
 	status();
+})();
+
+/* Clone screen: pair with a source site by its clone key and copy it here; hand out keys for this site. */
+(function () {
+	'use strict';
+	var cfg = window.siteshifterJobs || {};
+	var $ = function (id) { return document.getElementById(id); };
+	var remoteBox = $('ss-clone-remote');
+	if (!remoteBox) { return; }
+	var J = window.SiteShifterJobs, t = cfg.i18n.clone, keysBox = $('ss-clone-keys'), form = $('ss-clone-form');
+	function esc(v) { var d = document.createElement('div'); d.textContent = v == null ? '' : String(v); return d.innerHTML; }
+	function fmt(s) { var a = [].slice.call(arguments, 1); return s.replace(/%(\d)\$s|%s/g, function (m, n) { return esc(n ? a[n - 1] : a.shift()); }); }
+	function when(ts) { return ts ? new Date(ts * 1000).toLocaleString() : t.never; }
+
+	function pasteForm(note) {
+		form.style.display = 'none';
+		remoteBox.innerHTML = (note || '') + '<p><label for="ss-clone-key">' + esc(t.pasteLabel) + '</label><br>' +
+			'<textarea id="ss-clone-key" class="large-text code" rows="3" autocomplete="off" spellcheck="false"></textarea></p>' +
+			'<p><button class="button button-primary" id="ss-clone-connect">' + esc(t.connect) + '</button></p>';
+	}
+
+	function paired(remote, test) {
+		var html = '<p><strong>' + fmt(t.connected, remote.url) + '</strong> ' + (remote.expired ? esc(t.expired) : fmt(t.until, when(remote.expires))) + '</p>';
+		if (remote.insecure) { html += '<p>' + esc(t.insecure) + '</p>'; }
+		if (test && test.ok) {
+			var m = test.source.manifest || {};
+			html += '<p>' + fmt(t.facts, (m.site && m.site.wp_version) || '?', (m.php && m.php.version) || '?', test.source.plugin || '?') + '</p>';
+		} else if (test) {
+			html += '<div class="notice notice-error inline"><p>' + esc(t.testFailed) + ' ' + esc(test.message) + '</p><p>' + esc(t.driveHint) + '</p></div>';
+		}
+		html += '<p><button class="button" id="ss-clone-test">' + esc(t.testAgain) + '</button> <button class="button-link" id="ss-clone-forget">' + esc(t.forget) + '</button></p>';
+		remoteBox.innerHTML = html;
+		form.style.display = test && test.ok && !remote.expired ? 'block' : 'none';
+	}
+
+	function keyTable(keys, made, https) {
+		var html = https ? '' : '<div class="notice notice-warning inline"><p>' + esc(t.httpWarn) + '</p></div>';
+		if (made) {
+			html += '<p>' + esc(t.keyNote) + '</p><p><textarea readonly id="ss-clone-made" class="large-text code" rows="3">' + esc(made.key) + '</textarea></p>';
+		}
+		html += '<p><button class="button button-primary" id="ss-clone-create">' + esc(t.create) + '</button></p>';
+		if (!keys.length) { keysBox.innerHTML = html + '<p>' + esc(t.noKeys) + '</p>'; return; }
+		keysBox.innerHTML = html + '<table class="widefat striped"><thead><tr><th>' + esc(t.colCreated) + '</th><th>' + esc(t.colUntil) + '</th><th>' + esc(t.colUsed) + '</th><th>' + esc(t.colStatus) + '</th><th></th></tr></thead><tbody>' +
+			keys.map(function (k) {
+				var state = k.revoked ? t.revoked : (k.active ? t.active : t.expiredShort);
+				return '<tr><td>' + esc(when(k.created)) + '</td><td>' + esc(when(k.expires)) + '</td><td>' + esc(when(k.used)) + '</td><td>' + esc(state) + '</td>' +
+					'<td>' + (k.active ? '<button class="button ss-clone-revoke" data-id="' + esc(k.id) + '">' + esc(t.revoke) + '</button>' : '') + '</td></tr>';
+			}).join('') + '</tbody></table>';
+		var ta = $('ss-clone-made');
+		if (ta) { ta.addEventListener('focus', function () { this.select(); }); ta.focus(); }
+	}
+
+	function load() {
+		J.call('clone_keys', { params: {} }, J.ui(remoteBox)).then(function (r) {
+			if (!r.ok) { remoteBox.textContent = r.message; return; }
+			keyTable(r.keys, null, r.https);
+			if (!r.remote) { pasteForm(); return; }
+			paired(r.remote, null);
+			test();
+		});
+	}
+
+	function test() {
+		J.call('clone_remote_test', { params: {} }, J.ui(remoteBox)).then(function (r) {
+			if (!r.ok) { remoteBox.textContent = r.message; return; }
+			if (r.remote) { paired(r.remote, r.test); } else { pasteForm(); }
+		});
+	}
+
+	function params() {
+		return { profile: document.querySelector('input[name=ss-profile]:checked').value, scope: document.querySelector('input[name=ss-clone-scope]:checked').value };
+	}
+
+	remoteBox.addEventListener('click', function (e) {
+		var el = e.target;
+		if (el.id === 'ss-clone-connect') {
+			e.preventDefault();
+			var key = $('ss-clone-key').value.trim();
+			if (!key) { window.alert(t.paste); return; }
+			el.disabled = true;
+			J.call('clone_remote_set', { params: { key: key } }, J.ui(remoteBox)).then(function (r) {
+				if (!r.ok) { pasteForm('<div class="notice notice-error inline"><p>' + esc(r.message) + '</p></div>'); return; }
+				paired(r.remote, r.test);
+			});
+		}
+		if (el.id === 'ss-clone-test') { e.preventDefault(); test(); }
+		if (el.id === 'ss-clone-forget') {
+			e.preventDefault();
+			J.call('clone_remote_forget', { params: {} }, J.ui(remoteBox)).then(function () { pasteForm(); });
+		}
+	});
+
+	$('ss-clone-start').addEventListener('click', function (e) {
+		e.preventDefault();
+		var btn = e.target, box = $('ss-clone-report'), p = params();
+		btn.disabled = true;
+		box.textContent = cfg.i18n.checking;
+		$('ss-clone-result').textContent = '';
+		J.call('clone_check', { params: p }, J.ui(box)).then(function (r) {
+			if (!r.ok) { box.innerHTML = '<p>' + esc(r.message) + '</p><p>' + esc(t.driveHint) + '</p>'; return null; }
+			J.renderReport(box, r.results);
+			if (r.blockers) { return null; }
+			return J.run('clone', p, $('ss-clone-progress'));
+		}).then(function (job) {
+			btn.disabled = false;
+			if (!job || job.status !== 'done' || !job.result) { return; }
+			$('ss-clone-result').innerHTML = '<p><strong>' + esc(t.done) + '</strong></p>' + (job.result.left_on_source ? '<p>' + esc(t.leftOnSource) + '</p>' : '') +
+				'<p><a class="button button-primary" href="' + esc(cfg.importUrl) + '">' + esc(t.goImport) + '</a></p>';
+		}).catch(function (err) { btn.disabled = false; box.textContent = cfg.i18n.failed + ' ' + err.message; });
+	});
+
+	keysBox.addEventListener('click', function (e) {
+		var el = e.target;
+		if (el.id === 'ss-clone-create') {
+			e.preventDefault();
+			el.disabled = true;
+			J.call('clone_key_create', { params: {} }, J.ui(keysBox)).then(function (r) {
+				if (!r.ok) { keysBox.textContent = r.message; return; }
+				keyTable(r.keys, r.created, r.created.insecure === false);
+			});
+		}
+		if (el.classList.contains('ss-clone-revoke')) {
+			e.preventDefault();
+			if (!window.confirm(t.confirmRevoke)) { return; }
+			J.call('clone_key_revoke', { params: { key: el.getAttribute('data-id') } }, J.ui(keysBox)).then(function (r) {
+				if (!r.ok) { keysBox.textContent = r.message; return; }
+				load();
+			});
+		}
+	});
+	load();
 })();

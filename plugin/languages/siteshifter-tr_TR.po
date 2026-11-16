@@ -15,6 +15,10 @@ msgstr ""
 msgid "%d tables have a different number of rows than in the package."
 msgstr "%d tablonun satır sayısı paketteki ile farklı."
 
+#: plugin/includes/Admin/Menu.php
+msgid "A clone key lets one other site read this site (build a package and fetch it) for 24 hours. It cannot change anything here, and you can revoke it at any time."
+msgstr "Klon anahtarı, başka bir sitenin bu siteyi 24 saat boyunca okumasına (paket oluşturup çekmesine) izin verir. Burada hiçbir şeyi değiştiremez ve istediğiniz an iptal edebilirsiniz."
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "A database row or statement is larger than the server allows"
 msgstr "Bir veritabanı satırı veya sorgusu sunucunun izin verdiğinden büyük"
@@ -38,6 +42,10 @@ msgstr "Gerekli bir PHP eklentisi eksik"
 #: plugin/includes/Admin/Menu.php
 msgid "Access was not allowed. You can try again."
 msgstr "Erişime izin verilmedi. Yeniden deneyebilirsiniz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Active"
+msgstr "Etkin"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Advanced: use my own Google OAuth client"
@@ -96,6 +104,10 @@ msgid "Check and change address"
 msgstr "Kontrol et ve adresi değiştir"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Check and copy"
+msgstr "Kontrol et ve kopyala"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Check and create package"
 msgstr "Kontrol et ve paket oluştur"
 
@@ -140,6 +152,14 @@ msgid "Client secret"
 msgstr "İstemci gizli anahtarı"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Clone"
+msgstr "Klonla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Clone key from the source site"
+msgstr "Kaynak sitedeki klon anahtarı"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Cloud"
 msgstr "Bulut"
 
@@ -154,6 +174,10 @@ msgstr "Yorumlar dahil değil"
 #: plugin/includes/Admin/Menu.php
 msgid "Connect Google Drive"
 msgstr "Google Drive'ı bağla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect and test"
+msgstr "Bağlan ve dene"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Connect your own Google Drive to keep packages there and to bring them into another site. SiteShifter only sees the files it creates (a \"SiteShifter\" folder), never the rest of your Drive."
@@ -188,6 +212,10 @@ msgstr "İçerik türleri"
 msgid "Continue anyway"
 msgstr "Yine de devam et"
 
+#: plugin/includes/Admin/Menu.php
+msgid "Copy another site into this one"
+msgstr "Başka bir siteyi buraya kopyala"
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "Copy wp-content/uploads to the new site yourself (SFTP or rsync), then run the import check again."
 msgstr "wp-content/uploads klasörünü yeni siteye kendiniz kopyalayın (SFTP veya rsync), sonra içe aktarma kontrolünü yeniden çalıştırın."
@@ -195,6 +223,10 @@ msgstr "wp-content/uploads klasörünü yeni siteye kendiniz kopyalayın (SFTP v
 #: plugin/includes/Admin/Menu.php
 msgid "Could not finish:"
 msgstr "Tamamlanamadı:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Create a clone key"
+msgstr "Klon anahtarı oluştur"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Create a link for another site"
@@ -287,6 +319,10 @@ msgid "Everything (the whole site)"
 msgstr "Her şey (tüm site)"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Expired"
+msgstr "Süresi doldu"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Export"
 msgstr "Dışa aktar"
 
@@ -324,6 +360,10 @@ msgstr "Dosyalar"
 msgid "Finished."
 msgstr "Bitti."
 
+#: plugin/includes/Admin/Menu.php
+msgid "Forget this key"
+msgstr "Bu anahtarı unut"
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "Free some space (old packages, backups, caches) or ask your host to raise the disk quota, then resume."
 msgstr "Yer açın (eski paketler, yedekler, önbellekler) veya barındırma firmanızdan disk kotasını artırmasını isteyin, sonra devam edin."
@@ -357,6 +397,10 @@ msgid "I understand: this replaces the database, the themes, the plugins and the
 msgstr "Anlıyorum: bu işlem sitenin veritabanını, temalarını, eklentilerini ve yüklemelerini paketle değiştirir. Geri alabilmem için mevcut veri saklanır."
 
 #: plugin/includes/Admin/Menu.php
+msgid "If the two servers cannot reach each other, move the site through Google Drive (Cloud tab) instead."
+msgstr "İki sunucu birbirine ulaşamıyorsa siteyi Google Drive üzerinden (Bulut sekmesi) taşıyın."
+
+#: plugin/includes/Admin/Menu.php
 msgid "Import"
 msgstr "İçe aktar"
 
@@ -383,6 +427,14 @@ msgstr "En fazla şu kadar tut"
 #: plugin/includes/Admin/Menu.php
 msgid "Keep packages"
 msgstr "Paketleri sakla"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Last used"
+msgstr "Son kullanım"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Let another site copy this one"
+msgstr "Başka bir sitenin bunu kopyalamasına izin ver"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Link from the other site"
@@ -427,6 +479,10 @@ msgstr "Ad"
 #: plugin/includes/Admin/Menu.php
 msgid "New address"
 msgstr "Yeni adres"
+
+#: plugin/includes/Admin/Menu.php
+msgid "No clone keys yet."
+msgstr "Henüz klon anahtarı yok."
 
 #: plugin/includes/Admin/Menu.php
 msgid "No packages have been uploaded yet."
@@ -494,6 +550,10 @@ msgid "Packs this site (files and database) into one zip you can move to another
 msgstr "Bu siteyi (dosyalar ve veritabanı) başka bir WordPress'e taşıyabileceğiniz tek bir zip dosyasına paketler. Paket, indirmeden önce kontrol edilir."
 
 #: plugin/includes/Admin/Menu.php
+msgid "Paired with %s."
+msgstr "%s ile eşleşti."
+
+#: plugin/includes/Admin/Menu.php
 msgid "Parts"
 msgstr "Bölümler"
 
@@ -502,8 +562,16 @@ msgid "Passed"
 msgstr "Geçti"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Paste the key first."
+msgstr "Önce anahtarı yapıştırın."
+
+#: plugin/includes/Admin/Menu.php
 msgid "Paste the link first."
 msgstr "Önce bağlantıyı yapıştırın."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste this key into SiteShifter > Clone on the site that should receive the copy. Anyone who has it can copy this site until it expires or you revoke it, so share it only there. It is shown only once."
+msgstr "Bu anahtarı, kopyayı alacak sitede SiteShifter > Klonla ekranına yapıştırın. Anahtara sahip olan herkes, süresi dolana veya siz iptal edene kadar bu siteyi kopyalayabilir; bu yüzden yalnızca orada paylaşın. Anahtar yalnızca bir kez gösterilir."
 
 #: plugin/includes/Admin/Menu.php
 msgid "Paste this link into SiteShifter > Import > \"Fetch from another site\" on the other site. It works for 30 minutes and anyone who has it can download the package, so share it only there."
@@ -560,6 +628,18 @@ msgstr "Değiştir: site tam olarak paket haline gelir (mevcut veri geri alma i�
 #: plugin/includes/Admin/ProblemText.php
 msgid "Resume to try again. If it repeats, send the message below to support."
 msgstr "Yeniden denemek için devam edin. Tekrarlarsa aşağıdaki mesajı desteğe gönderin."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoke"
+msgstr "İptal et"
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoke this key? The site using it can no longer copy this site."
+msgstr "Bu anahtar iptal edilsin mi? Onu kullanan site artık bu siteyi kopyalayamaz."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoked"
+msgstr "İptal edildi"
 
 #: plugin/includes/Admin/Menu.php
 msgid "Run checks"
@@ -650,6 +730,14 @@ msgid "Source address"
 msgstr "Kaynak adres"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Source: WordPress %1$s, PHP %2$s, SiteShifter %3$s."
+msgstr "Kaynak: WordPress %1$s, PHP %2$s, SiteShifter %3$s."
+
+#: plugin/includes/Admin/Menu.php
+msgid "Status"
+msgstr "Durum"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Structure only"
 msgstr "Yalnızca yapı"
 
@@ -666,12 +754,24 @@ msgid "Technical detail:"
 msgstr "Teknik ayrıntı:"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Test again"
+msgstr "Yeniden dene"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Test this server"
 msgstr "Bu sunucuyu test et"
 
 #: plugin/includes/Admin/Menu.php
 msgid "The code expired before it was used. Start again."
 msgstr "Kodun süresi kullanılmadan doldu. Yeniden başlayın."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The connection test failed:"
+msgstr "Bağlantı denemesi başarısız oldu:"
+
+#: plugin/includes/Admin/Menu.php
+msgid "The copy is on this server and checked. Import it to finish: you choose Replace or Merge there."
+msgstr "Kopya bu sunucuda ve kontrol edildi. Bitirmek için içe aktarın; Değiştir veya Birleştir seçimini orada yaparsınız."
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "The database connection was lost"
@@ -704,6 +804,10 @@ msgstr "Dosya eksik veya hasarlı. Paketi yeniden oluşturun veya yükleyin."
 #: plugin/includes/Admin/Menu.php
 msgid "The import is finished and the site now runs the imported data."
 msgstr "İçe aktarma bitti, site artık içe aktarılan veriyle çalışıyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The key works until %s."
+msgstr "Anahtar %s tarihine kadar geçerli."
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "The message below says why and what to do. After fixing it, resume: the transfer continues from the last piece that arrived safely."
@@ -739,6 +843,10 @@ msgid "The package contains your database, including user password hashes and wp
 msgstr "Paket, kullanıcı parola özetleri dahil veritabanınızı ve wp-config.php dosyanızı içerir. Gizli tutun ve indirdikten sonra bu sunucudan silin."
 
 #: plugin/includes/Admin/Menu.php
+msgid "The package could not be removed from the source site; delete it there under Packages."
+msgstr "Paket kaynak siteden silinemedi; orada Paketler ekranından silin."
+
+#: plugin/includes/Admin/Menu.php
 msgid "The package is on this server and ready to import."
 msgstr "Paket bu sunucuda ve içe aktarmaya hazır."
 
@@ -755,6 +863,10 @@ msgstr "Sunucu bağlantıyı kapattı (zaman aşımı veya yeniden başlatma). D
 #: plugin/includes/Admin/Menu.php
 msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
 msgstr "Sunucu beklenmeyen bir yanıt verdi (araya bir güvenlik duvarı veya önbellek girmiş olabilir)."
+
+#: plugin/includes/Admin/Menu.php
+msgid "The source site does not use https. Requests are signed, but the package travels unencrypted."
+msgstr "Kaynak site https kullanmıyor. İstekler imzalı, ancak paket şifrelenmeden aktarılır."
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "The transfer could not go on"
@@ -797,8 +909,20 @@ msgid "This copy of SiteShifter has no Google Drive client. Use an official rele
 msgstr "Bu SiteShifter kopyasında Google Drive istemcisi yok. Resmi bir sürüm kullanın, wp-config.php dosyasına SITESHIFTER_GOOGLE_CLIENT_ID ve SITESHIFTER_GOOGLE_CLIENT_SECRET ekleyin veya \"Gelişmiş\" bölümünde kendi istemcinizi girin."
 
 #: plugin/includes/Admin/Menu.php
+msgid "This key has expired. Create a new one on the source site."
+msgstr "Bu anahtarın süresi doldu. Kaynak sitede yenisini oluşturun."
+
+#: plugin/includes/Admin/Menu.php
 msgid "This screen is coming in a later step."
 msgstr "Bu ekran sonraki bir adımda geliyor."
+
+#: plugin/includes/Admin/Menu.php
+msgid "This site asks the source site to build a package, fetches it piece by piece with checksums, and has the source delete it. Nothing changes here until you import the copy."
+msgstr "Bu site, kaynak siteden bir paket oluşturmasını ister, paketi sağlama toplamlarıyla parça parça çeker ve ardından kaynağa sildirir. Kopyayı içe aktarana kadar burada hiçbir şey değişmez."
+
+#: plugin/includes/Admin/Menu.php
+msgid "This site does not use https. Clone requests are signed, but the package would travel unencrypted: switch the site to https first if you can."
+msgstr "Bu site https kullanmıyor. Klon istekleri imzalı, ancak paket şifrelenmeden aktarılır; mümkünse önce siteyi https'e geçirin."
 
 #: plugin/includes/Admin/Menu.php
 msgid "To move a site, connect the same Google account on both sites: upload here, then press \"Bring to this site\" on the other one."
@@ -865,8 +989,16 @@ msgid "Users are not included"
 msgstr "Kullanıcılar dahil değil"
 
 #: plugin/includes/Admin/Menu.php
+msgid "Valid until"
+msgstr "Geçerlilik sonu"
+
+#: plugin/includes/Admin/Menu.php
 msgid "Waiting for your approval…"
 msgstr "Onayınız bekleniyor…"
+
+#: plugin/includes/Admin/Menu.php
+msgid "What to copy"
+msgstr "Neler kopyalanacak"
 
 #: plugin/includes/Admin/Menu.php
 msgid "What to include"
@@ -919,6 +1051,10 @@ msgid "keep this site's"
 msgstr "bu sitedekini koru"
 
 #: plugin/includes/Admin/Menu.php
+msgid "never"
+msgstr "hiç"
+
+#: plugin/includes/Admin/Menu.php
 msgid "overwrite with the package"
 msgstr "paketle üzerine yaz"
 
@@ -941,4 +1077,3 @@ msgstr "mevcut kullanıcıyı kullan"
 #: plugin/includes/Admin/Menu.php
 msgid "use the newer version"
 msgstr "yeni sürümü kullan"
-

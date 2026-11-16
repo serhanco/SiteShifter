@@ -12,7 +12,7 @@ class Menu
     const SLUG = 'siteshifter';
     const CAPABILITY = 'manage_options';
 
-    private static function profileRadios()
+    private static function profileRadios($custom = true)
     {
         $profiles = [
             'full' => __('Everything (the whole site)', 'siteshifter'),
@@ -21,6 +21,9 @@ class Menu
             'content' => __('Content only: posts, pages, media, comments, users, no themes, plugins or settings', 'siteshifter'),
             'custom' => __('Custom: choose content types and parts', 'siteshifter'),
         ];
+        if (!$custom) {
+            unset($profiles['custom']);
+        }
         $out = '';
         foreach ($profiles as $value => $label) {
             $out .= '<label><input type="radio" name="ss-profile" value="' . esc_attr($value) . '"' . ($value === 'full' ? ' checked' : '') . '> ' . esc_html($label) . '</label><br>';
@@ -232,6 +235,40 @@ class Menu
                     'remove' => __('Delete from Google Drive', 'siteshifter'),
                     'confirmDelete' => __('Delete this package from Google Drive? It goes to the Drive trash.', 'siteshifter'),
                 ],
+                'clone' => [
+                    'pasteLabel' => __('Clone key from the source site', 'siteshifter'),
+                    'paste' => __('Paste the key first.', 'siteshifter'),
+                    'connect' => __('Connect and test', 'siteshifter'),
+                    /* translators: %s: source site address */
+                    'connected' => __('Paired with %s.', 'siteshifter'),
+                    /* translators: 1: WordPress version, 2: PHP version, 3: SiteShifter version */
+                    'facts' => __('Source: WordPress %1$s, PHP %2$s, SiteShifter %3$s.', 'siteshifter'),
+                    'testFailed' => __('The connection test failed:', 'siteshifter'),
+                    'driveHint' => __('If the two servers cannot reach each other, move the site through Google Drive (Cloud tab) instead.', 'siteshifter'),
+                    'testAgain' => __('Test again', 'siteshifter'),
+                    'forget' => __('Forget this key', 'siteshifter'),
+                    /* translators: %s: date and time */
+                    'until' => __('The key works until %s.', 'siteshifter'),
+                    'expired' => __('This key has expired. Create a new one on the source site.', 'siteshifter'),
+                    'insecure' => __('The source site does not use https. Requests are signed, but the package travels unencrypted.', 'siteshifter'),
+                    'done' => __('The copy is on this server and checked. Import it to finish: you choose Replace or Merge there.', 'siteshifter'),
+                    'leftOnSource' => __('The package could not be removed from the source site; delete it there under Packages.', 'siteshifter'),
+                    'goImport' => __('Go to Import', 'siteshifter'),
+                    'create' => __('Create a clone key', 'siteshifter'),
+                    'keyNote' => __('Paste this key into SiteShifter > Clone on the site that should receive the copy. Anyone who has it can copy this site until it expires or you revoke it, so share it only there. It is shown only once.', 'siteshifter'),
+                    'noKeys' => __('No clone keys yet.', 'siteshifter'),
+                    'colCreated' => __('Created', 'siteshifter'),
+                    'colUntil' => __('Valid until', 'siteshifter'),
+                    'colUsed' => __('Last used', 'siteshifter'),
+                    'colStatus' => __('Status', 'siteshifter'),
+                    'active' => __('Active', 'siteshifter'),
+                    'revoked' => __('Revoked', 'siteshifter'),
+                    'expiredShort' => __('Expired', 'siteshifter'),
+                    'never' => __('never', 'siteshifter'),
+                    'revoke' => __('Revoke', 'siteshifter'),
+                    'confirmRevoke' => __('Revoke this key? The site using it can no longer copy this site.', 'siteshifter'),
+                    'httpWarn' => __('This site does not use https. Clone requests are signed, but the package would travel unencrypted: switch the site to https first if you can.', 'siteshifter'),
+                ],
             ],
         ]);
     }
@@ -244,6 +281,7 @@ class Menu
             'packages' => __('Packages', 'siteshifter'),
             'import' => __('Import', 'siteshifter'),
             'cloud' => __('Cloud', 'siteshifter'),
+            'clone' => __('Clone', 'siteshifter'),
             'address' => __('Change address', 'siteshifter'),
             'status' => __('Checks and history', 'siteshifter'),
         ];
@@ -335,6 +373,20 @@ class Menu
                 . '<p><label>' . esc_html__('Client ID', 'siteshifter') . '<br><input type="text" id="ss-cloud-id" class="large-text code" autocomplete="off"></label></p>'
                 . '<p><label>' . esc_html__('Client secret', 'siteshifter') . '<br><input type="password" id="ss-cloud-secret" class="regular-text code" autocomplete="new-password"></label></p>'
                 . '<p><button class="button" id="ss-cloud-save-client">' . esc_html__('Save', 'siteshifter') . '</button> <span id="ss-cloud-client-note"></span></p></details>';
+        } elseif ($current === 'clone') {
+            echo '<h2>' . esc_html__('Copy another site into this one', 'siteshifter') . '</h2>'
+                . '<p>' . esc_html__('This site asks the source site to build a package, fetches it piece by piece with checksums, and has the source delete it. Nothing changes here until you import the copy.', 'siteshifter') . '</p>'
+                . '<div id="ss-clone-remote" aria-live="polite"></div>'
+                . '<form id="ss-clone-form" onsubmit="return false" style="display:none"><table class="form-table" role="presentation"><tbody>'
+                . '<tr><th>' . esc_html__('What to copy', 'siteshifter') . '</th><td>' . self::profileRadios(false) . '</td></tr>'
+                . '<tr><th>' . esc_html__('Files', 'siteshifter') . '</th><td>'
+                . '<label><input type="radio" name="ss-clone-scope" value="root" checked> ' . esc_html__('The whole site (WordPress files, themes, plugins, uploads)', 'siteshifter') . '</label><br>'
+                . '<label><input type="radio" name="ss-clone-scope" value="wp-content"> ' . esc_html__('Only wp-content (themes, plugins, uploads)', 'siteshifter') . '</label>'
+                . '</td></tr></tbody></table><p><button class="button button-primary" id="ss-clone-start">' . esc_html__('Check and copy', 'siteshifter') . '</button></p></form>'
+                . '<div id="ss-clone-report"></div><div id="ss-clone-progress"></div><div id="ss-clone-result" aria-live="polite"></div>'
+                . '<h2 style="margin-top:2em">' . esc_html__('Let another site copy this one', 'siteshifter') . '</h2>'
+                . '<p>' . esc_html__('A clone key lets one other site read this site (build a package and fetch it) for 24 hours. It cannot change anything here, and you can revoke it at any time.', 'siteshifter') . '</p>'
+                . '<div id="ss-clone-keys" aria-live="polite"></div>';
         } else {
             echo '<p>' . esc_html__('This screen is coming in a later step.', 'siteshifter') . '</p>';
         }

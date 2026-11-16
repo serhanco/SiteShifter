@@ -13,6 +13,10 @@ msgstr ""
 msgid "%d tables have a different number of rows than in the package."
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "A clone key lets one other site read this site (build a package and fetch it) for 24 hours. It cannot change anything here, and you can revoke it at any time."
+msgstr ""
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "A database row or statement is larger than the server allows"
 msgstr ""
@@ -35,6 +39,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Access was not allowed. You can try again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Active"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -94,6 +102,10 @@ msgid "Check and change address"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Check and copy"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Check and create package"
 msgstr ""
 
@@ -138,6 +150,14 @@ msgid "Client secret"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Clone"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Clone key from the source site"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Cloud"
 msgstr ""
 
@@ -151,6 +171,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Connect Google Drive"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Connect and test"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -188,12 +212,20 @@ msgstr ""
 msgid "Continue anyway"
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "Copy another site into this one"
+msgstr ""
+
 #: plugin/includes/Admin/ScopeText.php
 msgid "Copy wp-content/uploads to the new site yourself (SFTP or rsync), then run the import check again."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Could not finish:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Create a clone key"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -287,6 +319,10 @@ msgid "Everything (the whole site)"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Expired"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Export"
 msgstr ""
 
@@ -324,6 +360,10 @@ msgstr ""
 msgid "Finished."
 msgstr ""
 
+#: plugin/includes/Admin/Menu.php
+msgid "Forget this key"
+msgstr ""
+
 #: plugin/includes/Admin/ProblemText.php
 msgid "Free some space (old packages, backups, caches) or ask your host to raise the disk quota, then resume."
 msgstr ""
@@ -359,6 +399,10 @@ msgid "I understand: this replaces the database, the themes, the plugins and the
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "If the two servers cannot reach each other, move the site through Google Drive (Cloud tab) instead."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Import"
 msgstr ""
 
@@ -384,6 +428,14 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "Keep packages"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Last used"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Let another site copy this one"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -428,6 +480,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "New address"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "No clone keys yet."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -495,6 +551,12 @@ msgstr ""
 msgid "Packs this site (files and database) into one zip you can move to another WordPress. The package is checked before you can download it."
 msgstr ""
 
+#. translators: %s: source site address
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Paired with %s."
+msgstr ""
+
 #: plugin/includes/Admin/Menu.php
 msgid "Parts"
 msgstr ""
@@ -504,7 +566,15 @@ msgid "Passed"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Paste the key first."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Paste the link first."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Paste this key into SiteShifter > Clone on the site that should receive the copy. Anyone who has it can copy this site until it expires or you revoke it, so share it only there. It is shown only once."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -561,6 +631,18 @@ msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
 msgid "Resume to try again. If it repeats, send the message below to support."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoke"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoke this key? The site using it can no longer copy this site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Revoked"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -651,6 +733,16 @@ msgstr ""
 msgid "Source address"
 msgstr ""
 
+#. translators: 1: WordPress version, 2: PHP version, 3: SiteShifter version
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "Source: WordPress %1$s, PHP %2$s, SiteShifter %3$s."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "Status"
+msgstr ""
+
 #: plugin/includes/Admin/Menu.php
 msgid "Structure only"
 msgstr ""
@@ -668,11 +760,23 @@ msgid "Technical detail:"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Test again"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Test this server"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "The code expired before it was used. Start again."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The connection test failed:"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The copy is on this server and checked. Import it to finish: you choose Replace or Merge there."
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
@@ -705,6 +809,12 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "The import is finished and the site now runs the imported data."
+msgstr ""
+
+#. translators: %s: date and time
+#: plugin/includes/Admin/Menu.php
+#, php-format
+msgid "The key works until %s."
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
@@ -740,6 +850,10 @@ msgid "The package contains your database, including user password hashes and wp
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "The package could not be removed from the source site; delete it there under Packages."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "The package is on this server and ready to import."
 msgstr ""
 
@@ -755,6 +869,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "The server sent an unexpected reply (a firewall or cache may be in the way)."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "The source site does not use https. Requests are signed, but the package travels unencrypted."
 msgstr ""
 
 #: plugin/includes/Admin/ProblemText.php
@@ -798,7 +916,19 @@ msgid "This copy of SiteShifter has no Google Drive client. Use an official rele
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "This key has expired. Create a new one on the source site."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "This screen is coming in a later step."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "This site asks the source site to build a package, fetches it piece by piece with checksums, and has the source delete it. Nothing changes here until you import the copy."
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "This site does not use https. Clone requests are signed, but the package would travel unencrypted: switch the site to https first if you can."
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -866,7 +996,15 @@ msgid "Users are not included"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
+msgid "Valid until"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
 msgid "Waiting for your approval…"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "What to copy"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php
@@ -917,6 +1055,10 @@ msgstr ""
 
 #: plugin/includes/Admin/Menu.php
 msgid "keep this site's"
+msgstr ""
+
+#: plugin/includes/Admin/Menu.php
+msgid "never"
 msgstr ""
 
 #: plugin/includes/Admin/Menu.php

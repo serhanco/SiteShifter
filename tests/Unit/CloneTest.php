@@ -3,6 +3,8 @@
 namespace SiteShifter\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use SiteShifter\Plugin\Jobs\CloneTask;
+use SiteShifter\Plugin\Jobs\Incoming;
 use SiteShifter\Plugin\Jobs\JobStore;
 use SiteShifter\Plugin\Jobs\Runner;
 use SiteShifter\Plugin\Jobs\Task;
@@ -22,6 +24,7 @@ use SiteShifter\Transfer\Vault;
 /** Builds a small package in two slices, like ExportTask, without a database. */
 class FakeExportTask implements Task
 {
+    public static $md5;
     private $dir;
 
     public function __construct($dir)
@@ -38,7 +41,12 @@ class FakeExportTask implements Task
     {
         if (++$state['step'] === 2) {
             $zip = $this->dir . '/package.zip';
-            file_put_contents($zip, str_repeat('siteshifter', 2000000)); // 22 MB, three pieces
+            $z = new \ZipArchive();
+            $z->open($zip, \ZipArchive::CREATE);
+            $z->addFromString('database.sql', str_repeat('siteshifter', 2000000)); // 22 MB stored: three pieces
+            $z->setCompressionName('database.sql', \ZipArchive::CM_STORE);
+            $z->close();
+            self::$md5 = md5_file($zip);
             file_put_contents($this->dir . '/package.pieces.json', json_encode(Pieces::ofFile($zip)));
             $state['done'] = true;
         }
@@ -379,5 +387,60 @@ class CloneTest extends TestCase
         $this->assertFalse($test['test']['ok']);
         $this->assertStringContainsString('refused', $test['test']['message']);
         $this->assertNull($targetApi->handle('clone_remote_forget', [])['remote']);
+    }
+
+    public function testTheCloneJobCopiesTheSourceIntoIncomingAndCleansUp(): void
+    {
+        list(, $keys, $store, $http) = $this->source();
+        $this->now = time();
+        $remote = CloneKey::decode($keys->create('https://old.example')['key']);
+        $incoming = new Incoming(new JobStore($this->base . '/in'));
+        $free = 1e12;
+        $runner = new Runner(new JobStore($this->base . '/target'), ['clone' => function ($job, $dir) use ($incoming, $http, $remote, &$free) {
+            return new CloneTask($dir, $incoming, function () use ($http, $remote) {
+                return new CloneClient($http, $remote);
+            }, function () use (&$free) {
+                return $free;
+            }, null, function () {
+            });
+        }]);
+        $view = $runner->start('clone', ['profile' => 'content', 'scope' => 'root', 'bogus' => 1]);
+        $percents = [];
+        for ($i = 0; $i < 30 && $view['status'] === 'running'; $i++) {
+            $view = $runner->step($view['id'], microtime(true) + 5);
+            $percents[] = $view['percent'];
+        }
+        $this->assertSame('done', $view['status'], (string) $view['error']);
+        $this->assertSame($percents, (function ($p) {
+            sort($p);
+
+            return $p;
+        })($percents), 'progress only goes up');
+        $this->assertFalse($view['result']['left_on_source']);
+        $copy = $incoming->path($view['result']['id']);
+        $this->assertSame(FakeExportTask::$md5, md5_file($copy));
+        $this->assertSame([], array_filter($store->all(), function ($j) {
+            return $j['type'] === 'export';
+        }), 'the package was removed from the source');
+
+        // Not enough disk here: the job stops before fetching and says why.
+        $free = 1000;
+        $view = $runner->start('clone', ['profile' => 'full']);
+        for ($i = 0; $i < 10 && $view['status'] === 'running'; $i++) {
+            $view = $runner->step($view['id'], microtime(true) + 5);
+        }
+        $this->assertSame('paused', $view['status']);
+        $this->assertStringContainsString('MB free', (string) $view['error']);
+    }
+
+    public function testCloningNeedsAPastedKey(): void
+    {
+        $runner = new Runner(new JobStore($this->base . '/target'), ['clone' => function ($job, $dir) {
+            return new CloneTask($dir, new Incoming(new JobStore($this->base . '/in')), function () {
+                throw new \InvalidArgumentException('Paste a clone key from the source site first.');
+            });
+        }]);
+        $this->expectException(\InvalidArgumentException::class);
+        $runner->start('clone', []);
     }
 }
